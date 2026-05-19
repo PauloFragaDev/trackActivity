@@ -103,6 +103,12 @@
                                 <span class="chip">{{ $session['block_count'] }} bloque{{ $session['block_count'] === 1 ? '' : 's' }}</span>
                             </div>
 
+                            @if (! empty($session['summary']))
+                                <p class="mt-2 text-sm text-ink-200 leading-relaxed">
+                                    {{ $session['summary'] }}
+                                </p>
+                            @endif
+
                             <details class="group mt-2">
                                 <summary class="cursor-pointer text-xs text-ink-500 hover:text-ink-300 select-none">
                                     {{ $session['evidence']->count() }} señal{{ $session['evidence']->count() === 1 ? '' : 'es' }} en evidencia ·

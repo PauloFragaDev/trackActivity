@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\TimeBlock;
+use App\Services\Summaries\SummaryGenerator;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
@@ -12,16 +13,22 @@ use Illuminate\Support\Collection;
  * "sesiones": bloques contiguos del mismo proyecto.
  *
  * El scoring real lo hace el Aggregator (M3). Esta clase solo presenta.
+ * Adicionalmente sintetiza un resumen por sesion combinando la evidencia
+ * de todos sus bloques.
  */
 class SessionBuilder
 {
     public function __construct(
         private readonly int $idleGapMinutes,
+        private readonly ?SummaryGenerator $summaryGenerator = null,
     ) {}
 
-    public static function fromConfig(): self
+    public static function fromConfig(?SummaryGenerator $generator = null): self
     {
-        return new self(idleGapMinutes: (int) config('tracker.idle_gap_minutes', 5));
+        return new self(
+            idleGapMinutes: (int) config('tracker.idle_gap_minutes', 5),
+            summaryGenerator: $generator,
+        );
     }
 
     /**
@@ -46,7 +53,7 @@ class SessionBuilder
         $endUtc   = $endLoc->setTimezone('UTC');
 
         $blocks = TimeBlock::query()
-            ->with(['project', 'evidence.activityEvent'])
+            ->with(['project', 'summary', 'evidence.activityEvent'])
             ->where('starts_at', '>=', $startUtc->format('Y-m-d H:i:s'))
             ->where('starts_at', '<',  $endUtc->format('Y-m-d H:i:s'))
             ->orderBy('starts_at')
@@ -111,6 +118,8 @@ class SessionBuilder
         $start = Carbon::parse($current['starts_at']);
         $end   = Carbon::parse($current['ends_at']);
 
+        $summary = $this->buildSummary($current['status'], $current['project'], $blocks, $evidence);
+
         return [
             'project'           => $current['project'],
             'status'            => $current['status'],
@@ -121,7 +130,40 @@ class SessionBuilder
             'duration_minutes'  => max(1, (int) $start->diffInMinutes($end)),
             'block_count'       => $blocks->count(),
             'evidence'          => $evidence,
+            'summary'           => $summary,
         ];
+    }
+
+    /**
+     * Texto resumen para la sesion. Estrategia:
+     *   1. Si hay un solo bloque con summary editado por usuario, lo usa tal cual.
+     *   2. Si hay summaries persistidos no editados, sintetiza uno via generator
+     *      sobre la evidencia consolidada.
+     *   3. Si no hay generator inyectado, fallback texto vacio.
+     */
+    private function buildSummary(string $status, ?\App\Models\Project $project, Collection $blocks, Collection $evidence): ?string
+    {
+        if ($status === TimeBlock::STATUS_IDLE) {
+            return null;
+        }
+
+        // Si algun bloque tiene un summary editado a mano, respetalo.
+        $edited = $blocks
+            ->map(fn (TimeBlock $b) => $b->summary)
+            ->filter(fn ($s) => $s && $s->edited_by_user);
+        if ($edited->isNotEmpty()) {
+            // Concatena summaries editados unicos
+            $texts = $edited->pluck('text')->filter()->unique()->values();
+            return $texts->implode(' ');
+        }
+
+        if (! $this->summaryGenerator) {
+            // Fallback: usar el text persistido del primer bloque, si existe
+            $first = $blocks->first(fn ($b) => $b->summary && $b->summary->text);
+            return $first?->summary->text;
+        }
+
+        return $this->summaryGenerator->renderText($project, $evidence);
     }
 
     private function labelForConfidence(?float $confidence, string $status): string
