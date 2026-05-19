@@ -26,9 +26,10 @@
 
     @if (count($sessions) === 0)
         <div class="card p-8 text-center text-ink-400">
-            <p class="text-base">Sin actividad registrada este día.</p>
+            <p class="text-base">Sin actividad reconstruida este día.</p>
             <p class="mt-2 text-xs">
-                Asegúrate de que el daemon está corriendo: <code class="chip">tracker run --foreground</code>
+                Si el daemon está corriendo y deberías tener actividad,
+                ejecuta <code class="chip">php artisan tracker:rebuild-blocks --day={{ $day->toDateString() }}</code>
             </p>
         </div>
     @else
@@ -59,10 +60,19 @@
         {{-- Timeline --}}
         <ol class="space-y-3">
             @foreach ($sessions as $session)
+                @php
+                    $confColor = match ($session['confidence_label']) {
+                        'Alta' => 'text-emerald-400 border-emerald-400/40',
+                        'Media' => 'text-amber-300 border-amber-400/40',
+                        'Baja' => 'text-rose-300 border-rose-400/40',
+                        'idle' => 'text-ink-500 border-ink-700',
+                        default => 'text-ink-500 border-ink-700',
+                    };
+                @endphp
                 <li class="card p-4">
                     <div class="flex items-start justify-between gap-4">
                         <div class="flex-1 min-w-0">
-                            <div class="flex items-center gap-2 mb-1">
+                            <div class="flex items-center gap-2 mb-1 flex-wrap">
                                 <span class="font-mono text-sm text-ink-300">
                                     {{ $session['starts_at_local']->format('H:i') }}
                                     <span class="text-ink-600">→</span>
@@ -77,27 +87,43 @@
                                               style="background: {{ $session['project']->color ?? '#9ca3af' }}"></span>
                                         {{ $session['project']->code }}
                                     </span>
+                                @elseif ($session['status'] === 'idle')
+                                    <span class="chip text-ink-500">idle</span>
                                 @else
                                     <span class="chip text-ink-500">sin proyecto</span>
                                 @endif
-                                <span class="chip">{{ $session['app'] }}</span>
+                                @if ($session['confidence_label'] !== 'idle' && $session['confidence_label'] !== 'n/a')
+                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] uppercase tracking-wider border {{ $confColor }}">
+                                        {{ $session['confidence_label'] }}
+                                        @if ($session['confidence'] !== null)
+                                            <span class="font-mono opacity-70">{{ number_format($session['confidence'], 2) }}</span>
+                                        @endif
+                                    </span>
+                                @endif
+                                <span class="chip">{{ $session['block_count'] }} bloque{{ $session['block_count'] === 1 ? '' : 's' }}</span>
                             </div>
 
                             <details class="group mt-2">
                                 <summary class="cursor-pointer text-xs text-ink-500 hover:text-ink-300 select-none">
-                                    {{ $session['evidence']->count() }} señal{{ $session['evidence']->count() === 1 ? '' : 'es' }} ·
-                                    <span class="underline-offset-2 group-hover:underline">ver evidencia</span>
+                                    {{ $session['evidence']->count() }} señal{{ $session['evidence']->count() === 1 ? '' : 'es' }} en evidencia ·
+                                    <span class="underline-offset-2 group-hover:underline">expandir</span>
                                 </summary>
                                 <ul class="mt-2 space-y-1 text-xs font-mono text-ink-400 border-l border-ink-800 pl-3">
-                                    @foreach ($session['evidence']->take(20) as $event)
+                                    @foreach ($session['evidence']->take(30) as $event)
                                         <li class="truncate">
                                             <span class="text-ink-600">{{ \Carbon\Carbon::parse($event->occurred_at)->setTimezone($tz)->format('H:i:s') }}</span>
                                             <span class="text-ink-500">[{{ $event->source }}]</span>
                                             {{ $event->title ?? $event->repo_name ?? $event->url ?? $event->subject ?? '—' }}
+                                            @if ($event->branch)
+                                                <span class="text-ink-600">· {{ $event->branch }}</span>
+                                            @endif
+                                            @if ($event->modified_files)
+                                                <span class="text-ink-600">· +{{ $event->modified_files }}</span>
+                                            @endif
                                         </li>
                                     @endforeach
-                                    @if ($session['evidence']->count() > 20)
-                                        <li class="text-ink-600">… y {{ $session['evidence']->count() - 20 }} más</li>
+                                    @if ($session['evidence']->count() > 30)
+                                        <li class="text-ink-600">… y {{ $session['evidence']->count() - 30 }} más</li>
                                     @endif
                                 </ul>
                             </details>

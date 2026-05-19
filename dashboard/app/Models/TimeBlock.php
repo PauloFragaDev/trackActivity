@@ -9,6 +9,9 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class TimeBlock extends Model
 {
+    const CREATED_AT = 'generated_at';
+    const UPDATED_AT = 'updated_at';
+
     protected $fillable = [
         'starts_at', 'ends_at', 'dominant_project_id', 'confidence',
         'status', 'scoring_snapshot', 'generated_at',
