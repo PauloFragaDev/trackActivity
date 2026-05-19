@@ -25,24 +25,24 @@ Define exactamente **qué entra en la v1** y qué queda fuera. El criterio recto
 - [x] Migraciones de las 8 tablas del esquema.
 - [x] Seeders iniciales: proyectos demo, `scoring_rules`, mappings de ejemplo.
 - [x] Modelos Eloquent + relaciones.
-- [ ] Servicios `Aggregator`, `Scorer`, `MappingResolver`, `SummaryGenerator` (engine `template`), `Exporter`.
-- [ ] Comandos artisan: `tracker:rebuild-blocks`, `tracker:generate-summaries`, `tracker:export`, `tracker:prune-events`, `tracker:doctor`.
-- [ ] Scheduler con rebuild + summary cada 15 min, prune diario.
-- [ ] UI:
+- [x] Servicios `Aggregator`, `Scorer`, `MappingResolver`, `SummaryGenerator` (engine `template`), `Exporter`.
+- [x] Comandos artisan: `tracker:rebuild-blocks`, `tracker:generate-summaries`, `tracker:export`, `tracker:prune-events`, `tracker:doctor`.
+- [x] Scheduler con rebuild + summary cada 15 min, prune diario.
+- [x] UI:
   - [x] Day view (`/`, `/day/{date}`).
-  - [ ] Week view (`/week/{week}`).
-  - [ ] Calendar mensual (`/calendar`).
-  - [ ] Export form (`/export`).
-- [ ] Edición de bloques: reasignar proyecto, editar resumen.
-- [ ] Tema oscuro por defecto.
-- [ ] Export TXT / Markdown / CSV con agrupaciones `session` y `project-day`.
+  - [x] Week view (`/week/{YYYY-Www}`).
+  - [x] Calendar mensual (`/calendar/{YYYY-MM}`).
+  - [x] Export form (`/export`).
+- [ ] Edición de bloques: reasignar proyecto, editar resumen. *(pendiente · pasa a v1.1)*
+- [x] Tema oscuro por defecto.
+- [x] Export TXT / Markdown / CSV con agrupaciones `session` y `project-day`.
 
 ### Mappings y scoring
 
-- [ ] Tipos de mapping: `repository`, `folder`, `url_pattern`, `email_subject`, `window_title`.
-- [ ] Pesos cargados por seeder (editables vía SQL o Filament).
-- [ ] Snapshot de scoring por bloque (`time_blocks.scoring_snapshot`).
-- [ ] Confianza con tres niveles (Alta / Media / Baja).
+- [x] Tipos de mapping: `repository`, `folder`, `url_pattern`, `email_subject`, `window_title`.
+- [x] Pesos cargados por seeder (editables vía SQL o Filament).
+- [x] Snapshot de scoring por bloque (`time_blocks.scoring_snapshot`).
+- [x] Confianza con tres niveles (Alta / Media / Baja).
 
 ### Documentación
 
@@ -75,11 +75,11 @@ Funcionalidades **intencionalmente excluidas** para mantener el MVP enfocado:
 | **M1 — Schema + Tracker mínimo** ✅ | Migraciones, modelos, `WindowCollector`, `IdleCollector`, storage, CLI `run`. | Tras 30 min de uso, hay > 100 filas en `activity_events`. |
 | **M4 — UI day view** ✅ (adelantado) | Layout, badges, evidencia (edición inline pendiente para M3). | Usuario ve su día reconstruido desde el navegador. |
 | **M2 — Git collector + repos** ✅ | `GitCollector`, upsert de `repositories`. | Cambiar de rama y guardar archivos se refleja en BBDD en < 5 min. |
-| **M3 — Aggregator + Scorer** | Servicios + `tracker:rebuild-blocks` + scoring ponderado real. | Reconstrucción de 1 día genera bloques con proyecto dominante razonable. |
-| **M5 — Summary template** | `SummaryGenerator` engine `template`, regeneración programada. | > 80% de bloques no-idle tienen summary no vacío. |
-| **M6 — Export** | TXT, Markdown, CSV; CLI + UI. | Usuario puede pegar export de un día en el timesheet sin retocar. |
-| **M7 — Week + Calendar** | `/week`, `/calendar`. | Vista semanal navegable, totales por proyecto. |
-| **M8 — Servicio systemd + pulido** | Unit file, `tracker doctor`, retención (`prune-events`), README final. | Daemon corre durante 1 semana sin intervención, BBDD < 50 MB. |
+| **M3 — Aggregator + Scorer** ✅ | Servicios + `tracker:rebuild-blocks` + scoring ponderado real. | Reconstrucción de 1 día genera bloques con proyecto dominante razonable. |
+| **M5 — Summary template** ✅ | `SummaryGenerator` engine `template`, regeneración programada. | > 80% de bloques no-idle tienen summary no vacío. |
+| **M6 — Export** ✅ | TXT, Markdown, CSV; CLI + UI. | Usuario puede pegar export de un día en el timesheet sin retocar. |
+| **M7 — Week + Calendar** ✅ | `/week`, `/calendar`. | Vista semanal navegable, totales por proyecto. |
+| **M8 — Servicio systemd + pulido** ✅ | Unit file, `tracker:doctor` (dashboard), retención (`prune-events`), scheduler. | Daemon corre durante 1 semana sin intervención, BBDD < 50 MB. |
 
 Cada hito debe poder usarse antes de pasar al siguiente: nada queda a medias.
 

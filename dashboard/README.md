@@ -74,11 +74,25 @@ php artisan schedule:work
 
 | Comando | Propósito |
 |---------|-----------|
-| `tracker:rebuild-blocks --since=...` | Re-agrega eventos en bloques. |
-| `tracker:generate-summaries --since=...` | Regenera resúmenes. |
-| `tracker:prune-events --older-than=...` | Limpia eventos antiguos. |
-| `tracker:export --from=... --to=... --format=md` | Exporta. |
-| `tracker:mapping:add --project=... --type=... --pattern=...` | Añade mapping. |
-| `tracker:doctor` | Diagnóstico (BBDD, schema). |
+| `tracker:doctor` | Diagnóstico: BBDD, schema, datos, configuración. |
+| `tracker:rebuild-blocks --day=YYYY-MM-DD` | Reagrega events en `time_blocks` aplicando el scoring actual. |
+| `tracker:generate-summaries --day=YYYY-MM-DD` | (Re)genera resúmenes para los bloques no-idle. |
+| `tracker:export --from=... --to=... --format=md` | Exporta a TXT / Markdown / CSV. |
+| `tracker:prune-events --older-than="90 days"` | Limpia events antiguos y bloques huérfanos. |
+
+## Scheduler
+
+Para que el dashboard se autoactualice (rebuild + summaries cada 15 min, prune diario a las 03:00) hay que tener corriendo:
+
+```fish
+cd /var/www/html/trackActivity/dashboard
+php artisan schedule:work
+```
+
+…o bien añadir la entrada estándar de Laravel al cron del sistema:
+
+```cron
+* * * * * cd /var/www/html/trackActivity/dashboard && php artisan schedule:run >> /dev/null 2>&1
+```
 
 Detalle en [`../docs/07-laravel-dashboard.md`](../docs/07-laravel-dashboard.md).
