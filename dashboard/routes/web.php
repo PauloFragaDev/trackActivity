@@ -38,5 +38,5 @@ Route::post('/projects/{project}/mappings',                       [ProjectContro
 Route::delete('/projects/{project}/mappings/{mapping}',           [ProjectController::class, 'destroyMapping'])->name('projects.mappings.destroy');
 Route::patch('/projects/{project}/mappings/{mapping}/toggle',     [ProjectController::class, 'toggleMapping'])->name('projects.mappings.toggle');
 
-// Placeholder ayuda: se rellena en el commit siguiente
-Route::view('/help', 'placeholder', ['title' => 'Ayuda', 'detail' => 'Guía en construcción'])->name('help');
+use App\Http\Controllers\HelpController;
+Route::get('/help', [HelpController::class, 'index'])->name('help');

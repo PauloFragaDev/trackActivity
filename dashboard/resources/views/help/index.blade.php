@@ -1,0 +1,275 @@
+@extends('layouts.app')
+
+@section('title', 'Guía de uso')
+
+@section('content')
+    <div class="mb-8">
+        <h1 class="text-2xl font-semibold tracking-tight">Guía de uso</h1>
+        <p class="text-sm text-muted mt-2 max-w-2xl">
+            trackActivity reconstruye automáticamente lo que has trabajado durante el día
+            agrupando señales pasivas (ventana activa, repos Git, idle). Esta guía cubre
+            instalación, uso diario, configuración y resolución de problemas.
+        </p>
+    </div>
+
+    {{-- Indice --}}
+    <nav class="card p-4 mb-8 text-sm">
+        <p class="text-xs uppercase tracking-wider text-muted mb-2">Contenido</p>
+        <ol class="grid grid-cols-1 sm:grid-cols-2 gap-1">
+            <li><a class="underline hover:opacity-80" href="#que-es">1. ¿Qué es y qué no es?</a></li>
+            <li><a class="underline hover:opacity-80" href="#arquitectura">2. Arquitectura en 30 segundos</a></li>
+            <li><a class="underline hover:opacity-80" href="#instalacion">3. Instalación (Ubuntu)</a></li>
+            <li><a class="underline hover:opacity-80" href="#arranque">4. Arranque diario</a></li>
+            <li><a class="underline hover:opacity-80" href="#vistas">5. Las vistas del dashboard</a></li>
+            <li><a class="underline hover:opacity-80" href="#proyectos">6. Proyectos y mappings</a></li>
+            <li><a class="underline hover:opacity-80" href="#export">7. Exportar al timesheet</a></li>
+            <li><a class="underline hover:opacity-80" href="#scheduler">8. Auto-actualización</a></li>
+            <li><a class="underline hover:opacity-80" href="#troubleshooting">9. Resolución de problemas</a></li>
+            <li><a class="underline hover:opacity-80" href="#privacidad">10. Privacidad</a></li>
+        </ol>
+    </nav>
+
+    {{-- 1 --}}
+    <section id="que-es" class="card p-6 mb-6">
+        <h2 class="text-lg font-semibold mb-2">1. ¿Qué es y qué no es?</h2>
+        <p class="text-sm mb-3"><strong>Es</strong> un sistema de reconstrucción de contexto de trabajo: captura
+        pistas pasivas (ventana activa, repos Git locales, idle) y deduce qué proyecto te ha
+        ocupado cada bloque de 15 min. Pensado para rellenar timesheets a posteriori.</p>
+        <p class="text-sm"><strong>No es</strong> un time tracker exacto, ni vigilancia (no hace screenshots ni
+        keystrokes), ni gestor de tareas, ni SaaS. Todo se queda en tu disco.</p>
+    </section>
+
+    {{-- 2 --}}
+    <section id="arquitectura" class="card p-6 mb-6">
+        <h2 class="text-lg font-semibold mb-2">2. Arquitectura en 30 segundos</h2>
+        <ul class="text-sm space-y-1 list-disc pl-5">
+            <li><strong>Daemon Python</strong> (<code class="chip">tracker</code>) corre en segundo plano y escribe
+                señales en SQLite.</li>
+            <li><strong>SQLite</strong> en <code class="chip">{{ $dbPath }}</code> hace de cola y de
+                fuente de verdad.</li>
+            <li><strong>Dashboard Laravel</strong> (esta web) lee la BBDD, agrupa eventos en bloques de
+                <code class="chip">{{ $blockMin }} min</code>, asigna proyecto dominante y muestra el timeline.</li>
+        </ul>
+    </section>
+
+    {{-- 3 --}}
+    <section id="instalacion" class="card p-6 mb-6">
+        <h2 class="text-lg font-semibold mb-2">3. Instalación (Ubuntu/Debian)</h2>
+        <h3 class="text-sm font-semibold mt-3 mb-1">3.1 Dependencias del SO</h3>
+        <pre class="surface-soft text-xs rounded p-3 overflow-x-auto"><code>sudo apt install -y xdotool x11-utils python3.11 python3.11-venv \
+    php8.4-cli php8.4-sqlite3 php8.4-mbstring php8.4-xml \
+    php8.4-curl php8.4-intl composer sqlite3 git</code></pre>
+
+        <h3 class="text-sm font-semibold mt-4 mb-1">3.2 Dashboard Laravel</h3>
+        <pre class="surface-soft text-xs rounded p-3 overflow-x-auto"><code>cd dashboard
+composer install
+cp .env.example .env
+php artisan key:generate
+mkdir -p ../storage
+php artisan migrate --seed</code></pre>
+
+        <h3 class="text-sm font-semibold mt-4 mb-1">3.3 Daemon Python</h3>
+        <pre class="surface-soft text-xs rounded p-3 overflow-x-auto"><code># bash/zsh
+cd tracker
+python3.11 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+pip install -e .
+cp config.example.yml config.yml
+
+# fish
+source .venv/bin/activate.fish</code></pre>
+
+        <h3 class="text-sm font-semibold mt-4 mb-1">3.4 Frontend (Tailwind/Vite)</h3>
+        <pre class="surface-soft text-xs rounded p-3 overflow-x-auto"><code>cd dashboard
+npm install
+npm run build</code></pre>
+    </section>
+
+    {{-- 4 --}}
+    <section id="arranque" class="card p-6 mb-6">
+        <h2 class="text-lg font-semibold mb-2">4. Arranque diario</h2>
+        <ol class="text-sm space-y-2 list-decimal pl-5">
+            <li>
+                <strong>Daemon</strong>. Como servicio (recomendado):
+                <pre class="surface-soft text-xs rounded p-2 mt-1"><code>systemctl --user enable --now trackactivity.service
+systemctl --user status trackactivity.service</code></pre>
+                O en primer plano para debugging:
+                <pre class="surface-soft text-xs rounded p-2 mt-1"><code>tracker run --foreground --log-level=DEBUG</code></pre>
+            </li>
+            <li>
+                <strong>Dashboard</strong>:
+                <pre class="surface-soft text-xs rounded p-2 mt-1"><code>cd dashboard
+php artisan serve   # http://127.0.0.1:8000</code></pre>
+            </li>
+            <li>
+                <strong>Comprobar todo</strong>:
+                <pre class="surface-soft text-xs rounded p-2 mt-1"><code>tracker doctor         # daemon side
+php artisan tracker:doctor    # dashboard side</code></pre>
+            </li>
+        </ol>
+    </section>
+
+    {{-- 5 --}}
+    <section id="vistas" class="card p-6 mb-6">
+        <h2 class="text-lg font-semibold mb-2">5. Las vistas del dashboard</h2>
+        <dl class="text-sm space-y-3">
+            <div>
+                <dt class="font-semibold"><a class="underline" href="{{ route('timeline.today') }}">Hoy</a> / Día</dt>
+                <dd class="text-muted">Sesiones del día con su proyecto dominante, badge de confianza (Alta/Media/Baja) y resumen generado. Click en "expandir" para ver la evidencia bruta (cada signal del daemon que contribuyó).</dd>
+            </div>
+            <div>
+                <dt class="font-semibold"><a class="underline" href="{{ route('timeline.this_week') }}">Semana</a></dt>
+                <dd class="text-muted">Las 7 columnas del lunes a domingo con totales por proyecto. Click en una celda → vista de día.</dd>
+            </div>
+            <div>
+                <dt class="font-semibold"><a class="underline" href="{{ route('calendar.current') }}">Calendario</a></dt>
+                <dd class="text-muted">Grid mensual con top-3 proyectos por día y totales. Sirve para ver patrones de uso del mes.</dd>
+            </div>
+            <div>
+                <dt class="font-semibold"><a class="underline" href="{{ route('export.form') }}">Export</a></dt>
+                <dd class="text-muted">Formulario para descargar el timeline a TXT/Markdown/CSV con filtros (rango, proyectos, confianza mínima, agrupación).</dd>
+            </div>
+            <div>
+                <dt class="font-semibold"><a class="underline" href="{{ route('projects.index') }}">Proyectos</a></dt>
+                <dd class="text-muted">CRUD de proyectos y de los mappings asociados a cada uno.</dd>
+            </div>
+        </dl>
+        <p class="text-xs text-muted mt-3">Zonas: BBDD en UTC, vistas en <code class="chip">{{ $tz }}</code>. El toggle ☾/☀ del header cambia el tema y persiste en localStorage.</p>
+    </section>
+
+    {{-- 6 --}}
+    <section id="proyectos" class="card p-6 mb-6">
+        <h2 class="text-lg font-semibold mb-2">6. Proyectos y mappings</h2>
+        <p class="text-sm mb-3">
+            Un <strong>proyecto</strong> es una entidad lógica (ej. "JASPER"). Un <strong>mapping</strong>
+            es una regla que conecta una pista del SO con ese proyecto. Tipos:
+        </p>
+        <ul class="text-sm space-y-1 list-disc pl-5">
+            <li><code class="chip">repository</code> — coincide con el nombre del repo Git
+                (ej. patrón <code class="chip">ywl-</code> matchea <code class="chip">ywl-admin</code>, <code class="chip">ywl-api</code>…).</li>
+            <li><code class="chip">folder</code> — coincide con la ruta de la cwd de un terminal
+                (ej. <code class="chip">/var/www/html/jasper-api</code>).</li>
+            <li><code class="chip">url_pattern</code> — coincide en la URL/title de Chrome
+                (ej. <code class="chip">github.com/company/jasper</code>).</li>
+            <li><code class="chip">email_subject</code> — coincide en el asunto de Thunderbird.</li>
+            <li><code class="chip">window_title</code> — coincide en el title de cualquier ventana.</li>
+        </ul>
+        <p class="text-sm mt-3">
+            Por defecto el matching es <strong>substring case-insensitive</strong>. Marca "regex" si
+            necesitas precisión (anchors <code class="chip">^</code>/<code class="chip">$</code>, alternancia, etc.).
+        </p>
+        <p class="text-sm mt-3">
+            El <strong>scoring</strong> aplica un peso distinto según la señal: VSCode en repo (+5),
+            terminal en repo (+4), git con cambios (+5), URL match (+3), email (+2), title genérico (+2).
+            Puedes añadir un bonus por mapping si una pista es especialmente fuerte.
+        </p>
+        <p class="text-sm mt-3">
+            <strong>Tras cambiar mappings</strong>, recomputa los bloques afectados:
+        </p>
+        <pre class="surface-soft text-xs rounded p-3 mt-2"><code>php artisan tracker:rebuild-blocks --day=$(date +%F)</code></pre>
+    </section>
+
+    {{-- 7 --}}
+    <section id="export" class="card p-6 mb-6">
+        <h2 class="text-lg font-semibold mb-2">7. Exportar al timesheet</h2>
+        <p class="text-sm mb-3">
+            Desde <a class="underline" href="{{ route('export.form') }}">Export</a> o por CLI:
+        </p>
+        <pre class="surface-soft text-xs rounded p-3 overflow-x-auto"><code>php artisan tracker:export --from=2026-05-13 --to=2026-05-19 \
+    --project=JASPER --format=md --min-confidence=medium \
+    --output=~/Documents/timesheets/week.md</code></pre>
+        <ul class="text-sm space-y-1 list-disc pl-5 mt-3">
+            <li><strong>TXT</strong> para pegar directamente en formularios.</li>
+            <li><strong>Markdown</strong> con secciones por día y detalles colapsables de evidencia.</li>
+            <li><strong>CSV</strong> con BOM UTF-8 (abre bien en Excel) y columnas estándar.</li>
+        </ul>
+        <p class="text-sm mt-3">
+            Agrupación <code class="chip">project-day</code>: un único resumen por (proyecto, día);
+            útil cuando el timesheet solo acepta totales diarios.
+        </p>
+    </section>
+
+    {{-- 8 --}}
+    <section id="scheduler" class="card p-6 mb-6">
+        <h2 class="text-lg font-semibold mb-2">8. Auto-actualización</h2>
+        <p class="text-sm mb-3">
+            Para que la UI refleje tu actividad sin ejecutar comandos a mano, deja corriendo:
+        </p>
+        <pre class="surface-soft text-xs rounded p-3"><code>cd dashboard
+php artisan schedule:work</code></pre>
+        <p class="text-sm mt-3">
+            Cada 15 min reconstruye los bloques y los resúmenes de las últimas 2 horas.
+            A las 03:00 limpia eventos con &gt; 90 días (configurable).
+        </p>
+        <p class="text-sm mt-3">Alternativa robusta (cron del SO):</p>
+        <pre class="surface-soft text-xs rounded p-3"><code>* * * * * cd /var/www/html/trackActivity/dashboard && \
+    php artisan schedule:run &gt;&gt; /dev/null 2&gt;&amp;1</code></pre>
+    </section>
+
+    {{-- 9 --}}
+    <section id="troubleshooting" class="card p-6 mb-6">
+        <h2 class="text-lg font-semibold mb-2">9. Resolución de problemas</h2>
+        <dl class="text-sm space-y-3">
+            <div>
+                <dt class="font-semibold">"No veo actividad reciente en el dashboard"</dt>
+                <dd class="text-muted">
+                    Probable: daemon parado. <code class="chip">systemctl --user status trackactivity.service</code>.
+                    Si está corriendo: <code class="chip">php artisan tracker:doctor</code> avisa si el último event
+                    tiene &gt; 2h. Después: <code class="chip">php artisan tracker:rebuild-blocks --day=$(date +%F)</code>.
+                </dd>
+            </div>
+            <div>
+                <dt class="font-semibold">"Todas las sesiones son 'sin proyecto'"</dt>
+                <dd class="text-muted">
+                    Faltan mappings que matcheen tus repos. Ve a
+                    <a class="underline" href="{{ route('projects.index') }}">Proyectos</a> y añade
+                    <code class="chip">repository</code> con el nombre (o substring) de tus repos.
+                </dd>
+            </div>
+            <div>
+                <dt class="font-semibold">"El calendario o la semana se ven rotos"</dt>
+                <dd class="text-muted">
+                    Recompila los assets: <code class="chip">npm run build</code> en <code class="chip">dashboard/</code>.
+                </dd>
+            </div>
+            <div>
+                <dt class="font-semibold">"Las horas están desplazadas 2h"</dt>
+                <dd class="text-muted">
+                    Convención: SQLite en UTC, vista en <code class="chip">tracker.display_timezone</code>. Verifica que
+                    <code class="chip">APP_TIMEZONE=UTC</code> en <code class="chip">.env</code> y que
+                    <code class="chip">TRACKER_DISPLAY_TIMEZONE</code> es tu zona local.
+                </dd>
+            </div>
+            <div>
+                <dt class="font-semibold">"Wayland: el daemon no captura ventanas"</dt>
+                <dd class="text-muted">
+                    El collector de ventana usa X11 (xdotool/xprop). Si tu sesión es Wayland, cambia a
+                    "Ubuntu on Xorg" en el selector de gdm3.
+                </dd>
+            </div>
+            <div>
+                <dt class="font-semibold">"<code class="chip">database is locked</code> en logs"</dt>
+                <dd class="text-muted">
+                    Verifica WAL: <code class="chip">sqlite3 storage/activity.db "PRAGMA journal_mode;"</code> debe devolver <code class="chip">wal</code>.
+                </dd>
+            </div>
+        </dl>
+    </section>
+
+    {{-- 10 --}}
+    <section id="privacidad" class="card p-6 mb-6">
+        <h2 class="text-lg font-semibold mb-2">10. Privacidad</h2>
+        <p class="text-sm">
+            <strong>Todo es local.</strong> Sin login, sin telemetría, sin cuenta. La BBDD
+            es un solo fichero en tu disco. No se hacen screenshots ni se capturan keystrokes.
+            Solo se almacena: título de ventana, clase de aplicación, ruta de cwd de terminales,
+            metadatos de repos Git (branch, archivos modificados, hash de último commit) y eventos
+            de idle (entrar/salir).
+        </p>
+        <p class="text-sm mt-2">
+            Para retener menos histórico, ajusta <code class="chip">--older-than</code> en el
+            scheduler de <code class="chip">tracker:prune-events</code>.
+        </p>
+    </section>
+@endsection
