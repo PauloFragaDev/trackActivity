@@ -1,7 +1,8 @@
-"""Wrappers para utilidades X11 (xdotool, wmctrl, screensaver)."""
+"""Wrappers para utilidades X11 (xdotool, wmctrl, screensaver) y /proc."""
 from __future__ import annotations
 
 import logging
+import os
 import shutil
 import subprocess
 
@@ -47,7 +48,15 @@ def get_active_window_xdotool() -> WindowInfo:
     # de Debian/Ubuntu estable). xprop WM_CLASS es la vía portable.
     cls = _xprop_class(wid)
     app = cls.lower() if cls else "unknown"
-    return WindowInfo(app=app, title=title, wm_class=cls)
+
+    pid: int | None = None
+    try:
+        raw = _run(["xdotool", "getwindowpid", wid])
+        pid = int(raw) if raw else None
+    except (X11NotAvailable, ValueError):
+        pid = None
+
+    return WindowInfo(app=app, title=title, wm_class=cls, pid=pid)
 
 
 def _xprop_class(wid: str) -> str:
@@ -85,3 +94,56 @@ def get_idle_seconds() -> int:
         return info.idle // 1000  # ms -> s
     except Exception as exc:  # noqa: BLE001
         raise X11NotAvailable(f"XScreenSaverQueryInfo failed: {exc}") from exc
+
+
+# ──────────────────────────────────────────────
+# /proc helpers
+# ──────────────────────────────────────────────
+
+def read_pid_cwd(pid: int) -> str | None:
+    """Devuelve la cwd del proceso `pid`, o None si no se puede leer."""
+    try:
+        return os.readlink(f"/proc/{int(pid)}/cwd")
+    except (FileNotFoundError, PermissionError, ProcessLookupError, OSError):
+        return None
+
+
+def find_descendant_cwd(pid: int, max_depth: int = 4) -> str | None:
+    """Para apps tipo terminal cuyo pid es el contenedor, busca el cwd del
+    descendiente mas profundo accesible (suele ser el shell activo).
+
+    Estrategia BFS sobre /proc/<pid>/task/<tid>/children.
+    """
+    visited: set[int] = set()
+    frontier = [(int(pid), 0)]
+    best_cwd: str | None = None
+
+    while frontier:
+        current, depth = frontier.pop(0)
+        if current in visited or depth > max_depth:
+            continue
+        visited.add(current)
+
+        cwd = read_pid_cwd(current)
+        # Guardamos la cwd mas profunda no trivial
+        if cwd and cwd not in ("/", os.path.expanduser("~")):
+            best_cwd = cwd
+
+        # Ampliar con hijos (suma de todos los threads del proceso)
+        try:
+            task_dir = f"/proc/{current}/task"
+            for tid in os.listdir(task_dir):
+                children_file = f"{task_dir}/{tid}/children"
+                try:
+                    raw = open(children_file).read().strip()
+                except (FileNotFoundError, PermissionError, OSError):
+                    continue
+                for child in raw.split():
+                    try:
+                        frontier.append((int(child), depth + 1))
+                    except ValueError:
+                        continue
+        except (FileNotFoundError, PermissionError, OSError):
+            continue
+
+    return best_cwd

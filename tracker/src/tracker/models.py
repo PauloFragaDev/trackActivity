@@ -56,3 +56,4 @@ class WindowInfo:
     title: str
     wm_class: str | None = None
     cwd_hint: str | None = None
+    pid: int | None = None

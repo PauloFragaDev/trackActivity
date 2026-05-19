@@ -82,44 +82,53 @@ class MappingResolver
     private function forWindow(ActivityEvent $event): array
     {
         $out = [];
-        $app = strtolower((string) $event->app);
+        $app   = strtolower((string) $event->app);
         $title = (string) $event->title;
+        $repo  = (string) $event->repo_name;          // poblado por el window collector cuando puede
 
         $isCode     = in_array($app, self::CODE_APPS, true);
         $isTerminal = in_array($app, self::TERMINAL_APPS, true);
 
-        // Repository mappings matcheados contra el title de la ventana
-        if ($title !== '') {
+        $kindForApp = $isCode
+            ? ScoringRule::KIND_VSCODE_IN_REPO
+            : ($isTerminal
+                ? ScoringRule::KIND_TERMINAL_IN_REPO
+                : ScoringRule::KIND_WINDOW_TITLE_MATCH);
+
+        // Repository mappings: preferimos repo_name (extraido del titulo o cwd
+        // por el collector) si esta poblado; si no, caemos al title como antes.
+        $repoHaystack = $repo !== '' ? $repo : $title;
+        if ($repoHaystack !== '') {
             foreach ($this->mappings('repository') as $m) {
-                if (! $this->matches($m, $title)) {
+                if (! $this->matches($m, $repoHaystack)) {
                     continue;
                 }
-                if ($isCode) {
-                    $kind = ScoringRule::KIND_VSCODE_IN_REPO;
-                } elseif ($isTerminal) {
-                    $kind = ScoringRule::KIND_TERMINAL_IN_REPO;
-                } else {
-                    $kind = ScoringRule::KIND_WINDOW_TITLE_MATCH;
-                }
-                $out[] = $this->contribution($m, $kind, "title contiene '{$m->pattern}'");
+                $note = $repo !== ''
+                    ? "repo '{$repo}' matchea '{$m->pattern}'"
+                    : "title contiene '{$m->pattern}'";
+                $out[] = $this->contribution($m, $kindForApp, $note);
             }
         }
 
-        // Folder mappings (terminal con cwd_hint o similar)
+        // Folder mappings: cwd_hint del collector (terminales y a veces editores)
         $cwd = data_get($event->metadata, 'cwd_hint');
-        if ($cwd && $isTerminal) {
+        if ($cwd) {
+            $folderKind = $isCode
+                ? ScoringRule::KIND_VSCODE_IN_REPO
+                : ScoringRule::KIND_TERMINAL_IN_REPO;
             foreach ($this->mappings('folder') as $m) {
                 if ($this->matches($m, (string) $cwd)) {
                     $out[] = $this->contribution(
                         $m,
-                        ScoringRule::KIND_TERMINAL_IN_REPO,
-                        "cwd contiene '{$m->pattern}'"
+                        $folderKind,
+                        "cwd '{$cwd}' matchea folder '{$m->pattern}'"
                     );
                 }
             }
         }
 
-        // Window-title mappings (fallback generico)
+        // Window-title mappings (fallback generico, suma evidencia aunque ya
+        // haya disparado repository).
         if ($title !== '') {
             foreach ($this->mappings('window_title') as $m) {
                 if ($this->matches($m, $title)) {
