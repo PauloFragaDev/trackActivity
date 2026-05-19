@@ -23,6 +23,20 @@ Route::get('/calendar/{ym}',  [CalendarController::class, 'month'])
 Route::get('/export',  [ExportController::class, 'form'])->name('export.form');
 Route::post('/export', [ExportController::class, 'download'])->name('export.download');
 
-// Placeholders: se rellenan en commits posteriores
-Route::view('/projects', 'placeholder', ['title' => 'Proyectos', 'detail' => 'CRUD en construcción'])->name('projects.index');
-Route::view('/help',     'placeholder', ['title' => 'Ayuda',     'detail' => 'Guía en construcción'])->name('help');
+// Proyectos (CRUD)
+use App\Http\Controllers\ProjectController;
+
+Route::get('/projects',              [ProjectController::class, 'index'])->name('projects.index');
+Route::get('/projects/create',       [ProjectController::class, 'create'])->name('projects.create');
+Route::post('/projects',             [ProjectController::class, 'store'])->name('projects.store');
+Route::get('/projects/{project}/edit',    [ProjectController::class, 'edit'])->name('projects.edit');
+Route::patch('/projects/{project}',       [ProjectController::class, 'update'])->name('projects.update');
+Route::delete('/projects/{project}',      [ProjectController::class, 'destroy'])->name('projects.destroy');
+
+// Mappings anidados bajo el proyecto
+Route::post('/projects/{project}/mappings',                       [ProjectController::class, 'storeMapping'])->name('projects.mappings.store');
+Route::delete('/projects/{project}/mappings/{mapping}',           [ProjectController::class, 'destroyMapping'])->name('projects.mappings.destroy');
+Route::patch('/projects/{project}/mappings/{mapping}/toggle',     [ProjectController::class, 'toggleMapping'])->name('projects.mappings.toggle');
+
+// Placeholder ayuda: se rellena en el commit siguiente
+Route::view('/help', 'placeholder', ['title' => 'Ayuda', 'detail' => 'Guía en construcción'])->name('help');
