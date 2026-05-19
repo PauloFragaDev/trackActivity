@@ -25,10 +25,17 @@ class Signal:
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def as_row(self) -> dict[str, Any]:
-        """Serializa para INSERT en SQLite."""
+        """Serializa para INSERT en SQLite.
+
+        Convención del proyecto: datetimes en SQLite siempre en UTC y sin offset
+        explícito (formato 'YYYY-MM-DD HH:MM:SS'). La conversión a zona local se
+        hace en el dashboard (config 'tracker.display_timezone'). Esto evita que
+        las comparaciones por rango fallen al mezclar formatos con/sin offset.
+        """
         import json
+        utc_dt = self.occurred_at.astimezone(timezone.utc).replace(microsecond=0, tzinfo=None)
         return {
-            "occurred_at": self.occurred_at.replace(microsecond=0).isoformat(sep=" "),
+            "occurred_at": utc_dt.isoformat(sep=" "),
             "source": self.source,
             "app": self.app,
             "title": self.title,

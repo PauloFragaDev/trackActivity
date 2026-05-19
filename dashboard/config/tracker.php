@@ -11,6 +11,16 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Timezone de presentación
+    |--------------------------------------------------------------------------
+    | La BBDD almacena UTC. Esta zona se aplica en vistas/exports para mostrar
+    | horas locales. Independiente de APP_TIMEZONE (que debe quedarse en UTC
+    | para consistencia de comparaciones por rango sobre activity_events).
+    */
+    'display_timezone'   => env('TRACKER_DISPLAY_TIMEZONE', 'Europe/Madrid'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Umbrales de confianza
     |--------------------------------------------------------------------------
     */

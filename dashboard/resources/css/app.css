@@ -1,3 +1,30 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+    html {
+        font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    }
+    body {
+        @apply bg-ink-950 text-ink-100 antialiased;
+    }
+}
+
+@layer components {
+    .btn {
+        @apply inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium
+               bg-ink-700 text-ink-50 hover:bg-ink-600 transition;
+    }
+    .btn-ghost {
+        @apply inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-ink-300
+               hover:bg-ink-800 hover:text-ink-50 transition;
+    }
+    .chip {
+        @apply inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-mono
+               bg-ink-800 text-ink-300;
+    }
+    .card {
+        @apply rounded-lg border border-ink-800 bg-ink-900;
+    }
+}
