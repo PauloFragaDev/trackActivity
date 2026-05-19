@@ -9,26 +9,22 @@
         @csrf
 
         <div class="grid grid-cols-2 gap-4">
-            <label class="block">
-                <span class="text-xs uppercase tracking-wider text-ink-500">Desde</span>
-                <input type="date" name="from" value="{{ $weekAgo }}" required
-                       class="mt-1 w-full bg-ink-800 border border-ink-700 rounded px-3 py-2 text-sm text-ink-100">
+            <label class="label">
+                <span>Desde</span>
+                <input type="date" name="from" value="{{ $weekAgo }}" required class="input">
             </label>
-
-            <label class="block">
-                <span class="text-xs uppercase tracking-wider text-ink-500">Hasta</span>
-                <input type="date" name="to" value="{{ $today }}" required
-                       class="mt-1 w-full bg-ink-800 border border-ink-700 rounded px-3 py-2 text-sm text-ink-100">
+            <label class="label">
+                <span>Hasta</span>
+                <input type="date" name="to" value="{{ $today }}" required class="input">
             </label>
         </div>
 
         <fieldset>
-            <legend class="text-xs uppercase tracking-wider text-ink-500 mb-2">Proyectos (vacío = todos)</legend>
+            <legend class="text-xs uppercase tracking-wider text-muted mb-2">Proyectos (vacío = todos)</legend>
             <div class="flex flex-wrap gap-3">
                 @foreach ($projects as $project)
-                    <label class="inline-flex items-center gap-2 px-3 py-1.5 rounded bg-ink-800 cursor-pointer hover:bg-ink-700">
-                        <input type="checkbox" name="projects[]" value="{{ $project->code }}"
-                               class="accent-emerald-400">
+                    <label class="surface-soft inline-flex items-center gap-2 px-3 py-1.5 rounded cursor-pointer hover:opacity-90">
+                        <input type="checkbox" name="projects[]" value="{{ $project->code }}" class="accent-emerald-500">
                         <span class="inline-block w-2 h-2 rounded-full" style="background: {{ $project->color }}"></span>
                         <span class="text-sm">{{ $project->code }}</span>
                     </label>
@@ -37,29 +33,24 @@
         </fieldset>
 
         <div class="grid grid-cols-3 gap-4">
-            <label class="block">
-                <span class="text-xs uppercase tracking-wider text-ink-500">Confianza mínima</span>
-                <select name="min_confidence"
-                        class="mt-1 w-full bg-ink-800 border border-ink-700 rounded px-3 py-2 text-sm text-ink-100">
+            <label class="label">
+                <span>Confianza mínima</span>
+                <select name="min_confidence" class="select">
                     <option value="low">Baja (incluye todas)</option>
                     <option value="medium">Media</option>
                     <option value="high">Alta</option>
                 </select>
             </label>
-
-            <label class="block">
-                <span class="text-xs uppercase tracking-wider text-ink-500">Agrupar por</span>
-                <select name="group_by"
-                        class="mt-1 w-full bg-ink-800 border border-ink-700 rounded px-3 py-2 text-sm text-ink-100">
+            <label class="label">
+                <span>Agrupar por</span>
+                <select name="group_by" class="select">
                     <option value="session">Sesión</option>
                     <option value="project-day">Proyecto · día</option>
                 </select>
             </label>
-
-            <label class="block">
-                <span class="text-xs uppercase tracking-wider text-ink-500">Formato</span>
-                <select name="format"
-                        class="mt-1 w-full bg-ink-800 border border-ink-700 rounded px-3 py-2 text-sm text-ink-100">
+            <label class="label">
+                <span>Formato</span>
+                <select name="format" class="select">
                     <option value="txt">Texto plano (.txt)</option>
                     <option value="md">Markdown (.md)</option>
                     <option value="csv">CSV (.csv)</option>
@@ -68,11 +59,11 @@
         </div>
 
         <label class="inline-flex items-center gap-2 text-sm">
-            <input type="checkbox" name="include_idle" value="1" class="accent-emerald-400">
+            <input type="checkbox" name="include_idle" value="1" class="accent-emerald-500">
             Incluir bloques idle
         </label>
 
-        <div class="pt-2 border-t border-ink-800">
+        <div class="pt-2 border-t divider">
             <button type="submit" class="btn">Descargar</button>
             <a href="{{ route('timeline.today') }}" class="btn-ghost ml-2">Cancelar</a>
         </div>

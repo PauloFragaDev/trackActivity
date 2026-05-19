@@ -8,7 +8,7 @@
             <h1 class="text-xl font-semibold tracking-tight">
                 {{ ucfirst($firstDay->locale('es')->isoFormat('MMMM YYYY')) }}
             </h1>
-            <p class="text-sm text-ink-400 mt-1">
+            <p class="text-sm text-muted mt-1">
                 @if ($monthTotal > 0)
                     {{ intdiv($monthTotal, 60) }}h {{ $monthTotal % 60 }}m en el mes
                 @else
@@ -25,26 +25,32 @@
     </div>
 
     <div class="card overflow-hidden">
-        <div class="grid grid-cols-7 border-b border-ink-800">
+        {{-- Cabecera dias semana --}}
+        <div class="grid grid-cols-7 border-b divider">
             @foreach (['lun','mar','mié','jue','vie','sáb','dom'] as $d)
-                <div class="px-3 py-2 text-xs uppercase tracking-wider text-ink-500 text-center">{{ $d }}</div>
+                <div class="px-3 py-2 text-xs uppercase tracking-wider text-muted text-center">{{ $d }}</div>
             @endforeach
         </div>
 
+        {{-- Grid 6 semanas x 7 dias --}}
         <div class="grid grid-cols-7">
             @foreach ($weeks as $week)
                 @foreach ($week as $cell)
                     @php
-                        $isToday = $cell['date']->isSameDay(\Carbon\CarbonImmutable::now($tz));
-                        $base = 'min-h-[110px] p-2 border-b border-r border-ink-800 last:border-r-0';
-                        $color = $cell['in_month'] ? 'text-ink-200' : 'text-ink-700 bg-ink-950';
+                        $isToday  = $cell['date']->isSameDay(\Carbon\CarbonImmutable::now($tz));
+                        $offMonth = ! $cell['in_month'];
                     @endphp
                     <a href="{{ route('timeline.day', ['date' => $cell['date']->format('Y-m-d')]) }}"
-                       class="{{ $base }} {{ $color }} {{ $isToday ? 'ring-1 ring-emerald-400/40' : '' }} hover:bg-ink-800 transition">
+                       class="min-h-[110px] p-2 border-b border-r divider last:border-r-0 transition block
+                              {{ $offMonth ? 'opacity-50' : '' }}
+                              {{ $isToday ? 'ring-1 ring-inset ring-emerald-400/50' : '' }}
+                              hover:bg-ink-100 dark:hover:bg-ink-800">
                         <div class="flex items-baseline justify-between">
-                            <span class="text-sm font-semibold">{{ $cell['date']->format('d') }}</span>
+                            <span class="text-sm font-semibold {{ $offMonth ? 'text-muted' : '' }}">
+                                {{ $cell['date']->format('d') }}
+                            </span>
                             @if ($cell['total'] > 0)
-                                <span class="text-[10px] font-mono text-ink-400">
+                                <span class="text-[10px] font-mono text-muted">
                                     {{ intdiv($cell['total'], 60) }}h{{ str_pad($cell['total'] % 60, 2, '0', STR_PAD_LEFT) }}
                                 </span>
                             @endif
@@ -56,17 +62,17 @@
                                     <li class="flex items-center gap-1 text-[10px]">
                                         @if ($p['project'])
                                             <span class="inline-block w-1.5 h-1.5 rounded-full flex-shrink-0"
-                                                  style="background: {{ $p['project']->color ?? '#9ca3af' }}"></span>
-                                            <span class="truncate" style="color: {{ $p['project']->color ?? '#9ca3af' }}">
+                                                  style="background: {{ $p['project']->color ?? '#6b7280' }}"></span>
+                                            <span class="truncate" style="color: {{ $p['project']->color ?? '#6b7280' }}">
                                                 {{ $p['project']->code }}
                                             </span>
                                         @else
-                                            <span class="text-ink-500 truncate">—</span>
+                                            <span class="text-muted truncate">—</span>
                                         @endif
                                     </li>
                                 @endforeach
                                 @if (count($cell['projects']) > 3)
-                                    <li class="text-[9px] text-ink-600">+{{ count($cell['projects']) - 3 }}</li>
+                                    <li class="text-[9px] text-faint">+{{ count($cell['projects']) - 3 }}</li>
                                 @endif
                             </ul>
                         @endif

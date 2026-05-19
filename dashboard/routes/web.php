@@ -22,3 +22,7 @@ Route::get('/calendar/{ym}',  [CalendarController::class, 'month'])
 
 Route::get('/export',  [ExportController::class, 'form'])->name('export.form');
 Route::post('/export', [ExportController::class, 'download'])->name('export.download');
+
+// Placeholders: se rellenan en commits posteriores
+Route::view('/projects', 'placeholder', ['title' => 'Proyectos', 'detail' => 'CRUD en construcción'])->name('projects.index');
+Route::view('/help',     'placeholder', ['title' => 'Ayuda',     'detail' => 'Guía en construcción'])->name('help');

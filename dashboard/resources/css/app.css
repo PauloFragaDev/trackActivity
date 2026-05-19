@@ -5,26 +5,88 @@
 @layer base {
     html {
         font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+        color-scheme: light;
+    }
+    html.dark {
+        color-scheme: dark;
     }
     body {
-        @apply bg-ink-950 text-ink-100 antialiased;
+        @apply antialiased min-h-screen;
+        @apply bg-ink-50 text-ink-900;
+        @apply dark:bg-ink-950 dark:text-ink-100;
     }
 }
 
 @layer components {
+    /* Superficies semanticas con variantes claro/oscuro */
+    .surface {
+        @apply bg-white border-ink-200;
+        @apply dark:bg-ink-900 dark:border-ink-800;
+    }
+    .surface-soft {
+        @apply bg-ink-100;
+        @apply dark:bg-ink-800;
+    }
+    .surface-strong {
+        @apply bg-white/85 backdrop-blur;
+        @apply dark:bg-ink-900/80;
+    }
+    .divider {
+        @apply border-ink-200;
+        @apply dark:border-ink-800;
+    }
+
+    /* Textos */
+    .text-faint {
+        @apply text-ink-400;
+        @apply dark:text-ink-600;
+    }
+    .text-muted {
+        @apply text-ink-500;
+        @apply dark:text-ink-400;
+    }
+
+    /* Controles */
     .btn {
-        @apply inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium
-               bg-ink-700 text-ink-50 hover:bg-ink-600 transition;
+        @apply inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition;
+        @apply bg-ink-900 text-white hover:bg-ink-700;
+        @apply dark:bg-ink-700 dark:text-ink-50 dark:hover:bg-ink-600;
     }
     .btn-ghost {
-        @apply inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-ink-300
-               hover:bg-ink-800 hover:text-ink-50 transition;
+        @apply inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-sm transition;
+        @apply text-ink-600 hover:bg-ink-100 hover:text-ink-900;
+        @apply dark:text-ink-300 dark:hover:bg-ink-800 dark:hover:text-ink-50;
+    }
+    .btn-danger {
+        @apply inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition;
+        @apply bg-rose-600 text-white hover:bg-rose-500;
     }
     .chip {
-        @apply inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-mono
-               bg-ink-800 text-ink-300;
+        @apply inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-mono;
+        @apply bg-ink-100 text-ink-600;
+        @apply dark:bg-ink-800 dark:text-ink-300;
     }
     .card {
-        @apply rounded-lg border border-ink-800 bg-ink-900;
+        @apply rounded-lg border;
+        @apply bg-white border-ink-200;
+        @apply dark:bg-ink-900 dark:border-ink-800;
+    }
+
+    /* Formularios */
+    .input, .select, .textarea {
+        @apply w-full rounded px-3 py-2 text-sm transition;
+        @apply bg-white border border-ink-300 text-ink-900 placeholder:text-ink-400;
+        @apply focus:outline-none focus:ring-2 focus:ring-emerald-400/40 focus:border-emerald-400/40;
+        @apply dark:bg-ink-800 dark:border-ink-700 dark:text-ink-100 dark:placeholder:text-ink-500;
+    }
+    .label {
+        @apply block;
+    }
+    .label > span:first-child {
+        @apply text-xs uppercase tracking-wider;
+        @apply text-ink-500 dark:text-ink-400;
+    }
+    .label > .input, .label > .select, .label > .textarea {
+        @apply mt-1;
     }
 }
