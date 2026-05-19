@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ExportController;
 use App\Http\Controllers\TimelineController;
 use Illuminate\Support\Facades\Route;
 
@@ -7,3 +8,6 @@ Route::get('/',           [TimelineController::class, 'today'])->name('timeline.
 Route::get('/day/{date}', [TimelineController::class, 'day'])
     ->where('date', '\d{4}-\d{2}-\d{2}')
     ->name('timeline.day');
+
+Route::get('/export',  [ExportController::class, 'form'])->name('export.form');
+Route::post('/export', [ExportController::class, 'download'])->name('export.download');
