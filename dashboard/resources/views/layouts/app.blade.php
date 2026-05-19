@@ -15,6 +15,8 @@
             </a>
             <nav class="flex items-center gap-2 text-sm text-ink-300">
                 <a class="btn-ghost" href="{{ route('timeline.today') }}">Hoy</a>
+                <a class="btn-ghost" href="{{ route('timeline.this_week') }}">Semana</a>
+                <a class="btn-ghost" href="{{ route('calendar.current') }}">Calendario</a>
                 <a class="btn-ghost" href="{{ route('export.form') }}">Export</a>
             </nav>
         </div>
