@@ -8,28 +8,28 @@ Define exactamente **qué entra en la v1** y qué queda fuera. El criterio recto
 
 ### Tracker (Python)
 
-- [ ] Daemon ejecutable en foreground y como servicio de usuario systemd.
-- [ ] CLI con: `run`, `doctor`, `collect <kind> --once --dry-run`, `init-db`, `version`.
-- [ ] Configuración por `config.yml` (validada con pydantic).
-- [ ] Buffer + flush batch a SQLite.
-- [ ] Logging rotado.
-- [ ] Collectors obligatorios:
-  - [ ] `window` (xdotool / wmctrl).
-  - [ ] `git` (pygit2).
-  - [ ] `idle` (Xlib screensaver).
-- [ ] Deduplicación de ventana entre ticks consecutivos.
-- [ ] Validación de schema al arrancar.
+- [x] Daemon ejecutable en foreground y como servicio de usuario systemd.
+- [x] CLI con: `run`, `doctor`, `collect <kind> --once --dry-run`, `version`.
+- [x] Configuración por `config.yml` (validada con pydantic).
+- [x] Buffer + flush batch a SQLite.
+- [x] Logging rotado.
+- [x] Collectors obligatorios:
+  - [x] `window` (xdotool + xprop WM_CLASS).
+  - [x] `git` (pygit2) — upserta `repositories`, dedupe por (branch, modified, last_commit).
+  - [x] `idle` (Xlib screensaver) — solo transiciones.
+- [x] Deduplicación entre ticks consecutivos (window, git).
+- [x] Validación de schema al arrancar.
 
 ### Dashboard (Laravel)
 
-- [ ] Migraciones de las 8 tablas del esquema.
-- [ ] Seeders iniciales: proyectos demo, `scoring_rules`, mappings de ejemplo.
-- [ ] Modelos Eloquent + relaciones.
+- [x] Migraciones de las 8 tablas del esquema.
+- [x] Seeders iniciales: proyectos demo, `scoring_rules`, mappings de ejemplo.
+- [x] Modelos Eloquent + relaciones.
 - [ ] Servicios `Aggregator`, `Scorer`, `MappingResolver`, `SummaryGenerator` (engine `template`), `Exporter`.
 - [ ] Comandos artisan: `tracker:rebuild-blocks`, `tracker:generate-summaries`, `tracker:export`, `tracker:prune-events`, `tracker:doctor`.
 - [ ] Scheduler con rebuild + summary cada 15 min, prune diario.
 - [ ] UI:
-  - [ ] Day view (`/`, `/day/{date}`).
+  - [x] Day view (`/`, `/day/{date}`).
   - [ ] Week view (`/week/{week}`).
   - [ ] Calendar mensual (`/calendar`).
   - [ ] Export form (`/export`).
@@ -72,10 +72,10 @@ Funcionalidades **intencionalmente excluidas** para mantener el MVP enfocado:
 
 | Hito | Contenido | Criterio de aceptación |
 |------|-----------|------------------------|
-| **M1 — Schema + Tracker mínimo** | Migraciones, modelos, `WindowCollector`, `IdleCollector`, storage, CLI `run`. | Tras 30 min de uso, hay > 100 filas en `activity_events`. |
-| **M2 — Git collector + repos** | `GitCollector`, upsert de `repositories`. | Cambiar de rama y guardar archivos se refleja en BBDD en < 5 min. |
-| **M3 — Aggregator + Scorer** | Servicios + `tracker:rebuild-blocks` + seeders de scoring. | Reconstrucción de 1 día genera bloques con proyecto dominante razonable. |
-| **M4 — UI day view** | Layout, badges, evidencia, edición inline de proyecto. | Usuario ve y corrige su día desde el navegador. |
+| **M1 — Schema + Tracker mínimo** ✅ | Migraciones, modelos, `WindowCollector`, `IdleCollector`, storage, CLI `run`. | Tras 30 min de uso, hay > 100 filas en `activity_events`. |
+| **M4 — UI day view** ✅ (adelantado) | Layout, badges, evidencia (edición inline pendiente para M3). | Usuario ve su día reconstruido desde el navegador. |
+| **M2 — Git collector + repos** ✅ | `GitCollector`, upsert de `repositories`. | Cambiar de rama y guardar archivos se refleja en BBDD en < 5 min. |
+| **M3 — Aggregator + Scorer** | Servicios + `tracker:rebuild-blocks` + scoring ponderado real. | Reconstrucción de 1 día genera bloques con proyecto dominante razonable. |
 | **M5 — Summary template** | `SummaryGenerator` engine `template`, regeneración programada. | > 80% de bloques no-idle tienen summary no vacío. |
 | **M6 — Export** | TXT, Markdown, CSV; CLI + UI. | Usuario puede pegar export de un día en el timesheet sin retocar. |
 | **M7 — Week + Calendar** | `/week`, `/calendar`. | Vista semanal navegable, totales por proyecto. |

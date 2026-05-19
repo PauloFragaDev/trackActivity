@@ -12,12 +12,14 @@ import typer
 
 from tracker import __version__
 from tracker.buffer import SignalBuffer
+from tracker.collectors.git import GitCollector
 from tracker.collectors.idle import IdleCollector
 from tracker.collectors.window import WindowCollector
 from tracker.config import TrackerConfig, find_config
 from tracker.logging_setup import setup_logging
 from tracker.scheduler import Scheduler
 from tracker.storage import SchemaError, Storage
+from tracker.utils.git_utils import PygitNotAvailable, discover_repositories, expand_paths, require_pygit2
 from tracker.utils.x11 import check_xdotool
 
 app = typer.Typer(add_completion=False, help="trackActivity daemon CLI")
@@ -38,7 +40,7 @@ def _load(config_path: Optional[Path]) -> TrackerConfig:
     return cfg
 
 
-def _build_collectors(cfg: TrackerConfig) -> list:
+def _build_collectors(cfg: TrackerConfig, storage: Storage | None) -> list:
     collectors = []
     if cfg.collectors.window.enabled:
         collectors.append(WindowCollector(
@@ -50,7 +52,14 @@ def _build_collectors(cfg: TrackerConfig) -> list:
             interval_seconds=cfg.collectors.idle.interval_seconds,
             threshold_seconds=cfg.collectors.idle.threshold_seconds,
         ))
-    # git/browser/thunderbird: M2+
+    if cfg.collectors.git.enabled:
+        collectors.append(GitCollector(
+            interval_seconds=cfg.collectors.git.interval_seconds,
+            repositories_paths=cfg.collectors.git.repositories_paths,
+            max_depth=cfg.collectors.git.max_depth,
+            storage=storage,
+        ))
+    # browser/thunderbird: futuro
     return collectors
 
 
@@ -82,7 +91,7 @@ def run(
         max_pending=cfg.buffer.max_pending_signals,
     )
     scheduler = Scheduler(buffer)
-    scheduler.register_many(_build_collectors(cfg))
+    scheduler.register_many(_build_collectors(cfg, storage))
 
     buffer.start()
     scheduler.start()
@@ -103,7 +112,7 @@ def run(
 def doctor(
     config: Optional[Path] = typer.Option(None, "--config", "-c"),
 ) -> None:
-    """Verifica dependencias del SO, schema y conexión a BBDD."""
+    """Verifica dependencias del SO, schema, conexion a BBDD y repos Git."""
     cfg = _load(config)
 
     ok = True
@@ -111,6 +120,26 @@ def doctor(
     print("→ xdotool:", "✅" if check_xdotool() else "❌ no encontrado")
     if not check_xdotool():
         ok = False
+
+    # pygit2 / git collector
+    try:
+        require_pygit2()
+        print("→ pygit2:", "✅")
+    except PygitNotAvailable as exc:
+        print(f"→ pygit2: ❌ {exc}")
+        if cfg.collectors.git.enabled:
+            ok = False
+
+    if cfg.collectors.git.enabled:
+        paths = expand_paths(cfg.collectors.git.repositories_paths)
+        repos = list(discover_repositories(paths, max_depth=cfg.collectors.git.max_depth))
+        print(f"→ Git repos descubiertos: {len(repos)} bajo {[str(p) for p in paths]}")
+        for r in repos[:5]:
+            print(f"   • {r}")
+        if len(repos) > 5:
+            print(f"   … y {len(repos) - 5} más")
+        if not repos:
+            print("   ⚠️  git esta habilitado pero no se ha encontrado ningun repo")
 
     db_path = cfg.database.resolved_path
     print(f"→ BBDD: {db_path}")
@@ -121,7 +150,7 @@ def doctor(
     storage = Storage(db_path, wal_mode=cfg.database.wal_mode)
     try:
         storage.validate_schema()
-        print("   ✅ schema válido (tablas requeridas presentes)")
+        print("   ✅ schema valido (tablas requeridas presentes)")
     except SchemaError as exc:
         print(f"   ❌ {exc}")
         ok = False
@@ -131,13 +160,20 @@ def doctor(
 
 @app.command()
 def collect(
-    kind: str = typer.Argument(..., help="window | idle"),
+    kind: str = typer.Argument(..., help="window | idle | git"),
     config: Optional[Path] = typer.Option(None, "--config", "-c"),
     once: bool = typer.Option(False, "--once", help="Ejecuta una sola vez y sale"),
     dry_run: bool = typer.Option(False, "--dry-run", help="No escribe a BBDD"),
 ) -> None:
-    """Ejecuta un único collector, para debugging."""
+    """Ejecuta un unico collector, para debugging."""
     cfg = _load(config)
+
+    storage = (
+        None
+        if dry_run
+        else Storage(cfg.database.resolved_path, wal_mode=cfg.database.wal_mode)
+    )
+
     factory = {
         "window": lambda: WindowCollector(
             interval_seconds=cfg.collectors.window.interval_seconds,
@@ -147,22 +183,23 @@ def collect(
             interval_seconds=cfg.collectors.idle.interval_seconds,
             threshold_seconds=cfg.collectors.idle.threshold_seconds,
         ),
+        "git": lambda: GitCollector(
+            interval_seconds=cfg.collectors.git.interval_seconds,
+            repositories_paths=cfg.collectors.git.repositories_paths,
+            max_depth=cfg.collectors.git.max_depth,
+            storage=storage,
+        ),
     }
     if kind not in factory:
-        print(f"collector desconocido: {kind} (válidos: {list(factory)})")
+        print(f"collector desconocido: {kind} (validos: {list(factory)})")
         raise typer.Exit(code=2)
 
     collector = factory[kind]()
-    storage = (
-        None
-        if dry_run
-        else Storage(cfg.database.resolved_path, wal_mode=cfg.database.wal_mode)
-    )
 
     def tick() -> None:
         signals = list(collector.collect())
         if not signals:
-            print("(sin señales nuevas)")
+            print("(sin senales nuevas)")
             return
         for s in signals:
             print(s)
@@ -183,7 +220,7 @@ def collect(
 
 @app.command()
 def version() -> None:
-    """Muestra la versión."""
+    """Muestra la version."""
     print(__version__)
 
 

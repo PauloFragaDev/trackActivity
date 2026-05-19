@@ -1,4 +1,4 @@
-# Configuración del daemon trackActivity.
+# Configuracion del daemon trackActivity.
 # Copia este archivo a config.yml y ajusta a tu entorno.
 
 database:
@@ -27,9 +27,13 @@ collectors:
     capture_app_name: true
 
   git:
-    enabled: false       # se habilita en M2
-    interval_seconds: 240
+    enabled: true
+    interval_seconds: 240   # 4 min
+    # Raices donde el daemon busca repos Git (recursivo hasta max_depth).
+    # Cada repo encontrado emite una signal con branch, archivos modificados
+    # y ultimo commit; ademas se upserta en la tabla `repositories`.
     repositories_paths:
+      - /var/www/html
       - ~/Projects
     max_depth: 3
 
