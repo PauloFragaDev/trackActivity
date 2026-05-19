@@ -1,0 +1,45 @@
+# Configuración del daemon trackActivity.
+# Copia este archivo a config.yml y ajusta a tu entorno.
+
+database:
+  # Debe coincidir con DB_DATABASE del .env de Laravel.
+  path: /var/www/html/trackActivity/storage/activity.db
+  wal_mode: true
+  busy_timeout_ms: 5000
+
+buffer:
+  flush_every_seconds: 30
+  max_pending_signals: 200
+
+logging:
+  level: INFO            # DEBUG | INFO | WARNING | ERROR
+  file: ~/.local/share/trackActivity/tracker.log
+  rotate_mb: 10
+  rotate_keep: 5
+
+collectors:
+
+  window:
+    enabled: true
+    interval_seconds: 15
+    backend: xdotool     # xdotool | wmctrl
+    capture_title: true
+    capture_app_name: true
+
+  git:
+    enabled: false       # se habilita en M2
+    interval_seconds: 240
+    repositories_paths:
+      - ~/Projects
+    max_depth: 3
+
+  browser:
+    enabled: false
+
+  thunderbird:
+    enabled: false
+
+  idle:
+    enabled: true
+    interval_seconds: 30
+    threshold_seconds: 180

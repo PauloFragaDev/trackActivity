@@ -111,14 +111,31 @@ php artisan serve
 
 ## 5. Instalar el daemon (Python)
 
+### bash / zsh
+
 ```bash
 cd ../tracker
 python3.11 -m venv .venv
 source .venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
+pip install -e .                 # instala el paquete tracker (necesario para `tracker ...`)
 cp config.example.yml config.yml
 ```
+
+### fish
+
+```fish
+cd ../tracker
+python3.11 -m venv .venv
+source .venv/bin/activate.fish
+pip install --upgrade pip
+pip install -r requirements.txt
+pip install -e .
+cp config.example.yml config.yml
+```
+
+> **Importante**: `pip install -e .` instala el paquete `tracker` en el venv en modo editable. Sin él, `python -m tracker.cli` falla con `No module named tracker` y tendrías que recurrir al workaround `env PYTHONPATH=src python -m tracker.cli ...`.
 
 Editar `config.yml` (ver detalle en [`04-configuration.md`](04-configuration.md)). Mínimo:
 
@@ -147,6 +164,11 @@ collectors:
 Verificar que captura señales en primer plano:
 
 ```bash
+# Forma corta (tras pip install -e .)
+tracker doctor
+tracker run --foreground --log-level=DEBUG
+
+# Forma larga equivalente
 python -m tracker.cli run --foreground --log-level=DEBUG
 ```
 

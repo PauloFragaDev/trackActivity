@@ -31,8 +31,8 @@ El título y la clase de la ventana actualmente enfocada.
 
 ### Backend técnico
 
-- X11 (`xdotool getactivewindow getwindowname` + `getwindowclassname`), o
-- `wmctrl -a :ACTIVE:` (fallback).
+- X11 (`xdotool getactivewindow` + `xdotool getwindowname <wid>` para el título; `xprop -id <wid> WM_CLASS` para la clase de aplicación — más portable que `xdotool getwindowclassname`, que no está en todas las versiones).
+- `wmctrl -a :ACTIVE:` (fallback, no implementado en M1).
 
 ### Apps detectables por `wm_class`
 

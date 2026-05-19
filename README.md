@@ -99,21 +99,23 @@ La documentación está organizada modularmente en [`/docs`](docs):
 # 1. Clonar
 git clone <repo> trackActivity && cd trackActivity
 
-# 2. Daemon Python
-cd tracker
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-cp config.example.yml config.yml
-python -m tracker.cli init-db
-python -m tracker.cli run
-
-# 3. Dashboard Laravel
-cd ../dashboard
+# 2. Dashboard Laravel (crea el schema de la BBDD)
+cd dashboard
 composer install
 cp .env.example .env
 php artisan key:generate
-php artisan migrate
-php artisan serve
+php artisan migrate --seed
+php artisan serve   # http://127.0.0.1:8000
+
+# 3. Daemon Python (en otra terminal)
+cd ../tracker
+python3.11 -m venv .venv
+source .venv/bin/activate           # fish: source .venv/bin/activate.fish
+pip install -r requirements.txt
+pip install -e .                    # ← necesario para que `tracker` sea ejecutable
+cp config.example.yml config.yml
+tracker doctor
+tracker run --foreground --log-level=DEBUG
 ```
 
 Detalle completo en [`docs/03-installation.md`](docs/03-installation.md).

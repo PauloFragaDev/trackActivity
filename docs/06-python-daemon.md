@@ -129,7 +129,7 @@ Cada collector implementa `collect()`. El `Scheduler` se encarga de invocarlo pe
 
 ### `window`
 
-- Backend por defecto: `xdotool getactivewindow getwindowname` + `xdotool getactivewindow getwindowclassname`.
+- Backend por defecto: `xdotool getactivewindow` + `xdotool getwindowname <wid>` para el título, y `xprop -id <wid> WM_CLASS` para la clase (xprop es más portable que `xdotool getwindowclassname`, que no existe en versiones antiguas de xdotool).
 - Frecuencia recomendada: 10–20 s.
 - Output:
 
