@@ -42,9 +42,13 @@
 
     <main class="max-w-6xl mx-auto px-6 py-8">
         @if (session('status'))
-            <div class="card p-3 mb-4 border-emerald-400/40 text-emerald-700 dark:text-emerald-300">
-                {{ session('status') }}
-            </div>
+            {{-- Lo recoge app.js y lo muestra como toast inferior --}}
+            <div id="flash-data" data-message="{{ session('status') }}" hidden></div>
+        @endif
+
+        @if (session('overlap'))
+            {{-- Aviso de solapamiento: app.js lo muestra con SweetAlert --}}
+            <script type="application/json" id="overlap-data">@json(session('overlap'))</script>
         @endif
 
         @yield('content')

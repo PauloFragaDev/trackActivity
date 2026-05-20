@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\BlockStatus;
 use App\Models\TimeBlock;
 use App\Services\Summaries\SummaryGenerator;
 use Carbon\Carbon;
@@ -15,6 +16,11 @@ use Illuminate\Support\Collection;
  * El scoring real lo hace el Aggregator (M3). Esta clase solo presenta.
  * Adicionalmente sintetiza un resumen por sesion combinando la evidencia
  * de todos sus bloques.
+ *
+ * Agrupacion: dos bloques contiguos forman la misma sesion si comparten
+ * proyecto dominante y ambos son idle o ambos no-idle. El `status` concreto
+ * (auto/edited/merged/split) NO rompe la sesion: asi un bloque reasignado a
+ * mano se funde visualmente con sus vecinos auto del mismo proyecto.
  */
 class SessionBuilder
 {
@@ -31,19 +37,6 @@ class SessionBuilder
         );
     }
 
-    /**
-     * @return list<array{
-     *   project: \App\Models\Project|null,
-     *   status: string,
-     *   confidence: ?float,
-     *   confidence_label: string,
-     *   starts_at_local: \Carbon\Carbon,
-     *   ends_at_local: \Carbon\Carbon,
-     *   duration_minutes: int,
-     *   block_count: int,
-     *   evidence: \Illuminate\Support\Collection,
-     * }>
-     */
     public function buildForDay(CarbonImmutable $localDay): array
     {
         $tz = $this->displayTz();
@@ -67,9 +60,11 @@ class SessionBuilder
         $current  = null;
 
         foreach ($blocks as $block) {
+            $blockIsIdle = $block->status === BlockStatus::Idle;
+
             $sameSession = $current !== null
                 && $current['project_id'] === $block->dominant_project_id
-                && $current['status']     === $block->status
+                && $current['is_idle']    === $blockIsIdle
                 && $block->starts_at->equalTo($current['ends_at']);
 
             if (! $sameSession) {
@@ -79,7 +74,7 @@ class SessionBuilder
                 $current = [
                     'project_id' => $block->dominant_project_id,
                     'project'    => $block->project,
-                    'status'     => $block->status,
+                    'is_idle'    => $blockIsIdle,
                     'starts_at'  => $block->starts_at->copy(),
                     'ends_at'    => $block->ends_at->copy(),
                     'blocks'     => collect([$block]),
@@ -102,11 +97,13 @@ class SessionBuilder
         /** @var Collection<int,TimeBlock> $blocks */
         $blocks = $current['blocks'];
 
-        // Confianza: media de los bloques que tienen confianza definida.
+        $status = $this->sessionStatus($blocks, $current['is_idle']);
+
+        // Confianza: media de los bloques con confianza definida.
         $confidences = $blocks->pluck('confidence')->filter(fn ($c) => $c !== null);
         $confAvg = $confidences->isEmpty() ? null : (float) $confidences->avg();
 
-        // Evidencia consolidada: todos los activity_events de los bloques agrupados.
+        // Evidencia consolidada: todos los activity_events de los bloques.
         $evidence = $blocks
             ->flatMap(fn (TimeBlock $b) => $b->evidence)
             ->map(fn ($ev) => $ev->activityEvent)
@@ -118,32 +115,42 @@ class SessionBuilder
         $start = Carbon::parse($current['starts_at']);
         $end   = Carbon::parse($current['ends_at']);
 
-        $summary = $this->buildSummary($current['status'], $current['project'], $blocks, $evidence);
+        $summary = $this->buildSummary($status, $current['project'], $blocks, $evidence);
 
         return [
             'project'           => $current['project'],
-            'status'            => $current['status'],
+            'status'            => $status->value,
+            'is_idle'           => $current['is_idle'],
             'confidence'        => $confAvg,
-            'confidence_label'  => $this->labelForConfidence($confAvg, $current['status']),
+            'confidence_label'  => $this->labelForConfidence($confAvg, $status),
             'starts_at_local'   => $start->copy()->setTimezone($tz),
             'ends_at_local'     => $end->copy()->setTimezone($tz),
             'duration_minutes'  => max(1, (int) $start->diffInMinutes($end)),
             'block_count'       => $blocks->count(),
+            'block_ids'         => $blocks->pluck('id')->all(),
             'evidence'          => $evidence,
             'summary'           => $summary,
         ];
     }
 
     /**
-     * Texto resumen para la sesion. Estrategia:
-     *   1. Si hay un solo bloque con summary editado por usuario, lo usa tal cual.
-     *   2. Si hay summaries persistidos no editados, sintetiza uno via generator
-     *      sobre la evidencia consolidada.
-     *   3. Si no hay generator inyectado, fallback texto vacio.
+     * Estado representativo de la sesion: idle si todos idle; editado si
+     * algun bloque fue tocado a mano; si no, auto.
      */
-    private function buildSummary(string $status, ?\App\Models\Project $project, Collection $blocks, Collection $evidence): ?string
+    private function sessionStatus(Collection $blocks, bool $isIdle): BlockStatus
     {
-        if ($status === TimeBlock::STATUS_IDLE) {
+        if ($isIdle) {
+            return BlockStatus::Idle;
+        }
+        if ($blocks->contains(fn (TimeBlock $b) => $b->status->isManual())) {
+            return BlockStatus::Edited;
+        }
+        return BlockStatus::Auto;
+    }
+
+    private function buildSummary(BlockStatus $status, ?\App\Models\Project $project, Collection $blocks, Collection $evidence): ?string
+    {
+        if ($status === BlockStatus::Idle) {
             return null;
         }
 
@@ -152,13 +159,11 @@ class SessionBuilder
             ->map(fn (TimeBlock $b) => $b->summary)
             ->filter(fn ($s) => $s && $s->edited_by_user);
         if ($edited->isNotEmpty()) {
-            // Concatena summaries editados unicos
             $texts = $edited->pluck('text')->filter()->unique()->values();
             return $texts->implode(' ');
         }
 
         if (! $this->summaryGenerator) {
-            // Fallback: usar el text persistido del primer bloque, si existe
             $first = $blocks->first(fn ($b) => $b->summary && $b->summary->text);
             return $first?->summary->text;
         }
@@ -166,10 +171,13 @@ class SessionBuilder
         return $this->summaryGenerator->renderText($project, $evidence);
     }
 
-    private function labelForConfidence(?float $confidence, string $status): string
+    private function labelForConfidence(?float $confidence, BlockStatus $status): string
     {
-        if ($status === TimeBlock::STATUS_IDLE) {
+        if ($status === BlockStatus::Idle) {
             return 'idle';
+        }
+        if ($status === BlockStatus::Edited) {
+            return 'editado';
         }
         if ($confidence === null) {
             return 'n/a';

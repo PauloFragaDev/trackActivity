@@ -24,6 +24,16 @@
         </div>
     </div>
 
+    @if ($errors->any())
+        <div id="form-errors" class="card p-4 mb-4 border-rose-400/60 text-rose-700 dark:text-rose-300">
+            <ul class="list-disc pl-5 space-y-0.5 text-sm">
+                @foreach ($errors->all() as $e)
+                    <li>{{ $e }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <div class="card overflow-hidden">
         {{-- Cabecera dias semana --}}
         <div class="grid grid-cols-7 border-b divider">
@@ -81,4 +91,32 @@
             @endforeach
         </div>
     </div>
+
+    {{-- ─────── Añadir entrada manual a un día ─────── --}}
+    <div class="mt-6">
+        <button type="button" class="btn" data-modal-open="#manual-add">
+            + Añadir entrada manual
+        </button>
+    </div>
+
+    <dialog id="manual-add" class="modal">
+        <form method="POST" action="{{ route('manual-entries.store') }}" class="space-y-3">
+            @csrf
+            <div class="flex items-center justify-between">
+                <h3 class="text-base font-semibold">Nueva entrada manual</h3>
+                <button type="button" class="btn-ghost" data-modal-close aria-label="Cerrar">✕</button>
+            </div>
+            <input type="hidden" name="return" value="calendar">
+            <label class="label">
+                <span>Día</span>
+                <input type="date" name="date" required class="input mt-1"
+                       value="{{ old('date', $formDate) }}">
+            </label>
+            @include('timeline.partials.manual-entry-fields', ['entry' => null])
+            <div class="flex items-center justify-end gap-2 pt-1">
+                <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
+                <button type="submit" class="btn">Añadir entrada</button>
+            </div>
+        </form>
+    </dialog>
 @endsection

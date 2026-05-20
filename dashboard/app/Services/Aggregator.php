@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
+use App\Enums\BlockStatus;
 use App\Models\ActivityEvent;
+use App\Models\ManualEntry;
 use App\Models\TimeBlock;
 use App\Models\TimeBlockEvidence;
 use App\Services\Scoring\Scorer;
@@ -69,6 +71,12 @@ class Aggregator
 
     private function rebuildOneBlock(CarbonImmutable $start, CarbonImmutable $end, bool $forceEdited): bool
     {
+        // Un tramo cubierto por una entrada manual no se auto-genera: la
+        // entrada manual es la fuente de verdad para ese horario.
+        if ($this->coveredByManualEntry($start, $end)) {
+            return false;
+        }
+
         $events = $this->eventsBetween($start, $end);
         $existing = TimeBlock::query()->where('starts_at', $start->format('Y-m-d H:i:s'))->first();
 
@@ -78,17 +86,13 @@ class Aggregator
             return false;
         }
 
-        if ($existing && in_array($existing->status, [
-            TimeBlock::STATUS_EDITED,
-            TimeBlock::STATUS_MERGED,
-            TimeBlock::STATUS_SPLIT,
-        ], true) && ! $forceEdited) {
+        if ($existing && $existing->status->isManual() && ! $forceEdited) {
             return false;
         }
 
         $result = $this->scorer->score($events, $this->blockMinutes);
 
-        $status = $result->isIdle ? TimeBlock::STATUS_IDLE : TimeBlock::STATUS_AUTO;
+        $status = $result->isIdle ? BlockStatus::Idle : BlockStatus::Auto;
 
         DB::transaction(function () use ($start, $end, $result, $events, $status, $existing) {
             /** @var TimeBlock $block */
@@ -128,6 +132,15 @@ class Aggregator
             ->where('occurred_at', '<',  $end->format('Y-m-d H:i:s'))
             ->orderBy('occurred_at')
             ->get();
+    }
+
+    /** ¿Hay alguna entrada manual que solape el tramo [$start, $end)? */
+    private function coveredByManualEntry(CarbonImmutable $start, CarbonImmutable $end): bool
+    {
+        return ManualEntry::query()
+            ->where('starts_at', '<', $end->format('Y-m-d H:i:s'))
+            ->where('ends_at', '>', $start->format('Y-m-d H:i:s'))
+            ->exists();
     }
 
     private function alignToGridFloor(CarbonImmutable $dt): CarbonImmutable

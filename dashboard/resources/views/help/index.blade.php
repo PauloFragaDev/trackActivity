@@ -21,11 +21,12 @@
             <li><a class="underline hover:opacity-80" href="#instalacion">3. Instalación (Ubuntu)</a></li>
             <li><a class="underline hover:opacity-80" href="#arranque">4. Arranque diario</a></li>
             <li><a class="underline hover:opacity-80" href="#vistas">5. Las vistas del dashboard</a></li>
-            <li><a class="underline hover:opacity-80" href="#proyectos">6. Proyectos y mappings</a></li>
-            <li><a class="underline hover:opacity-80" href="#export">7. Exportar al timesheet</a></li>
-            <li><a class="underline hover:opacity-80" href="#scheduler">8. Auto-actualización</a></li>
-            <li><a class="underline hover:opacity-80" href="#troubleshooting">9. Resolución de problemas</a></li>
-            <li><a class="underline hover:opacity-80" href="#privacidad">10. Privacidad</a></li>
+            <li><a class="underline hover:opacity-80" href="#editar">6. Editar sesiones a mano</a></li>
+            <li><a class="underline hover:opacity-80" href="#proyectos">7. Proyectos y mappings</a></li>
+            <li><a class="underline hover:opacity-80" href="#export">8. Exportar al timesheet</a></li>
+            <li><a class="underline hover:opacity-80" href="#scheduler">9. Auto-actualización</a></li>
+            <li><a class="underline hover:opacity-80" href="#troubleshooting">10. Resolución de problemas</a></li>
+            <li><a class="underline hover:opacity-80" href="#privacidad">11. Privacidad</a></li>
         </ol>
     </nav>
 
@@ -116,7 +117,7 @@ php artisan tracker:doctor    # dashboard side</code></pre>
         <dl class="text-sm space-y-3">
             <div>
                 <dt class="font-semibold"><a class="underline" href="{{ route('timeline.today') }}">Hoy</a> / Día</dt>
-                <dd class="text-muted">Sesiones del día con su proyecto dominante, badge de confianza (Alta/Media/Baja) y resumen generado. Click en "expandir" para ver la evidencia bruta (cada signal del daemon que contribuyó).</dd>
+                <dd class="text-muted">Sesiones del día con su proyecto dominante, badge de confianza (Alta/Media/Baja) y resumen generado. Click en "expandir" para ver la evidencia bruta (cada signal del daemon que contribuyó); "editar sesión" permite corregir el proyecto o el resumen a mano (ver <a class="underline" href="#editar">§6</a>).</dd>
             </div>
             <div>
                 <dt class="font-semibold"><a class="underline" href="{{ route('timeline.this_week') }}">Semana</a></dt>
@@ -139,8 +140,59 @@ php artisan tracker:doctor    # dashboard side</code></pre>
     </section>
 
     {{-- 6 --}}
+    <section id="editar" class="card p-6 mb-6">
+        <h2 class="text-lg font-semibold mb-2">6. Editar sesiones a mano</h2>
+        <p class="text-sm mb-3">
+            El scoring acierta la mayoría de las veces, pero no siempre. Cuando una sesión
+            tiene mal el proyecto o un resumen pobre, corrígela desde la vista de
+            <strong>Día</strong>: despliega <code class="chip">editar sesión</code> debajo de la sesión.
+        </p>
+        <ul class="text-sm space-y-1 list-disc pl-5">
+            <li><strong>Proyecto</strong> — reasigna la sesión a otro proyecto (o "sin proyecto").</li>
+            <li><strong>Resumen</strong> — texto opcional que sobrescribe el resumen generado.
+                Déjalo vacío para conservar el actual.</li>
+        </ul>
+        <p class="text-sm mt-3">
+            Al guardar, <strong>todos los bloques</strong> de la sesión pasan a estado
+            <code class="chip">editado</code> con confianza 1.0 y la sesión muestra un badge azul
+            <code class="chip">editado</code>. Un bloque editado queda <strong>congelado</strong>:
+            los rebuilds automáticos (también los del scheduler) ya no lo recalculan, así no
+            pierdes la corrección.
+        </p>
+        <p class="text-sm mt-3">
+            <strong>Volver a automático</strong>: en una sesión ya editada aparece ese botón,
+            que la devuelve a estado <code class="chip">auto</code> y libera el resumen. El
+            siguiente rebuild la recalcula desde cero.
+        </p>
+        <p class="text-xs text-muted mt-3">
+            Bloques contiguos del mismo proyecto se muestran como una sola sesión aunque unos
+            sean <code class="chip">auto</code> y otros <code class="chip">editado</code>. Para
+            recalcular a la fuerza incluso los bloques editados:
+            <code class="chip">php artisan tracker:rebuild-blocks --day=… --force-edited</code>.
+        </p>
+
+        <h3 class="text-sm font-semibold mt-5 mb-1">Entradas manuales (reuniones, correcciones)</h3>
+        <p class="text-sm mb-3">
+            El tracking automático no capta todo: reuniones, llamadas o ratos sin el editor
+            delante. Para esos huecos añade una <strong>entrada manual</strong> — un tramo con
+            hora de inicio/fin, proyecto, tipo y título — desde el botón
+            <code class="chip">+ Añadir entrada manual</code> al final de la vista de
+            <strong>Día</strong> o del <strong>Calendario</strong>.
+        </p>
+        <ul class="text-sm space-y-1 list-disc pl-5">
+            <li>Capa independiente del tracking: el daemon y los rebuilds nunca las tocan.</li>
+            <li>Tipo <code class="chip">Reunión</code>, <code class="chip">Trabajo</code> u
+                <code class="chip">Otro</code>, cada uno con su color en el timeline.</li>
+            <li>Editables y borrables cuando quieras (<em>editar entrada</em> bajo cada una).</li>
+            <li>Suman en los totales por proyecto del día y del calendario.</li>
+            <li>Si el horario pisa otra entrada manual o tiempo ya registrado, se te pregunta
+                si <strong>reemplazarlo</strong> antes de guardar.</li>
+        </ul>
+    </section>
+
+    {{-- 7 --}}
     <section id="proyectos" class="card p-6 mb-6">
-        <h2 class="text-lg font-semibold mb-2">6. Proyectos y mappings</h2>
+        <h2 class="text-lg font-semibold mb-2">7. Proyectos y mappings</h2>
         <p class="text-sm mb-3">
             Un <strong>proyecto</strong> es una entidad lógica (ej. "JASPER"). Un <strong>mapping</strong>
             es una regla que conecta una pista del SO con ese proyecto. Tipos:
@@ -170,9 +222,9 @@ php artisan tracker:doctor    # dashboard side</code></pre>
         <pre class="surface-soft text-xs rounded p-3 mt-2"><code>php artisan tracker:rebuild-blocks --day=$(date +%F)</code></pre>
     </section>
 
-    {{-- 7 --}}
+    {{-- 8 --}}
     <section id="export" class="card p-6 mb-6">
-        <h2 class="text-lg font-semibold mb-2">7. Exportar al timesheet</h2>
+        <h2 class="text-lg font-semibold mb-2">8. Exportar al timesheet</h2>
         <p class="text-sm mb-3">
             Desde <a class="underline" href="{{ route('export.form') }}">Export</a> o por CLI:
         </p>
@@ -185,14 +237,19 @@ php artisan tracker:doctor    # dashboard side</code></pre>
             <li><strong>CSV</strong> con BOM UTF-8 (abre bien en Excel) y columnas estándar.</li>
         </ul>
         <p class="text-sm mt-3">
+            El export incluye tanto las sesiones reconstruidas como las
+            <strong>entradas manuales</strong> (reuniones), marcadas como
+            <code class="chip">manual · …</code>, y sus minutos cuentan en los totales.
+        </p>
+        <p class="text-sm mt-3">
             Agrupación <code class="chip">project-day</code>: un único resumen por (proyecto, día);
             útil cuando el timesheet solo acepta totales diarios.
         </p>
     </section>
 
-    {{-- 8 --}}
+    {{-- 9 --}}
     <section id="scheduler" class="card p-6 mb-6">
-        <h2 class="text-lg font-semibold mb-2">8. Auto-actualización</h2>
+        <h2 class="text-lg font-semibold mb-2">9. Auto-actualización</h2>
         <p class="text-sm mb-3">
             Para que la UI refleje tu actividad sin ejecutar comandos a mano, deja corriendo:
         </p>
@@ -207,9 +264,9 @@ php artisan schedule:work</code></pre>
     php artisan schedule:run &gt;&gt; /dev/null 2&gt;&amp;1</code></pre>
     </section>
 
-    {{-- 9 --}}
+    {{-- 10 --}}
     <section id="troubleshooting" class="card p-6 mb-6">
-        <h2 class="text-lg font-semibold mb-2">9. Resolución de problemas</h2>
+        <h2 class="text-lg font-semibold mb-2">10. Resolución de problemas</h2>
         <dl class="text-sm space-y-3">
             <div>
                 <dt class="font-semibold">"No veo actividad reciente en el dashboard"</dt>
@@ -257,9 +314,9 @@ php artisan schedule:work</code></pre>
         </dl>
     </section>
 
-    {{-- 10 --}}
+    {{-- 11 --}}
     <section id="privacidad" class="card p-6 mb-6">
-        <h2 class="text-lg font-semibold mb-2">10. Privacidad</h2>
+        <h2 class="text-lg font-semibold mb-2">11. Privacidad</h2>
         <p class="text-sm">
             <strong>Todo es local.</strong> Sin login, sin telemetría, sin cuenta. La BBDD
             es un solo fichero en tu disco. No se hacen screenshots ni se capturan keystrokes.

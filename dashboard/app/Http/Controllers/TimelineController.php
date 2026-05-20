@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\ActivityEvent;
+use App\Models\ManualEntry;
 use App\Models\Project;
 use App\Services\SessionBuilder;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 class TimelineController extends Controller
@@ -27,22 +29,57 @@ class TimelineController extends Controller
 
     private function renderDay(CarbonImmutable $day): View
     {
-        $sessions = $this->sessions->buildForDay($day);
+        $tz            = $this->tz();
+        $sessions      = $this->sessions->buildForDay($day);
+        $manualEntries = $this->manualEntriesForDay($day, $tz);
 
-        $totals = $this->totalsByProject($sessions);
+        // Timeline unificado: sesiones auto + entradas manuales, por hora de inicio.
+        $timeline = collect($sessions)
+            ->map(fn (array $s) => [
+                'type'    => 'session',
+                'sort'    => $s['starts_at_local'],
+                'session' => $s,
+            ])
+            ->concat($manualEntries->map(fn (ManualEntry $e) => [
+                'type'  => 'manual',
+                'sort'  => $e->starts_at->copy()->setTimezone($tz),
+                'entry' => $e,
+            ]))
+            ->sortBy('sort')
+            ->values()
+            ->all();
+
+        $totals = $this->dayTotals($sessions, $manualEntries);
         $totalMinutes = array_sum($totals->pluck('minutes')->all());
 
         return view('timeline.day', [
             'day'           => $day,
             'sessions'      => $sessions,
+            'manualEntries' => $manualEntries,
+            'timeline'      => $timeline,
             'totals'        => $totals,
             'totalMinutes'  => $totalMinutes,
-            'tz'            => $this->tz(),
+            'tz'            => $tz,
             'projects'      => Project::orderBy('code')->get(),
             'eventCount'    => $this->countRawEvents($day),
             'prevDay'       => $day->subDay()->format('Y-m-d'),
             'nextDay'       => $day->addDay()->format('Y-m-d'),
         ]);
+    }
+
+    /** @return Collection<int,ManualEntry> */
+    private function manualEntriesForDay(CarbonImmutable $day, string $tz): Collection
+    {
+        $startLocal = $day->setTimezone($tz)->startOfDay();
+
+        return ManualEntry::query()
+            ->with('project')
+            ->startingBetween(
+                $startLocal->setTimezone('UTC'),
+                $startLocal->addDay()->setTimezone('UTC'),
+            )
+            ->orderBy('starts_at')
+            ->get();
     }
 
     // ─────────────────── SEMANA ───────────────────
@@ -86,13 +123,12 @@ class TimelineController extends Controller
                 ->values();
 
             foreach ($byProject as $row) {
-                $key = $row['project']?->code ?? '__none__';
-                $weekTotals->put(
-                    $key,
-                    ($weekTotals->get($key)['minutes'] ?? 0) + $row['minutes']
-                        ? ['project' => $row['project'], 'minutes' => ($weekTotals->get($key)['minutes'] ?? 0) + $row['minutes']]
-                        : ['project' => $row['project'], 'minutes' => $row['minutes']]
-                );
+                $key  = $row['project']?->code ?? '__none__';
+                $prev = $weekTotals->get($key)['minutes'] ?? 0;
+                $weekTotals->put($key, [
+                    'project' => $row['project'],
+                    'minutes' => $prev + $row['minutes'],
+                ]);
             }
 
             $days[] = [
@@ -123,17 +159,35 @@ class TimelineController extends Controller
 
     // ─────────────────── HELPERS ───────────────────
 
-    private function totalsByProject(array $sessions): \Illuminate\Support\Collection
+    /**
+     * Totales por proyecto del día, sumando sesiones auto y entradas manuales.
+     *
+     * @param  list<array<string,mixed>>      $sessions
+     * @param  Collection<int,ManualEntry>    $manualEntries
+     * @return Collection<int,array<string,mixed>>
+     */
+    private function dayTotals(array $sessions, Collection $manualEntries): Collection
     {
-        return collect($sessions)
-            ->groupBy(fn ($s) => $s['project']?->code ?? '__none__')
-            ->map(fn ($group, $key) => [
-                'project' => $group->first()['project'],
-                'code'    => $key === '__none__' ? null : $key,
-                'minutes' => $group->sum('duration_minutes'),
-            ])
-            ->sortByDesc('minutes')
-            ->values();
+        $rows = [];
+
+        $add = function (?Project $project, int $minutes) use (&$rows): void {
+            $code = $project?->code ?? '__none__';
+            $rows[$code] ??= [
+                'project' => $project,
+                'code'    => $code === '__none__' ? null : $code,
+                'minutes' => 0,
+            ];
+            $rows[$code]['minutes'] += $minutes;
+        };
+
+        foreach ($sessions as $s) {
+            $add($s['project'], $s['duration_minutes']);
+        }
+        foreach ($manualEntries as $entry) {
+            $add($entry->project, $entry->durationMinutes());
+        }
+
+        return collect($rows)->sortByDesc('minutes')->values();
     }
 
     private function countRawEvents(CarbonImmutable $day): int

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\BlockStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -23,13 +24,8 @@ class TimeBlock extends Model
         'generated_at'     => 'datetime',
         'confidence'       => 'float',
         'scoring_snapshot' => 'array',
+        'status'           => BlockStatus::class,
     ];
-
-    public const STATUS_AUTO   = 'auto';
-    public const STATUS_EDITED = 'edited';
-    public const STATUS_MERGED = 'merged';
-    public const STATUS_SPLIT  = 'split';
-    public const STATUS_IDLE   = 'idle';
 
     public function project(): BelongsTo
     {

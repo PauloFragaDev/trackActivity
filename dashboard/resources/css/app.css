@@ -89,4 +89,36 @@
     .label > .input, .label > .select, .label > .textarea {
         @apply mt-1;
     }
+
+    /* Modal nativo <dialog> */
+    .modal {
+        @apply rounded-lg border p-5;
+        @apply bg-white border-ink-200 text-ink-900;
+        @apply dark:bg-ink-900 dark:border-ink-800 dark:text-ink-100;
+        width: min(34rem, calc(100vw - 2rem));
+    }
+    .modal::backdrop {
+        background-color: rgb(15 23 42 / 0.55);
+    }
+    .modal[open] {
+        animation: modal-pop 0.18s ease-out;
+    }
+
+    /* Toast de feedback (Toastify-js) */
+    .toastify.app-toast {
+        @apply rounded-lg border border-ink-200 bg-white text-ink-800;
+        @apply dark:border-ink-800 dark:bg-ink-900 dark:text-ink-100;
+        /* Toastify trae un degradado azul por defecto: lo anulamos. */
+        background-image: none;
+        border-left: 3px solid #10b981;
+        font-size: 0.8rem;
+        font-weight: 500;
+        padding: 0.62rem 1rem;
+        box-shadow: 0 14px 34px -12px rgb(0 0 0 / 0.45);
+    }
+}
+
+@keyframes modal-pop {
+    from { opacity: 0; transform: translateY(10px) scale(0.985); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
 }

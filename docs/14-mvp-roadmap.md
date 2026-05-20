@@ -33,7 +33,7 @@ Define exactamente **qué entra en la v1** y qué queda fuera. El criterio recto
   - [x] Week view (`/week/{YYYY-Www}`).
   - [x] Calendar mensual (`/calendar/{YYYY-MM}`).
   - [x] Export form (`/export`).
-- [ ] Edición de bloques: reasignar proyecto, editar resumen. *(pendiente · pasa a v1.1)*
+- [x] Edición manual de sesiones: reasignar proyecto y sobrescribir resumen (`/blocks`).
 - [x] Tema oscuro por defecto.
 - [x] Export TXT / Markdown / CSV con agrupaciones `session` y `project-day`.
 
@@ -59,7 +59,7 @@ Funcionalidades **intencionalmente excluidas** para mantener el MVP enfocado:
 - ❌ Collector de Chrome vía extensión. (Solo título de ventana.)
 - ❌ Integración API con GitHub/Jira. (Solo lo que se vea en navegador.)
 - ❌ Panel Filament. (Editor avanzado opcional; mappings se cargan vía seeder o CLI.)
-- ❌ Merge / Split visual de bloques. (CLI permite reasignar; merge/split llegan en v1.1.)
+- ❌ Merge / Split visual de bloques. (Reasignar proyecto/resumen ya está en la UI; merge/split llegan en v1.1.)
 - ❌ Notificaciones, websockets, hot updates en la UI.
 - ❌ Soporte multi-usuario, login, RBAC.
 - ❌ Sincronización entre máquinas.
@@ -73,7 +73,7 @@ Funcionalidades **intencionalmente excluidas** para mantener el MVP enfocado:
 | Hito | Contenido | Criterio de aceptación |
 |------|-----------|------------------------|
 | **M1 — Schema + Tracker mínimo** ✅ | Migraciones, modelos, `WindowCollector`, `IdleCollector`, storage, CLI `run`. | Tras 30 min de uso, hay > 100 filas en `activity_events`. |
-| **M4 — UI day view** ✅ (adelantado) | Layout, badges, evidencia (edición inline pendiente para M3). | Usuario ve su día reconstruido desde el navegador. |
+| **M4 — UI day view** ✅ (adelantado) | Layout, badges, evidencia, edición inline de sesiones. | Usuario ve su día reconstruido desde el navegador. |
 | **M2 — Git collector + repos** ✅ | `GitCollector`, upsert de `repositories`. | Cambiar de rama y guardar archivos se refleja en BBDD en < 5 min. |
 | **M3 — Aggregator + Scorer** ✅ | Servicios + `tracker:rebuild-blocks` + scoring ponderado real. | Reconstrucción de 1 día genera bloques con proyecto dominante razonable. |
 | **M5 — Summary template** ✅ | `SummaryGenerator` engine `template`, regeneración programada. | > 80% de bloques no-idle tienen summary no vacío. |

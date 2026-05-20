@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\SummaryEngine;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -15,10 +16,8 @@ class GeneratedSummary extends Model
     protected $casts = [
         'generated_at'   => 'datetime',
         'edited_by_user' => 'boolean',
+        'engine'         => SummaryEngine::class,
     ];
-
-    public const ENGINE_TEMPLATE = 'template';
-    public const ENGINE_LLM      = 'llm';
 
     public function timeBlock(): BelongsTo
     {
