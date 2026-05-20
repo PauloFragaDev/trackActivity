@@ -265,23 +265,46 @@ Si Filament está desactivado, los CRUDs se hacen vía comandos artisan o editan
 
 ---
 
-## Edición manual de bloques
+## Edición manual de sesiones
 
-### Reasignar proyecto
+La edición se hace a nivel de **sesión** (el grupo de `time_blocks`
+contiguos que la vista de Día muestra como una sola fila), no de bloque
+individual. `TimeBlockController` opera sobre el array de `block_ids`
+que `SessionBuilder` adjunta a cada sesión.
 
-`PATCH /blocks/{id}` con `dominant_project_id`. El sistema marca `status = 'edited'` y **no** lo sobrescribirá en futuros rebuilds salvo que se fuerce con `--force`.
+### Reasignar proyecto y/o resumen
 
-### Fusionar bloques
+`PATCH /blocks` (`blocks.update`) con:
 
-`POST /blocks/merge` con array de IDs contiguos. Resultado: un único `time_block` con `status = 'merged'`, `starts_at = min(starts)`, `ends_at = max(ends)`. Los bloques originales se borran (cascade limpia evidencia).
+| Campo | Tipo | Notas |
+|-------|------|-------|
+| `block_ids[]` | int[] | IDs de todos los bloques de la sesión. Requerido. |
+| `project_id` | int\|null | Proyecto destino; `null` = sin proyecto. |
+| `summary_text` | string\|null | Máx. 500 chars. Vacío = no toca el resumen. |
+| `date` | `Y-m-d` | Día al que redirige tras guardar. |
 
-### Dividir
+Efecto sobre cada bloque no-idle de la sesión: `status = 'edited'`,
+`confidence = 1.0`, `dominant_project_id` reasignado. Si llega
+`summary_text`, se hace `updateOrCreate` del `generated_summary` con
+`edited_by_user = true` (conservando el `engine` original, o
+`manual` si no existía). Los bloques `idle` no se reasignan a proyecto.
 
-`POST /blocks/{id}/split` con `split_at` (timestamp). Crea dos bloques, redistribuye evidencia según `occurred_at`. Status `split`.
+Un bloque `edited` **no** se recalcula en los rebuilds salvo
+`tracker:rebuild-blocks --force-edited`.
 
-### Editar resumen
+### Volver a automático
 
-Inline. Si el usuario edita, se setea `edited_by_user = true` y futuros `tracker:generate-summaries` lo respetan.
+`PATCH /blocks/reset` (`blocks.reset`) con `block_ids[]` y `date`.
+Devuelve los bloques a `status = 'auto'` y marca sus resúmenes con
+`edited_by_user = false`. El siguiente rebuild los recalcula desde cero.
+
+### Fusionar / dividir bloques
+
+Fuera del alcance del MVP. Las constantes `STATUS_MERGED` / `STATUS_SPLIT`
+están reservadas en el modelo y el `Aggregator` ya las trata como
+no-recalculables, pero no hay endpoints `merge` / `split`. La fusión
+*visual* de bloques contiguos del mismo proyecto ya la hace
+`SessionBuilder` al agrupar en sesiones.
 
 ---
 

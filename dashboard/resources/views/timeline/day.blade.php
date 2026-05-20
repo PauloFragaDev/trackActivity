@@ -60,77 +60,128 @@
             @foreach ($sessions as $session)
                 @php
                     $confColor = match ($session['confidence_label']) {
-                        'Alta'  => 'text-emerald-600 dark:text-emerald-400 border-emerald-400/40',
-                        'Media' => 'text-amber-600 dark:text-amber-300 border-amber-400/40',
-                        'Baja'  => 'text-rose-600 dark:text-rose-300 border-rose-400/40',
-                        default => 'text-muted divider',
+                        'Alta'    => 'text-emerald-600 dark:text-emerald-400 border-emerald-400/40',
+                        'Media'   => 'text-amber-600 dark:text-amber-300 border-amber-400/40',
+                        'Baja'    => 'text-rose-600 dark:text-rose-300 border-rose-400/40',
+                        'editado' => 'text-sky-600 dark:text-sky-300 border-sky-400/40',
+                        default   => 'text-muted divider',
                     };
                 @endphp
                 <li class="card p-4">
-                    <div class="flex items-start justify-between gap-4">
-                        <div class="flex-1 min-w-0">
-                            <div class="flex items-center gap-2 mb-1 flex-wrap">
-                                <span class="font-mono text-sm text-muted">
-                                    {{ $session['starts_at_local']->format('H:i') }}
-                                    <span class="text-faint">→</span>
-                                    {{ $session['ends_at_local']->format('H:i') }}
-                                </span>
-                                <span class="chip">{{ $session['duration_minutes'] }}m</span>
-                                @if ($session['project'])
-                                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-medium"
-                                          style="background: {{ $session['project']->color ?? '#374151' }}22;
-                                                 color: {{ $session['project']->color ?? '#9ca3af' }};">
-                                        <span class="inline-block w-1.5 h-1.5 rounded-full"
-                                              style="background: {{ $session['project']->color ?? '#9ca3af' }}"></span>
-                                        {{ $session['project']->code }}
-                                    </span>
-                                @elseif ($session['status'] === 'idle')
-                                    <span class="chip">idle</span>
-                                @else
-                                    <span class="chip">sin proyecto</span>
+                    <div class="flex items-center gap-2 mb-1 flex-wrap">
+                        <span class="font-mono text-sm text-muted">
+                            {{ $session['starts_at_local']->format('H:i') }}
+                            <span class="text-faint">→</span>
+                            {{ $session['ends_at_local']->format('H:i') }}
+                        </span>
+                        <span class="chip">{{ $session['duration_minutes'] }}m</span>
+                        @if ($session['project'])
+                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-medium"
+                                  style="background: {{ $session['project']->color ?? '#374151' }}22;
+                                         color: {{ $session['project']->color ?? '#9ca3af' }};">
+                                <span class="inline-block w-1.5 h-1.5 rounded-full"
+                                      style="background: {{ $session['project']->color ?? '#9ca3af' }}"></span>
+                                {{ $session['project']->code }}
+                            </span>
+                        @elseif ($session['is_idle'])
+                            <span class="chip">idle</span>
+                        @else
+                            <span class="chip">sin proyecto</span>
+                        @endif
+                        @if ($session['confidence_label'] !== 'idle' && $session['confidence_label'] !== 'n/a')
+                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] uppercase tracking-wider border {{ $confColor }}">
+                                {{ $session['confidence_label'] }}
+                                @if ($session['confidence_label'] !== 'editado' && $session['confidence'] !== null)
+                                    <span class="font-mono opacity-70">{{ number_format($session['confidence'], 2) }}</span>
                                 @endif
-                                @if ($session['confidence_label'] !== 'idle' && $session['confidence_label'] !== 'n/a')
-                                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] uppercase tracking-wider border {{ $confColor }}">
-                                        {{ $session['confidence_label'] }}
-                                        @if ($session['confidence'] !== null)
-                                            <span class="font-mono opacity-70">{{ number_format($session['confidence'], 2) }}</span>
+                            </span>
+                        @endif
+                        <span class="chip">{{ $session['block_count'] }} bloque{{ $session['block_count'] === 1 ? '' : 's' }}</span>
+                    </div>
+
+                    @if (! empty($session['summary']))
+                        <p class="mt-2 text-sm leading-relaxed">{{ $session['summary'] }}</p>
+                    @endif
+
+                    <div class="mt-2 flex items-center gap-4">
+                        <details class="group">
+                            <summary class="cursor-pointer text-xs text-muted hover:opacity-100 opacity-80 select-none">
+                                {{ $session['evidence']->count() }} señal{{ $session['evidence']->count() === 1 ? '' : 'es' }} en evidencia ·
+                                <span class="underline-offset-2 group-hover:underline">expandir</span>
+                            </summary>
+                            <ul class="mt-2 space-y-1 text-xs font-mono text-muted border-l divider pl-3">
+                                @foreach ($session['evidence']->take(30) as $event)
+                                    <li class="truncate">
+                                        <span class="text-faint">{{ \Carbon\Carbon::parse($event->occurred_at)->setTimezone($tz)->format('H:i:s') }}</span>
+                                        <span class="text-faint">[{{ $event->source }}]</span>
+                                        {{ $event->title ?? $event->repo_name ?? $event->url ?? $event->subject ?? '—' }}
+                                        @if ($event->branch)
+                                            <span class="text-faint">· {{ $event->branch }}</span>
                                         @endif
-                                    </span>
+                                        @if ($event->modified_files)
+                                            <span class="text-faint">· +{{ $event->modified_files }}</span>
+                                        @endif
+                                    </li>
+                                @endforeach
+                                @if ($session['evidence']->count() > 30)
+                                    <li class="text-faint">… y {{ $session['evidence']->count() - 30 }} más</li>
                                 @endif
-                                <span class="chip">{{ $session['block_count'] }} bloque{{ $session['block_count'] === 1 ? '' : 's' }}</span>
-                            </div>
+                            </ul>
+                        </details>
 
-                            @if (! empty($session['summary']))
-                                <p class="mt-2 text-sm leading-relaxed">
-                                    {{ $session['summary'] }}
-                                </p>
-                            @endif
-
-                            <details class="group mt-2">
+                        @unless ($session['is_idle'])
+                            <details class="group">
                                 <summary class="cursor-pointer text-xs text-muted hover:opacity-100 opacity-80 select-none">
-                                    {{ $session['evidence']->count() }} señal{{ $session['evidence']->count() === 1 ? '' : 'es' }} en evidencia ·
-                                    <span class="underline-offset-2 group-hover:underline">expandir</span>
+                                    <span class="underline-offset-2 group-hover:underline">editar sesión</span>
                                 </summary>
-                                <ul class="mt-2 space-y-1 text-xs font-mono text-muted border-l divider pl-3">
-                                    @foreach ($session['evidence']->take(30) as $event)
-                                        <li class="truncate">
-                                            <span class="text-faint">{{ \Carbon\Carbon::parse($event->occurred_at)->setTimezone($tz)->format('H:i:s') }}</span>
-                                            <span class="text-faint">[{{ $event->source }}]</span>
-                                            {{ $event->title ?? $event->repo_name ?? $event->url ?? $event->subject ?? '—' }}
-                                            @if ($event->branch)
-                                                <span class="text-faint">· {{ $event->branch }}</span>
-                                            @endif
-                                            @if ($event->modified_files)
-                                                <span class="text-faint">· +{{ $event->modified_files }}</span>
-                                            @endif
-                                        </li>
+
+                                <form method="POST" action="{{ route('blocks.update') }}"
+                                      class="surface-soft mt-2 p-3 rounded space-y-3">
+                                    @csrf
+                                    @method('PATCH')
+                                    <input type="hidden" name="date" value="{{ $day->toDateString() }}">
+                                    @foreach ($session['block_ids'] as $bid)
+                                        <input type="hidden" name="block_ids[]" value="{{ $bid }}">
                                     @endforeach
-                                    @if ($session['evidence']->count() > 30)
-                                        <li class="text-faint">… y {{ $session['evidence']->count() - 30 }} más</li>
-                                    @endif
-                                </ul>
+
+                                    <label class="label">
+                                        <span>Proyecto</span>
+                                        <select name="project_id" class="select mt-1">
+                                            <option value="">— Sin proyecto —</option>
+                                            @foreach ($projects as $p)
+                                                <option value="{{ $p->id }}"
+                                                    @selected($session['project'] && $session['project']->id === $p->id)>
+                                                    {{ $p->code }} · {{ $p->name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </label>
+
+                                    <label class="label">
+                                        <span>Resumen (opcional, sobrescribe el generado)</span>
+                                        <textarea name="summary_text" rows="2" maxlength="500"
+                                                  class="textarea mt-1"
+                                                  placeholder="Deja vacío para conservar el resumen actual">{{ $session['status'] === 'edited' ? $session['summary'] : '' }}</textarea>
+                                    </label>
+
+                                    <div class="flex items-center gap-2">
+                                        <button type="submit" class="btn">Guardar</button>
+                                        @if ($session['status'] === 'edited')
+                                            <button type="submit"
+                                                    class="btn-ghost"
+                                                    formaction="{{ route('blocks.reset') }}"
+                                                    title="Devuelve la sesión a modo automático">
+                                                Volver a automático
+                                            </button>
+                                        @endif
+                                    </div>
+                                    <p class="text-[11px] text-faint">
+                                        Al guardar, los {{ $session['block_count'] }} bloque(s) de esta sesión quedan
+                                        marcados como <code class="chip">editado</code> y no se recalcularán en los rebuilds.
+                                    </p>
+                                </form>
                             </details>
-                        </div>
+                        @endunless
                     </div>
                 </li>
             @endforeach

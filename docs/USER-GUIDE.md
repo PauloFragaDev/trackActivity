@@ -17,11 +17,12 @@ configuración y resolución de problemas, en una sola página.
 3. [Instalación (Ubuntu/Debian)](#3-instalación-ubuntudebian)
 4. [Arranque diario](#4-arranque-diario)
 5. [Las vistas del dashboard](#5-las-vistas-del-dashboard)
-6. [Proyectos y mappings](#6-proyectos-y-mappings)
-7. [Exportar al timesheet](#7-exportar-al-timesheet)
-8. [Auto-actualización (scheduler)](#8-auto-actualización-scheduler)
-9. [Resolución de problemas](#9-resolución-de-problemas)
-10. [Privacidad y retención](#10-privacidad-y-retención)
+6. [Editar sesiones a mano](#6-editar-sesiones-a-mano)
+7. [Proyectos y mappings](#7-proyectos-y-mappings)
+8. [Exportar al timesheet](#8-exportar-al-timesheet)
+9. [Auto-actualización (scheduler)](#9-auto-actualización-scheduler)
+10. [Resolución de problemas](#10-resolución-de-problemas)
+11. [Privacidad y retención](#11-privacidad-y-retención)
 
 ---
 
@@ -94,7 +95,7 @@ php artisan migrate --seed
 ```
 
 El `.env` ya viene preconfigurado con:
-- `APP_TIMEZONE=UTC` (no lo cambies; ver [Resolución de problemas](#9-resolución-de-problemas))
+- `APP_TIMEZONE=UTC` (no lo cambies; ver [Resolución de problemas](#10-resolución-de-problemas))
 - `TRACKER_DISPLAY_TIMEZONE=Europe/Madrid` (ajústalo a tu zona si es otra)
 - `DB_DATABASE=/var/www/html/trackActivity/storage/activity.db` (ajustala a la tuya)
 
@@ -184,7 +185,7 @@ php artisan tracker:doctor    # dashboard side: BBDD, schema, datos, datos recie
 
 | Ruta | Qué muestra |
 |------|-------------|
-| `/` o `/day/{YYYY-MM-DD}` | **Día**: lista de sesiones con proyecto, confianza, summary y evidencia desplegable. |
+| `/` o `/day/{YYYY-MM-DD}` | **Día**: lista de sesiones con proyecto, confianza, summary, evidencia desplegable y edición inline ([§6](#6-editar-sesiones-a-mano)). |
 | `/week` o `/week/{YYYY-Www}` | **Semana**: 7 columnas L–D con totales por proyecto. |
 | `/calendar` o `/calendar/{YYYY-MM}` | **Mes**: grid 6×7 con top-3 proyectos por día. |
 | `/projects` | **CRUD de proyectos** + edición inline de mappings. |
@@ -196,7 +197,41 @@ queda en `localStorage`.
 
 ---
 
-## 6. Proyectos y mappings
+## 6. Editar sesiones a mano
+
+El scoring acierta la mayoría de las veces, pero no siempre. Cuando una
+sesión tiene el proyecto equivocado o un resumen pobre, corrígela desde
+la vista de **Día**: despliega `editar sesión` debajo de la sesión.
+
+| Campo | Efecto |
+|-------|--------|
+| Proyecto | Reasigna la sesión a otro proyecto (o "sin proyecto"). |
+| Resumen | Texto opcional que **sobrescribe** el resumen generado. Vacío = conserva el actual. |
+
+Al guardar, **todos los bloques** de la sesión pasan a estado `editado`
+con confianza `1.0`, y la sesión muestra un badge azul `editado` en
+lugar del de confianza. Un bloque `editado` queda **congelado**: los
+rebuilds automáticos (también los del scheduler) ya no lo recalculan, de
+modo que tu corrección no se pierde.
+
+**Volver a automático**: en una sesión ya editada aparece el botón
+*Volver a automático*, que la devuelve a estado `auto` y libera el
+resumen (`edited_by_user = false`). El siguiente `rebuild-blocks` la
+recalcula desde cero.
+
+> Bloques contiguos del mismo proyecto se muestran como **una sola
+> sesión** aunque unos sean `auto` y otros `editado`. La edición se
+> aplica a todos los bloques de la sesión a la vez.
+
+Para forzar el recálculo incluso de bloques editados:
+
+```bash
+php artisan tracker:rebuild-blocks --day=$(date +%F) --force-edited
+```
+
+---
+
+## 7. Proyectos y mappings
 
 ### Conceptos
 
@@ -251,7 +286,7 @@ php artisan tracker:rebuild-blocks --day=$(date +%F) --force-edited
 
 ---
 
-## 7. Exportar al timesheet
+## 8. Exportar al timesheet
 
 ### Desde la UI
 
@@ -281,7 +316,7 @@ Sin `--output` escribe a stdout (útil para pipes).
 
 ---
 
-## 8. Auto-actualización (scheduler)
+## 9. Auto-actualización (scheduler)
 
 Para no estar lanzando `rebuild-blocks` y `generate-summaries` a mano:
 
@@ -306,7 +341,7 @@ Para producción usa cron en lugar de `schedule:work`:
 
 ---
 
-## 9. Resolución de problemas
+## 10. Resolución de problemas
 
 ### "No veo actividad reciente"
 
@@ -382,7 +417,7 @@ php artisan config:clear
 
 ---
 
-## 10. Privacidad y retención
+## 11. Privacidad y retención
 
 **Todo es local.** No hay login, telemetría ni nube. La BBDD es un solo
 archivo SQLite en tu disco.

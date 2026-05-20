@@ -19,6 +19,7 @@ class GeneratedSummary extends Model
 
     public const ENGINE_TEMPLATE = 'template';
     public const ENGINE_LLM      = 'llm';
+    public const ENGINE_MANUAL   = 'manual';
 
     public function timeBlock(): BelongsTo
     {
