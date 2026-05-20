@@ -1,6 +1,8 @@
 import './bootstrap';
 import Swal from 'sweetalert2';
 import 'sweetalert2/dist/sweetalert2.min.css';
+import Toastify from 'toastify-js';
+import 'toastify-js/src/toastify.css';
 
 // ──────────────────────────────────────────────
 // Theme toggle (claro/oscuro) con persistencia.
@@ -31,7 +33,7 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 // ──────────────────────────────────────────────
-// SweetAlert: confirmaciones y toasts.
+// Confirmaciones (SweetAlert2) y toasts (Toastify-js).
 // ──────────────────────────────────────────────
 
 /** Colores de SweetAlert adaptados al tema activo. */
@@ -42,21 +44,17 @@ function swalTheme() {
 }
 
 /** Toast de feedback: entra y sale deslizándose desde abajo. */
-window.toast = (message, icon = 'success') => {
-    Swal.fire({
-        toast: true,
-        position: 'bottom',
-        icon,
-        title: message,
-        showConfirmButton: false,
-        timer: 3200,
-        timerProgressBar: true,
-        width: 'auto',
-        customClass: { popup: 'app-toast' },
-        showClass: { popup: 'app-toast-show' },
-        hideClass: { popup: 'app-toast-hide' },
-        ...swalTheme(),
-    });
+window.toast = (message) => {
+    Toastify({
+        text: message,
+        duration: 3200,
+        gravity: 'bottom',
+        position: 'center',
+        className: 'app-toast',
+        close: false,
+        stopOnFocus: true,
+        offset: { x: 0, y: 24 },
+    }).showToast();
 };
 
 /** Abre un <dialog> modal por selector, si existe. */

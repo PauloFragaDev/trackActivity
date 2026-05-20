@@ -104,41 +104,19 @@
         animation: modal-pop 0.18s ease-out;
     }
 
-    /* Toast de feedback (SweetAlert2) */
-    .swal2-popup.swal2-toast.app-toast {
-        @apply rounded-lg border border-ink-200 dark:border-ink-800;
-        padding: 0.5rem 0.85rem;
-        margin-bottom: 1.4rem;
-        box-shadow: 0 14px 34px -12px rgb(0 0 0 / 0.45);
-    }
-    .app-toast .swal2-title {
+    /* Toast de feedback (Toastify-js) */
+    .toastify.app-toast {
+        @apply rounded-lg border border-ink-200 bg-white text-ink-800;
+        @apply dark:border-ink-800 dark:bg-ink-900 dark:text-ink-100;
+        border-left: 3px solid #10b981;
         font-size: 0.8rem;
         font-weight: 500;
-        line-height: 1.35;
-        margin: 0;
-        padding: 0;
+        padding: 0.62rem 1rem;
+        box-shadow: 0 14px 34px -12px rgb(0 0 0 / 0.45);
     }
-    .app-toast .swal2-icon {
-        width: 1.5em;
-        height: 1.5em;
-        margin: 0 0.55em 0 0;
-    }
-    .app-toast .swal2-timer-progress-bar {
-        @apply bg-emerald-400/70;
-    }
-    .app-toast-show { animation: app-toast-in 0.42s cubic-bezier(0.16, 1, 0.3, 1); }
-    .app-toast-hide { animation: app-toast-out 0.3s ease-in forwards; }
 }
 
 @keyframes modal-pop {
     from { opacity: 0; transform: translateY(10px) scale(0.985); }
     to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-@keyframes app-toast-in {
-    from { opacity: 0; transform: translateY(72px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-@keyframes app-toast-out {
-    from { opacity: 1; transform: translateY(0); }
-    to   { opacity: 0; transform: translateY(72px); }
 }
