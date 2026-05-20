@@ -170,6 +170,22 @@ php artisan tracker:doctor    # dashboard side</code></pre>
             recalcular a la fuerza incluso los bloques editados:
             <code class="chip">php artisan tracker:rebuild-blocks --day=… --force-edited</code>.
         </p>
+
+        <h3 class="text-sm font-semibold mt-5 mb-1">Entradas manuales (reuniones, correcciones)</h3>
+        <p class="text-sm mb-3">
+            El tracking automático no capta todo: reuniones, llamadas o ratos sin el editor
+            delante. Para esos huecos añade una <strong>entrada manual</strong> — un tramo con
+            hora de inicio/fin, proyecto, tipo y título — desde el botón
+            <code class="chip">+ Añadir entrada manual</code> al final de la vista de
+            <strong>Día</strong> o del <strong>Calendario</strong>.
+        </p>
+        <ul class="text-sm space-y-1 list-disc pl-5">
+            <li>Capa independiente del tracking: el daemon y los rebuilds nunca las tocan.</li>
+            <li>Tipo <code class="chip">Reunión</code>, <code class="chip">Trabajo</code> u
+                <code class="chip">Otro</code>, cada uno con su color en el timeline.</li>
+            <li>Editables y borrables cuando quieras (<em>editar entrada</em> bajo cada una).</li>
+            <li>Suman en los totales por proyecto del día y del calendario.</li>
+        </ul>
     </section>
 
     {{-- 7 --}}

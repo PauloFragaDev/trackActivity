@@ -229,6 +229,21 @@ Para forzar el recálculo incluso de bloques editados:
 php artisan tracker:rebuild-blocks --day=$(date +%F) --force-edited
 ```
 
+### Entradas manuales (reuniones, correcciones)
+
+El tracking automático no capta todo: reuniones, llamadas o ratos sin el
+editor delante. Para esos huecos añade una **entrada manual** — un tramo
+con hora de inicio/fin, proyecto, tipo y título — desde el botón
+`+ Añadir entrada manual` al final de la vista de **Día** o del
+**Calendario**.
+
+- Son una capa independiente del tracking automático: el daemon y los
+  rebuilds nunca las tocan; su inicio/fin son libres (fuera del grid de
+  15 min).
+- Tipo `Reunión` / `Trabajo` / `Otro`, cada uno con su color.
+- Editables y borrables en cualquier momento.
+- Suman en los totales por proyecto del día y del calendario.
+
 ---
 
 ## 7. Proyectos y mappings

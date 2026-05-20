@@ -53,7 +53,7 @@ dashboard/
 │           ├── Report.php
 │           └── Renderers/                  # Txt / Markdown / Csv
 ├── database/
-│   ├── migrations/                         # 8 tablas (2026_01_01_0000NN_*)
+│   ├── migrations/                         # 9 tablas (2026_01_01_0000NN_*)
 │   └── seeders/
 │       ├── DatabaseSeeder.php
 │       ├── ProjectsSeeder.php
