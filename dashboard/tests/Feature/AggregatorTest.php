@@ -3,7 +3,9 @@
 namespace Tests\Feature;
 
 use App\Enums\BlockStatus;
+use App\Enums\EntryKind;
 use App\Models\ActivityEvent;
+use App\Models\ManualEntry;
 use App\Models\Project;
 use App\Models\ProjectMapping;
 use App\Models\ScoringRule;
@@ -181,5 +183,23 @@ class AggregatorTest extends TestCase
         $block = TimeBlock::firstWhere('starts_at', self::BLOCK_START);
         $this->assertNotNull($block);
         $this->assertSame($p->id, $block->dominant_project_id);
+    }
+
+    public function test_rebuild_skips_a_slot_covered_by_a_manual_entry(): void
+    {
+        $this->project();
+        $this->codeEvent();   // evento dentro del tramo 10:00–10:15
+        ManualEntry::create([
+            'starts_at' => self::BLOCK_START,
+            'ends_at'   => self::BLOCK_END,
+            'kind'      => EntryKind::Meeting,
+            'title'     => 'Reunión',
+        ]);
+
+        $count = $this->aggregator()->rebuildRange(...$this->range());
+
+        // La entrada manual manda: no se genera bloque automático.
+        $this->assertSame(0, $count);
+        $this->assertSame(0, TimeBlock::count());
     }
 }

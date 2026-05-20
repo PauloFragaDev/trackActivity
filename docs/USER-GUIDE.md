@@ -243,6 +243,10 @@ con hora de inicio/fin, proyecto, tipo y título — desde el botón
 - Tipo `Reunión` / `Trabajo` / `Otro`, cada uno con su color.
 - Editables y borrables en cualquier momento.
 - Suman en los totales por proyecto del día y del calendario.
+- Si el horario se solapa con otra entrada manual o con tiempo ya
+  registrado por el tracker, se te pregunta si reemplazarlo antes de
+  guardar (el tiempo solapado se borra). Un tramo cubierto por una
+  entrada manual deja de auto-generarse en los rebuilds.
 
 ---
 

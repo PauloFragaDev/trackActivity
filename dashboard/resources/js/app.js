@@ -87,4 +87,48 @@ window.addEventListener('DOMContentLoaded', () => {
     if (flash && flash.dataset.message) {
         window.toast(flash.dataset.message);
     }
+
+    // Solapamiento de entrada manual: el server devolvió un aviso. Si el
+    // usuario confirma, se reenvía el formulario con confirm_replace=1.
+    const overlapEl = document.getElementById('overlap-data');
+    if (overlapEl) {
+        const overlap = JSON.parse(overlapEl.textContent);
+        Swal.fire({
+            title: 'Solapamiento de horario',
+            text: overlap.message,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Reemplazar',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#e11d48',
+            cancelButtonColor: '#64748b',
+            reverseButtons: true,
+            ...swalTheme(),
+        }).then((result) => {
+            if (!result.isConfirmed) return;
+
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = overlap.action;
+
+            const add = (name, value) => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = name;
+                input.value = value ?? '';
+                form.appendChild(input);
+            };
+
+            for (const [key, value] of Object.entries(overlap.fields || {})) {
+                add(key, value);
+            }
+            if (overlap.method && overlap.method !== 'POST') {
+                add('_method', overlap.method);
+            }
+            add('confirm_replace', '1');
+
+            document.body.appendChild(form);
+            form.submit();
+        });
+    }
 });

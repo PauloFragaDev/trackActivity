@@ -2,9 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Enums\BlockStatus;
 use App\Enums\EntryKind;
 use App\Models\ManualEntry;
 use App\Models\Project;
+use App\Models\TimeBlock;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -157,5 +159,103 @@ class ManualEntryControllerTest extends TestCase
         ]);
 
         $this->assertSame(105, $entry->durationMinutes());
+    }
+
+    // ─────────────────── Solapamientos ───────────────────
+
+    private function block(string $start, string $end, BlockStatus $status = BlockStatus::Auto): TimeBlock
+    {
+        return TimeBlock::create([
+            'starts_at'    => $start,
+            'ends_at'      => $end,
+            'confidence'   => 0.9,
+            'status'       => $status,
+            'generated_at' => now('UTC'),
+        ]);
+    }
+
+    public function test_store_overlapping_a_manual_entry_asks_for_confirmation(): void
+    {
+        $this->entry();   // 2026-05-22 10:00–11:00
+
+        $this->post('/manual-entries', $this->payload(['start_time' => '10:30', 'end_time' => '11:30']))
+            ->assertSessionHas('overlap');
+
+        // La nueva no se crea: sigue habiendo solo la original.
+        $this->assertSame(1, ManualEntry::count());
+    }
+
+    public function test_confirm_replace_deletes_the_overlapping_manual_entry(): void
+    {
+        $old = $this->entry();   // título 'Original'
+
+        $this->post('/manual-entries', $this->payload([
+            'start_time'      => '10:30',
+            'end_time'        => '11:30',
+            'title'           => 'Reunión nueva',
+            'confirm_replace' => '1',
+        ]))->assertRedirect();
+
+        $this->assertDatabaseMissing('manual_entries', ['id' => $old->id]);
+        $this->assertSame(1, ManualEntry::count());
+        $this->assertSame('Reunión nueva', ManualEntry::firstOrFail()->title);
+    }
+
+    public function test_store_overlapping_an_auto_block_asks_for_confirmation(): void
+    {
+        $this->block('2026-05-22 10:00:00', '2026-05-22 10:15:00');
+
+        $this->post('/manual-entries', $this->payload(['start_time' => '10:00', 'end_time' => '11:00']))
+            ->assertSessionHas('overlap');
+
+        $this->assertSame(0, ManualEntry::count());
+    }
+
+    public function test_confirm_replace_deletes_overlapping_auto_blocks(): void
+    {
+        $this->block('2026-05-22 10:00:00', '2026-05-22 10:15:00');
+
+        $this->post('/manual-entries', $this->payload([
+            'start_time'      => '10:00',
+            'end_time'        => '11:00',
+            'confirm_replace' => '1',
+        ]))->assertRedirect();
+
+        $this->assertSame(0, TimeBlock::count());
+        $this->assertSame(1, ManualEntry::count());
+    }
+
+    public function test_idle_blocks_do_not_count_as_overlap(): void
+    {
+        $this->block('2026-05-22 10:00:00', '2026-05-22 10:15:00', BlockStatus::Idle);
+
+        $this->post('/manual-entries', $this->payload(['start_time' => '10:00', 'end_time' => '11:00']))
+            ->assertSessionHas('status');
+
+        // El bloque idle no es conflicto → la entrada se guarda directamente.
+        $this->assertSame(1, ManualEntry::count());
+    }
+
+    public function test_update_does_not_flag_itself_as_overlap(): void
+    {
+        $entry = $this->entry();
+
+        $this->patch("/manual-entries/{$entry->id}", $this->payload([
+            'start_time' => '10:00',
+            'end_time'   => '11:00',
+            'title'      => 'Mismo horario, otro título',
+        ]))->assertSessionHas('status');
+
+        $this->assertSame('Mismo horario, otro título', $entry->fresh()->title);
+    }
+
+    public function test_non_overlapping_entry_saves_without_prompt(): void
+    {
+        $this->entry();   // 10:00–11:00
+
+        $this->post('/manual-entries', $this->payload(['start_time' => '11:00', 'end_time' => '12:00']))
+            ->assertSessionHas('status');
+
+        $this->assertSame(2, ManualEntry::count());
     }
 }

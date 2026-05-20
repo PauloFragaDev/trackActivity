@@ -94,7 +94,7 @@
 
     {{-- ─────── Añadir entrada manual a un día ─────── --}}
     <div class="mt-6">
-        <details class="card p-4" @if ($errors->any()) open @endif>
+        <details class="card p-4" @if ($errors->any() || session('overlap')) open @endif>
             <summary class="cursor-pointer text-sm font-medium select-none">
                 + Añadir entrada manual <span class="text-muted">(reunión, corrección de horas…)</span>
             </summary>

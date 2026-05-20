@@ -185,6 +185,8 @@ php artisan tracker:doctor    # dashboard side</code></pre>
                 <code class="chip">Otro</code>, cada uno con su color en el timeline.</li>
             <li>Editables y borrables cuando quieras (<em>editar entrada</em> bajo cada una).</li>
             <li>Suman en los totales por proyecto del día y del calendario.</li>
+            <li>Si el horario pisa otra entrada manual o tiempo ya registrado, se te pregunta
+                si <strong>reemplazarlo</strong> antes de guardar.</li>
         </ul>
     </section>
 

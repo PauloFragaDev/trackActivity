@@ -46,6 +46,11 @@
             <div id="flash-data" data-message="{{ session('status') }}" hidden></div>
         @endif
 
+        @if (session('overlap'))
+            {{-- Aviso de solapamiento: app.js lo muestra con SweetAlert --}}
+            <script type="application/json" id="overlap-data">@json(session('overlap'))</script>
+        @endif
+
         @yield('content')
     </main>
 
