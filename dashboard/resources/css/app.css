@@ -108,6 +108,8 @@
     .toastify.app-toast {
         @apply rounded-lg border border-ink-200 bg-white text-ink-800;
         @apply dark:border-ink-800 dark:bg-ink-900 dark:text-ink-100;
+        /* Toastify trae un degradado azul por defecto: lo anulamos. */
+        background-image: none;
         border-left: 3px solid #10b981;
         font-size: 0.8rem;
         font-weight: 500;
