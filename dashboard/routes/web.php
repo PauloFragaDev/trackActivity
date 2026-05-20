@@ -3,6 +3,7 @@
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\HelpController;
+use App\Http\Controllers\ManualEntryController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\TimeBlockController;
 use App\Http\Controllers\TimelineController;
@@ -27,6 +28,11 @@ Route::get('/calendar/{ym}',  [CalendarController::class, 'month'])
 // ─────────────────── Edicion manual de bloques ───────────────────
 Route::patch('/blocks',       [TimeBlockController::class, 'update'])->name('blocks.update');
 Route::patch('/blocks/reset', [TimeBlockController::class, 'reset'])->name('blocks.reset');
+
+// ─────────────────── Entradas manuales (reuniones, correcciones) ───────────────────
+Route::post('/manual-entries',                  [ManualEntryController::class, 'store'])->name('manual-entries.store');
+Route::patch('/manual-entries/{manualEntry}',   [ManualEntryController::class, 'update'])->name('manual-entries.update');
+Route::delete('/manual-entries/{manualEntry}',  [ManualEntryController::class, 'destroy'])->name('manual-entries.destroy');
 
 // ─────────────────── Export ───────────────────
 Route::get('/export',  [ExportController::class, 'form'])->name('export.form');

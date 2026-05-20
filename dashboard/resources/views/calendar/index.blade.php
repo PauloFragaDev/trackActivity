@@ -24,6 +24,16 @@
         </div>
     </div>
 
+    @if ($errors->any())
+        <div class="card p-4 mb-4 border-rose-400/60 text-rose-700 dark:text-rose-300">
+            <ul class="list-disc pl-5 space-y-0.5 text-sm">
+                @foreach ($errors->all() as $e)
+                    <li>{{ $e }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <div class="card overflow-hidden">
         {{-- Cabecera dias semana --}}
         <div class="grid grid-cols-7 border-b divider">
@@ -80,5 +90,25 @@
                 @endforeach
             @endforeach
         </div>
+    </div>
+
+    {{-- ─────── Añadir entrada manual a un día ─────── --}}
+    <div class="mt-6">
+        <details class="card p-4" @if ($errors->any()) open @endif>
+            <summary class="cursor-pointer text-sm font-medium select-none">
+                + Añadir entrada manual <span class="text-muted">(reunión, corrección de horas…)</span>
+            </summary>
+            <form method="POST" action="{{ route('manual-entries.store') }}" class="mt-3 space-y-3 max-w-2xl">
+                @csrf
+                <input type="hidden" name="return" value="calendar">
+                <label class="label">
+                    <span>Día</span>
+                    <input type="date" name="date" required class="input mt-1"
+                           value="{{ old('date', $formDate) }}">
+                </label>
+                @include('timeline.partials.manual-entry-fields', ['entry' => null])
+                <button type="submit" class="btn">Añadir entrada</button>
+            </form>
+        </details>
     </div>
 @endsection

@@ -3,9 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Enums\BlockStatus;
+use App\Models\ManualEntry;
+use App\Models\Project;
 use App\Models\TimeBlock;
 use Carbon\CarbonImmutable;
-use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class CalendarController extends Controller
@@ -64,6 +65,12 @@ class CalendarController extends Controller
         $prev = $firstOfMonth->subMonth();
         $next = $firstOfMonth->addMonth();
 
+        // Día por defecto del formulario de alta: hoy si cae en el mes mostrado.
+        $today = CarbonImmutable::now($tz);
+        $formDate = ($today->year === $year && $today->month === $month)
+            ? $today->format('Y-m-d')
+            : $firstOfMonth->format('Y-m-d');
+
         return view('calendar.index', [
             'year'        => $year,
             'month'       => $month,
@@ -73,38 +80,56 @@ class CalendarController extends Controller
             'prevMonth'   => sprintf('%04d-%02d', $prev->year, $prev->month),
             'nextMonth'   => sprintf('%04d-%02d', $next->year, $next->month),
             'tz'          => $tz,
+            'projects'    => Project::orderBy('code')->get(),
+            'formDate'    => $formDate,
         ]);
     }
 
     /**
      * Devuelve [ 'YYYY-MM-DD' => list<['project'=>Project, 'minutes'=>int]>, ... ]
-     * sumando duracion de bloques (ends_at-starts_at) por (dia_local, proyecto).
+     * sumando, por (dia_local, proyecto), la duración de los time_blocks auto
+     * y de las entradas manuales.
      */
     private function aggregateTotalsBetween(CarbonImmutable $startLocal, CarbonImmutable $endLocal): array
     {
         $startUtc = $startLocal->setTimezone('UTC')->format('Y-m-d H:i:s');
         $endUtc   = $endLocal->setTimezone('UTC')->format('Y-m-d H:i:s');
+        $tz       = $startLocal->getTimezone()->getName();
 
-        $rows = TimeBlock::query()
+        $out = [];
+        $accumulate = function (string $localDay, ?Project $project, int $minutes) use (&$out): void {
+            $code = $project?->code ?? '__none__';
+            $out[$localDay] ??= [];
+            $out[$localDay][$code] ??= ['project' => $project, 'minutes' => 0];
+            $out[$localDay][$code]['minutes'] += $minutes;
+        };
+
+        $blocks = TimeBlock::query()
             ->with('project')
             ->where('starts_at', '>=', $startUtc)
             ->where('starts_at', '<',  $endUtc)
             ->where('status', '!=', BlockStatus::Idle->value)
             ->whereNotNull('dominant_project_id')
             ->get();
+        foreach ($blocks as $block) {
+            $accumulate(
+                $block->starts_at->copy()->setTimezone($tz)->format('Y-m-d'),
+                $block->project,
+                max(1, (int) $block->starts_at->diffInMinutes($block->ends_at)),
+            );
+        }
 
-        $out = [];
-        $tz = $startLocal->getTimezone()->getName();
-        foreach ($rows as $block) {
-            $localDay = $block->starts_at->copy()->setTimezone($tz)->format('Y-m-d');
-            $minutes  = max(1, (int) $block->starts_at->diffInMinutes($block->ends_at));
-            $code     = $block->project?->code ?? '__none__';
-
-            $out[$localDay] ??= [];
-            if (! isset($out[$localDay][$code])) {
-                $out[$localDay][$code] = ['project' => $block->project, 'minutes' => 0];
-            }
-            $out[$localDay][$code]['minutes'] += $minutes;
+        $entries = ManualEntry::query()
+            ->with('project')
+            ->where('starts_at', '>=', $startUtc)
+            ->where('starts_at', '<',  $endUtc)
+            ->get();
+        foreach ($entries as $entry) {
+            $accumulate(
+                $entry->starts_at->copy()->setTimezone($tz)->format('Y-m-d'),
+                $entry->project,
+                $entry->durationMinutes(),
+            );
         }
 
         // Ordenar y reindexar
