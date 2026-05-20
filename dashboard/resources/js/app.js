@@ -41,7 +41,7 @@ function swalTheme() {
         : {};
 }
 
-/** Toast de feedback en la parte inferior-centro. */
+/** Toast de feedback: entra y sale deslizándose desde abajo. */
 window.toast = (message, icon = 'success') => {
     Swal.fire({
         toast: true,
@@ -49,11 +49,21 @@ window.toast = (message, icon = 'success') => {
         icon,
         title: message,
         showConfirmButton: false,
-        timer: 3500,
+        timer: 3200,
         timerProgressBar: true,
+        width: 'auto',
+        customClass: { popup: 'app-toast' },
+        showClass: { popup: 'app-toast-show' },
+        hideClass: { popup: 'app-toast-hide' },
         ...swalTheme(),
     });
 };
+
+/** Abre un <dialog> modal por selector, si existe. */
+function openModal(selector) {
+    const dlg = document.querySelector(selector);
+    if (dlg && typeof dlg.showModal === 'function') dlg.showModal();
+}
 
 window.addEventListener('DOMContentLoaded', () => {
     // Confirmaciones: <form data-confirm="mensaje"> pide confirmación con
@@ -82,6 +92,20 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // Modales <dialog>: [data-modal-open="#id"] abre, [data-modal-close] cierra.
+    document.querySelectorAll('[data-modal-open]').forEach((btn) => {
+        btn.addEventListener('click', () => openModal(btn.dataset.modalOpen));
+    });
+    document.querySelectorAll('dialog.modal').forEach((dlg) => {
+        dlg.querySelectorAll('[data-modal-close]').forEach((btn) => {
+            btn.addEventListener('click', () => dlg.close());
+        });
+        // Click en el backdrop (fuera del contenido) cierra el modal.
+        dlg.addEventListener('click', (e) => {
+            if (e.target === dlg) dlg.close();
+        });
+    });
+
     // Toast de guardado: el layout deja el mensaje flash en #flash-data.
     const flash = document.getElementById('flash-data');
     if (flash && flash.dataset.message) {
@@ -105,30 +129,37 @@ window.addEventListener('DOMContentLoaded', () => {
             reverseButtons: true,
             ...swalTheme(),
         }).then((result) => {
-            if (!result.isConfirmed) return;
+            if (result.isConfirmed) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = overlap.action;
 
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = overlap.action;
+                const add = (name, value) => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = name;
+                    input.value = value ?? '';
+                    form.appendChild(input);
+                };
 
-            const add = (name, value) => {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = name;
-                input.value = value ?? '';
-                form.appendChild(input);
-            };
+                for (const [key, value] of Object.entries(overlap.fields || {})) {
+                    add(key, value);
+                }
+                if (overlap.method && overlap.method !== 'POST') {
+                    add('_method', overlap.method);
+                }
+                add('confirm_replace', '1');
 
-            for (const [key, value] of Object.entries(overlap.fields || {})) {
-                add(key, value);
+                document.body.appendChild(form);
+                form.submit();
+                return;
             }
-            if (overlap.method && overlap.method !== 'POST') {
-                add('_method', overlap.method);
-            }
-            add('confirm_replace', '1');
-
-            document.body.appendChild(form);
-            form.submit();
+            // Cancelar: reabrir el modal correspondiente para ajustar los datos.
+            const match = overlap.action.match(/manual-entries(?:\/(\d+))?$/);
+            openModal(match && match[1] ? `#manual-edit-${match[1]}` : '#manual-add');
         });
+    } else if (document.getElementById('form-errors')) {
+        // Errores de validación: reabre el modal de alta con los datos.
+        openModal('#manual-add');
     }
 });

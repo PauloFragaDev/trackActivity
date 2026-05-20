@@ -28,7 +28,7 @@
     </div>
 
     @if ($errors->any())
-        <div class="card p-4 mb-4 border-rose-400/60 text-rose-700 dark:text-rose-300">
+        <div id="form-errors" class="card p-4 mb-4 border-rose-400/60 text-rose-700 dark:text-rose-300">
             <ul class="list-disc pl-5 space-y-0.5 text-sm">
                 @foreach ($errors->all() as $e)
                     <li>{{ $e }}</li>
@@ -231,35 +231,42 @@
                             <p class="mt-1 text-sm text-muted leading-relaxed">{{ $entry->notes }}</p>
                         @endif
 
-                        <div class="mt-2">
-                            <details class="group">
-                                <summary class="cursor-pointer text-xs text-muted hover:opacity-100 opacity-80 select-none">
-                                    <span class="underline-offset-2 group-hover:underline">editar entrada</span>
-                                </summary>
-
-                                <form method="POST" action="{{ route('manual-entries.update', $entry) }}"
-                                      class="surface-soft mt-2 p-3 rounded space-y-3">
-                                    @csrf
-                                    @method('PATCH')
-                                    <input type="hidden" name="date" value="{{ $day->toDateString() }}">
-                                    <input type="hidden" name="return" value="day">
-                                    @include('timeline.partials.manual-entry-fields', ['entry' => $entry])
-                                    <button type="submit" class="btn">Guardar cambios</button>
-                                </form>
-
-                                <form method="POST" action="{{ route('manual-entries.destroy', $entry) }}"
-                                      class="mt-2"
-                                      data-confirm="¿Eliminar esta entrada manual?">
-                                    @csrf
-                                    @method('DELETE')
-                                    <input type="hidden" name="date" value="{{ $day->toDateString() }}">
-                                    <input type="hidden" name="return" value="day">
-                                    <button type="submit" class="btn-ghost text-rose-600 dark:text-rose-400">
-                                        Eliminar entrada
-                                    </button>
-                                </form>
-                            </details>
+                        <div class="mt-2 flex items-center gap-3 text-xs">
+                            <button type="button"
+                                    class="text-muted hover:text-ink-900 dark:hover:text-ink-50 underline underline-offset-2 decoration-dotted"
+                                    data-modal-open="#manual-edit-{{ $entry->id }}">
+                                editar entrada
+                            </button>
+                            <form method="POST" action="{{ route('manual-entries.destroy', $entry) }}"
+                                  class="inline" data-confirm="¿Eliminar esta entrada manual?">
+                                @csrf
+                                @method('DELETE')
+                                <input type="hidden" name="date" value="{{ $day->toDateString() }}">
+                                <input type="hidden" name="return" value="day">
+                                <button type="submit"
+                                        class="text-rose-600 dark:text-rose-400 underline underline-offset-2 decoration-dotted">
+                                    eliminar
+                                </button>
+                            </form>
                         </div>
+
+                        <dialog id="manual-edit-{{ $entry->id }}" class="modal">
+                            <form method="POST" action="{{ route('manual-entries.update', $entry) }}" class="space-y-3">
+                                @csrf
+                                @method('PATCH')
+                                <div class="flex items-center justify-between">
+                                    <h3 class="text-base font-semibold">Editar entrada manual</h3>
+                                    <button type="button" class="btn-ghost" data-modal-close aria-label="Cerrar">✕</button>
+                                </div>
+                                <input type="hidden" name="date" value="{{ $day->toDateString() }}">
+                                <input type="hidden" name="return" value="day">
+                                @include('timeline.partials.manual-entry-fields', ['entry' => $entry])
+                                <div class="flex items-center justify-end gap-2 pt-1">
+                                    <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
+                                    <button type="submit" class="btn">Guardar cambios</button>
+                                </div>
+                            </form>
+                        </dialog>
                     </li>
                 @endif
             @endforeach
@@ -268,17 +275,26 @@
 
     {{-- ─────── Añadir entrada manual ─────── --}}
     <div class="mt-6">
-        <details class="card p-4" @if ($errors->any() || session('overlap')) open @endif>
-            <summary class="cursor-pointer text-sm font-medium select-none">
-                + Añadir entrada manual <span class="text-muted">(reunión, corrección de horas…)</span>
-            </summary>
-            <form method="POST" action="{{ route('manual-entries.store') }}" class="mt-3 space-y-3 max-w-2xl">
-                @csrf
-                <input type="hidden" name="date" value="{{ $day->toDateString() }}">
-                <input type="hidden" name="return" value="day">
-                @include('timeline.partials.manual-entry-fields', ['entry' => null])
-                <button type="submit" class="btn">Añadir al {{ $day->format('d/m/Y') }}</button>
-            </form>
-        </details>
+        <button type="button" class="btn" data-modal-open="#manual-add">
+            + Añadir entrada manual
+        </button>
     </div>
+
+    <dialog id="manual-add" class="modal">
+        <form method="POST" action="{{ route('manual-entries.store') }}" class="space-y-3">
+            @csrf
+            <div class="flex items-center justify-between">
+                <h3 class="text-base font-semibold">Nueva entrada manual</h3>
+                <button type="button" class="btn-ghost" data-modal-close aria-label="Cerrar">✕</button>
+            </div>
+            <p class="-mt-1 text-xs text-muted">Reunión, corrección de horas… para el {{ $day->format('d/m/Y') }}.</p>
+            <input type="hidden" name="date" value="{{ $day->toDateString() }}">
+            <input type="hidden" name="return" value="day">
+            @include('timeline.partials.manual-entry-fields', ['entry' => null])
+            <div class="flex items-center justify-end gap-2 pt-1">
+                <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
+                <button type="submit" class="btn">Añadir</button>
+            </div>
+        </form>
+    </dialog>
 @endsection
