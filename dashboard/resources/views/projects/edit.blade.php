@@ -93,7 +93,7 @@
               method="POST"
               action="{{ route('projects.destroy', $project) }}"
               class="hidden"
-              onsubmit="return confirm('¿Eliminar el proyecto {{ $project->code }}? Sus mappings se borrarán también. Los bloques quedan sin proyecto asignado.');">
+              data-confirm="¿Eliminar el proyecto {{ $project->code }}? Sus mappings se borrarán también. Los bloques quedan sin proyecto asignado.">
             @csrf
             @method('DELETE')
         </form>
@@ -173,7 +173,7 @@
                                     </td>
                                     <td class="px-3 py-2 text-right">
                                         <form method="POST" action="{{ route('projects.mappings.destroy', [$project, $m]) }}" class="inline"
-                                              onsubmit="return confirm('¿Eliminar este mapping?');">
+                                              data-confirm="¿Eliminar este mapping?">
                                             @csrf @method('DELETE')
                                             <button class="btn-ghost text-rose-600 dark:text-rose-400">Eliminar</button>
                                         </form>

@@ -249,7 +249,7 @@
 
                                 <form method="POST" action="{{ route('manual-entries.destroy', $entry) }}"
                                       class="mt-2"
-                                      onsubmit="return confirm('¿Eliminar esta entrada manual?');">
+                                      data-confirm="¿Eliminar esta entrada manual?">
                                     @csrf
                                     @method('DELETE')
                                     <input type="hidden" name="date" value="{{ $day->toDateString() }}">
