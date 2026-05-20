@@ -27,6 +27,7 @@
                 <a class="btn-ghost" href="{{ route('timeline.this_week') }}">Semana</a>
                 <a class="btn-ghost" href="{{ route('calendar.current') }}">Calendario</a>
                 <a class="btn-ghost" href="{{ route('projects.index') }}">Proyectos</a>
+                <a class="btn-ghost" href="{{ route('notes.index') }}">Notas</a>
                 <a class="btn-ghost" href="{{ route('export.form') }}">Export</a>
                 <a class="btn-ghost" href="{{ route('help') }}">Ayuda</a>
                 <button id="theme-toggle" type="button"
