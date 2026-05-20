@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\BlockStatus;
 use App\Models\ActivityEvent;
 use App\Models\Project;
 use App\Models\ProjectMapping;
@@ -79,7 +80,7 @@ class AggregatorTest extends TestCase
         $this->assertSame(1, $count);
         $block = TimeBlock::firstWhere('starts_at', self::BLOCK_START);
         $this->assertNotNull($block);
-        $this->assertSame(TimeBlock::STATUS_AUTO, $block->status);
+        $this->assertSame(BlockStatus::Auto, $block->status);
         $this->assertSame($p->id, $block->dominant_project_id);
         $this->assertSame(1, TimeBlockEvidence::where('time_block_id', $block->id)->count());
     }
@@ -108,14 +109,14 @@ class AggregatorTest extends TestCase
             'ends_at'             => self::BLOCK_END,
             'dominant_project_id' => null,
             'confidence'          => 1.0,
-            'status'              => TimeBlock::STATUS_EDITED,
+            'status'              => BlockStatus::Edited,
             'generated_at'        => now('UTC'),
         ]);
 
         $this->aggregator()->rebuildRange(...$this->range());
 
         $block = TimeBlock::firstWhere('starts_at', self::BLOCK_START);
-        $this->assertSame(TimeBlock::STATUS_EDITED, $block->status);
+        $this->assertSame(BlockStatus::Edited, $block->status);
         $this->assertNull($block->dominant_project_id);
     }
 
@@ -128,7 +129,7 @@ class AggregatorTest extends TestCase
             'ends_at'             => self::BLOCK_END,
             'dominant_project_id' => null,
             'confidence'          => 1.0,
-            'status'              => TimeBlock::STATUS_EDITED,
+            'status'              => BlockStatus::Edited,
             'generated_at'        => now('UTC'),
         ]);
 
@@ -136,7 +137,7 @@ class AggregatorTest extends TestCase
         $this->aggregator()->rebuildRange($start, $end, forceEdited: true);
 
         $block = TimeBlock::firstWhere('starts_at', self::BLOCK_START);
-        $this->assertSame(TimeBlock::STATUS_AUTO, $block->status);
+        $this->assertSame(BlockStatus::Auto, $block->status);
         $this->assertSame($p->id, $block->dominant_project_id);
     }
 
@@ -152,7 +153,7 @@ class AggregatorTest extends TestCase
         $this->aggregator()->rebuildRange(...$this->range());
 
         $block = TimeBlock::firstWhere('starts_at', self::BLOCK_START);
-        $this->assertSame(TimeBlock::STATUS_IDLE, $block->status);
+        $this->assertSame(BlockStatus::Idle, $block->status);
         $this->assertNull($block->dominant_project_id);
     }
 

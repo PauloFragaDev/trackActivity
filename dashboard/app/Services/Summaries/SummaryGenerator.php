@@ -2,6 +2,7 @@
 
 namespace App\Services\Summaries;
 
+use App\Enums\SummaryEngine;
 use App\Models\ActivityEvent;
 use App\Models\GeneratedSummary;
 use App\Models\Project;
@@ -17,7 +18,6 @@ use Illuminate\Support\Collection;
  */
 class SummaryGenerator
 {
-    public const ENGINE_TEMPLATE = 'template';
     public const MAX_LENGTH = 240;
     public const MAX_BRANCHES_INLINE = 3;
     public const MAX_COMMITS_INLINE = 3;
@@ -49,7 +49,7 @@ class SummaryGenerator
         if ($existing) {
             $existing->update([
                 'text'           => $text,
-                'engine'         => self::ENGINE_TEMPLATE,
+                'engine'         => SummaryEngine::Template,
                 'edited_by_user' => $force ? false : $existing->edited_by_user,
             ]);
             return $existing->fresh();
@@ -58,7 +58,7 @@ class SummaryGenerator
         return GeneratedSummary::create([
             'time_block_id'  => $block->id,
             'text'           => $text,
-            'engine'         => self::ENGINE_TEMPLATE,
+            'engine'         => SummaryEngine::Template,
             'edited_by_user' => false,
             'generated_at'   => now('UTC'),
         ]);

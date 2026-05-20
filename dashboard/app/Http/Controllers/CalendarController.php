@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\BlockStatus;
 use App\Models\TimeBlock;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
@@ -88,7 +89,7 @@ class CalendarController extends Controller
             ->with('project')
             ->where('starts_at', '>=', $startUtc)
             ->where('starts_at', '<',  $endUtc)
-            ->where('status', '!=', TimeBlock::STATUS_IDLE)
+            ->where('status', '!=', BlockStatus::Idle->value)
             ->whereNotNull('dominant_project_id')
             ->get();
 

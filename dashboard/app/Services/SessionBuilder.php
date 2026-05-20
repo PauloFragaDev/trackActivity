@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\BlockStatus;
 use App\Models\TimeBlock;
 use App\Services\Summaries\SummaryGenerator;
 use Carbon\Carbon;
@@ -59,7 +60,7 @@ class SessionBuilder
         $current  = null;
 
         foreach ($blocks as $block) {
-            $blockIsIdle = $block->status === TimeBlock::STATUS_IDLE;
+            $blockIsIdle = $block->status === BlockStatus::Idle;
 
             $sameSession = $current !== null
                 && $current['project_id'] === $block->dominant_project_id
@@ -118,7 +119,7 @@ class SessionBuilder
 
         return [
             'project'           => $current['project'],
-            'status'            => $status,
+            'status'            => $status->value,
             'is_idle'           => $current['is_idle'],
             'confidence'        => $confAvg,
             'confidence_label'  => $this->labelForConfidence($confAvg, $status),
@@ -136,21 +137,20 @@ class SessionBuilder
      * Estado representativo de la sesion: idle si todos idle; editado si
      * algun bloque fue tocado a mano; si no, auto.
      */
-    private function sessionStatus(Collection $blocks, bool $isIdle): string
+    private function sessionStatus(Collection $blocks, bool $isIdle): BlockStatus
     {
         if ($isIdle) {
-            return TimeBlock::STATUS_IDLE;
+            return BlockStatus::Idle;
         }
-        $manual = [TimeBlock::STATUS_EDITED, TimeBlock::STATUS_MERGED, TimeBlock::STATUS_SPLIT];
-        if ($blocks->contains(fn (TimeBlock $b) => in_array($b->status, $manual, true))) {
-            return TimeBlock::STATUS_EDITED;
+        if ($blocks->contains(fn (TimeBlock $b) => $b->status->isManual())) {
+            return BlockStatus::Edited;
         }
-        return TimeBlock::STATUS_AUTO;
+        return BlockStatus::Auto;
     }
 
-    private function buildSummary(string $status, ?\App\Models\Project $project, Collection $blocks, Collection $evidence): ?string
+    private function buildSummary(BlockStatus $status, ?\App\Models\Project $project, Collection $blocks, Collection $evidence): ?string
     {
-        if ($status === TimeBlock::STATUS_IDLE) {
+        if ($status === BlockStatus::Idle) {
             return null;
         }
 
@@ -171,12 +171,12 @@ class SessionBuilder
         return $this->summaryGenerator->renderText($project, $evidence);
     }
 
-    private function labelForConfidence(?float $confidence, string $status): string
+    private function labelForConfidence(?float $confidence, BlockStatus $status): string
     {
-        if ($status === TimeBlock::STATUS_IDLE) {
+        if ($status === BlockStatus::Idle) {
             return 'idle';
         }
-        if ($status === TimeBlock::STATUS_EDITED) {
+        if ($status === BlockStatus::Edited) {
             return 'editado';
         }
         if ($confidence === null) {

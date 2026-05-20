@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Enums\BlockStatus;
 use App\Models\TimeBlock;
 use App\Services\Summaries\SummaryGenerator;
 use Carbon\CarbonImmutable;
@@ -37,7 +38,7 @@ class GenerateSummariesCommand extends Command
         $blocks = TimeBlock::query()
             ->where('starts_at', '>=', $startUtc->format('Y-m-d H:i:s'))
             ->where('starts_at', '<',  $endUtc->format('Y-m-d H:i:s'))
-            ->where('status', '!=', TimeBlock::STATUS_IDLE)
+            ->where('status', '!=', BlockStatus::Idle->value)
             ->whereNotNull('dominant_project_id')
             ->orderBy('starts_at')
             ->get();

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\BlockStatus;
 use App\Models\ActivityEvent;
 use App\Models\TimeBlock;
 use App\Models\TimeBlockEvidence;
@@ -78,17 +79,13 @@ class Aggregator
             return false;
         }
 
-        if ($existing && in_array($existing->status, [
-            TimeBlock::STATUS_EDITED,
-            TimeBlock::STATUS_MERGED,
-            TimeBlock::STATUS_SPLIT,
-        ], true) && ! $forceEdited) {
+        if ($existing && $existing->status->isManual() && ! $forceEdited) {
             return false;
         }
 
         $result = $this->scorer->score($events, $this->blockMinutes);
 
-        $status = $result->isIdle ? TimeBlock::STATUS_IDLE : TimeBlock::STATUS_AUTO;
+        $status = $result->isIdle ? BlockStatus::Idle : BlockStatus::Auto;
 
         DB::transaction(function () use ($start, $end, $result, $events, $status, $existing) {
             /** @var TimeBlock $block */

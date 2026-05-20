@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\BlockStatus;
+use App\Enums\SummaryEngine;
 use App\Models\GeneratedSummary;
 use App\Models\TimeBlock;
 use Illuminate\Http\RedirectResponse;
@@ -41,7 +43,7 @@ class TimeBlockController extends Controller
             foreach ($blocks as $block) {
                 // Un bloque idle no se reasigna a proyecto ni cambia de
                 // estado/confianza/resumen: queda intacto.
-                if ($block->status === TimeBlock::STATUS_IDLE) {
+                if ($block->status === BlockStatus::Idle) {
                     continue;
                 }
 
@@ -49,7 +51,7 @@ class TimeBlockController extends Controller
                     'dominant_project_id' => $projectId,
                     // El usuario es la autoridad: confianza plena.
                     'confidence'          => 1.0,
-                    'status'              => TimeBlock::STATUS_EDITED,
+                    'status'              => BlockStatus::Edited,
                 ]);
 
                 if ($summaryText !== null && $summaryText !== '') {
@@ -59,7 +61,7 @@ class TimeBlockController extends Controller
                         [
                             'text'           => $summaryText,
                             // Conserva el engine original si existia; si no, 'manual'.
-                            'engine'         => $existing->engine ?? GeneratedSummary::ENGINE_MANUAL,
+                            'engine'         => $existing->engine ?? SummaryEngine::Manual,
                             'edited_by_user' => true,
                             'generated_at'   => now('UTC'),
                         ],
@@ -92,10 +94,10 @@ class TimeBlockController extends Controller
         DB::transaction(function () use ($data) {
             $blocks = TimeBlock::query()->whereIn('id', $data['block_ids'])->get();
             foreach ($blocks as $block) {
-                if ($block->status === TimeBlock::STATUS_IDLE) {
+                if ($block->status === BlockStatus::Idle) {
                     continue;
                 }
-                $block->update(['status' => TimeBlock::STATUS_AUTO]);
+                $block->update(['status' => BlockStatus::Auto]);
                 $block->summary?->update(['edited_by_user' => false]);
             }
         });

@@ -2,8 +2,8 @@
 
 namespace App\Services\Export;
 
+use App\Enums\BlockStatus;
 use App\Models\Project;
-use App\Models\TimeBlock;
 use App\Services\Export\Renderers\CsvRenderer;
 use App\Services\Export\Renderers\MarkdownRenderer;
 use App\Services\Export\Renderers\Renderer;
@@ -42,7 +42,7 @@ class Exporter
 
             foreach ($sessions as $s) {
                 // Filtro idle
-                if ($s['status'] === TimeBlock::STATUS_IDLE && ! $query->includeIdle) {
+                if ($s['status'] === BlockStatus::Idle->value && ! $query->includeIdle) {
                     continue;
                 }
                 // Filtro proyecto
