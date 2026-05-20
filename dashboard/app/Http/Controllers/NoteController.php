@@ -6,6 +6,7 @@ use App\Models\Note;
 use App\Models\NoteFolder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
 
 /**
@@ -65,7 +66,7 @@ class NoteController extends Controller
             ->with('status', 'Nota creada.');
     }
 
-    public function update(Request $request, Note $note): RedirectResponse
+    public function update(Request $request, Note $note): RedirectResponse|Response
     {
         $data = $request->validate([
             'title'     => ['required', 'string', 'max:200'],
@@ -79,6 +80,11 @@ class NoteController extends Controller
             'folder_id' => $data['folder_id'] ?? null,
             'pinned'    => $request->boolean('pinned'),
         ]);
+
+        // Autosave del editor (AJAX): responde 204, sin redirección.
+        if ($request->expectsJson()) {
+            return response()->noContent();
+        }
 
         return redirect()
             ->route('notes.index', ['folder' => $note->folder_id, 'note' => $note->id])

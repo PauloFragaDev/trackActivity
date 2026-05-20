@@ -76,7 +76,7 @@
         {{-- ─── Panel 3 · Editor ─── --}}
         <div class="p-4">
             @if ($currentNote)
-                <form method="POST" action="{{ route('notes.update', $currentNote) }}" class="flex flex-col h-full gap-3">
+                <form method="POST" action="{{ route('notes.update', $currentNote) }}" data-note-form class="flex flex-col h-full gap-3">
                     @csrf
                     @method('PATCH')
                     <input type="text" name="title" required maxlength="200"
@@ -85,6 +85,8 @@
                     <textarea name="body" rows="16"
                               class="textarea font-mono flex-1"
                               placeholder="Escribe en Markdown…">{{ old('body', $currentNote->body) }}</textarea>
+                    {{-- El editor WYSIWYG (Crepe) se monta aquí; ver resources/js/notes-editor.js --}}
+                    <div data-note-editor hidden class="flex-1 min-h-[20rem]"></div>
                     <div class="flex items-center gap-3 flex-wrap">
                         <label class="inline-flex items-center gap-1.5 text-sm">
                             <span class="text-muted">Carpeta</span>
@@ -102,7 +104,8 @@
                             <input type="checkbox" name="pinned" value="1" class="accent-emerald-500" @checked($currentNote->pinned)>
                             Fijada
                         </label>
-                        <div class="ml-auto">
+                        <div class="ml-auto flex items-center gap-3">
+                            <span data-autosave-status class="text-xs text-muted"></span>
                             <button type="submit" class="btn">Guardar</button>
                         </div>
                     </div>

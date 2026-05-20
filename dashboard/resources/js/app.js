@@ -160,4 +160,9 @@ window.addEventListener('DOMContentLoaded', () => {
         // Errores de validación: reabre el modal de alta con los datos.
         openModal('#manual-add');
     }
+
+    // Editor de notas: Crepe se carga de forma diferida solo en /notes.
+    if (document.querySelector('[data-note-editor]')) {
+        import('./notes-editor.js').then((m) => m.initNoteEditor());
+    }
 });
