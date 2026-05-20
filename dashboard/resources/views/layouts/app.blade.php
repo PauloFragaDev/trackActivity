@@ -16,47 +16,98 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body>
-    <header class="surface-strong border-b divider sticky top-0 z-10">
-        <div class="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
-            <a href="{{ route('timeline.today') }}" class="flex items-center gap-2 font-semibold tracking-tight">
+    @php
+        // Clases de un ítem de navegación según si su ruta está activa.
+        $navItem = fn (array $routes) => request()->routeIs(...$routes)
+            ? 'bg-ink-100 dark:bg-ink-800 text-ink-900 dark:text-ink-50 font-medium'
+            : 'text-ink-600 dark:text-ink-300 hover:bg-ink-100 dark:hover:bg-ink-800';
+    @endphp
+
+    <div class="flex min-h-screen">
+        {{-- ─────────────── Sidebar ─────────────── --}}
+        <aside class="w-56 shrink-0 flex flex-col sticky top-0 h-screen
+                      bg-white dark:bg-ink-900 border-r divider">
+            <a href="{{ route('timeline.today') }}"
+               class="flex items-center gap-2 px-4 py-3.5 font-semibold tracking-tight border-b divider">
                 <span class="inline-block w-2 h-2 rounded-full bg-emerald-400"></span>
                 trackActivity
             </a>
-            <nav class="flex items-center gap-1 text-sm">
-                <a class="btn-ghost" href="{{ route('timeline.today') }}">Hoy</a>
-                <a class="btn-ghost" href="{{ route('timeline.this_week') }}">Semana</a>
-                <a class="btn-ghost" href="{{ route('calendar.current') }}">Calendario</a>
-                <a class="btn-ghost" href="{{ route('projects.index') }}">Proyectos</a>
-                <a class="btn-ghost" href="{{ route('notes.index') }}">Notas</a>
-                <a class="btn-ghost" href="{{ route('export.form') }}">Export</a>
-                <a class="btn-ghost" href="{{ route('help') }}">Ayuda</a>
+
+            <nav class="flex-1 overflow-y-auto p-2 space-y-0.5 text-sm">
+                {{-- Tracking --}}
+                <details class="group" @if (request()->routeIs('timeline.*', 'calendar.*')) open @endif>
+                    <summary class="flex items-center gap-1.5 px-2 py-1.5 rounded cursor-pointer select-none list-none
+                                    text-[11px] uppercase tracking-wider text-muted hover:bg-ink-100 dark:hover:bg-ink-800">
+                        <span class="text-[9px] transition-transform group-open:rotate-90">▸</span>
+                        Tracking
+                    </summary>
+                    <div class="mt-0.5 ml-2 space-y-0.5">
+                        <a href="{{ route('timeline.today') }}"
+                           class="block px-2 py-1.5 rounded {{ $navItem(['timeline.today', 'timeline.day']) }}">Hoy</a>
+                        <a href="{{ route('timeline.this_week') }}"
+                           class="block px-2 py-1.5 rounded {{ $navItem(['timeline.this_week', 'timeline.week']) }}">Semana</a>
+                        <a href="{{ route('calendar.current') }}"
+                           class="block px-2 py-1.5 rounded {{ $navItem(['calendar.current', 'calendar.month']) }}">Mes</a>
+                    </div>
+                </details>
+
+                {{-- Notas --}}
+                <a href="{{ route('notes.index') }}"
+                   class="block px-2 py-1.5 rounded {{ $navItem(['notes.*']) }}">Notas</a>
+
+                {{-- Configuración --}}
+                <details class="group" @if (request()->routeIs('projects.*', 'export.*')) open @endif>
+                    <summary class="flex items-center gap-1.5 px-2 py-1.5 rounded cursor-pointer select-none list-none
+                                    text-[11px] uppercase tracking-wider text-muted hover:bg-ink-100 dark:hover:bg-ink-800">
+                        <span class="text-[9px] transition-transform group-open:rotate-90">▸</span>
+                        Configuración
+                    </summary>
+                    <div class="mt-0.5 ml-2 space-y-0.5">
+                        <a href="{{ route('projects.index') }}"
+                           class="block px-2 py-1.5 rounded {{ $navItem(['projects.*']) }}">Proyectos</a>
+                        <a href="{{ route('export.form') }}"
+                           class="block px-2 py-1.5 rounded {{ $navItem(['export.*']) }}">Export</a>
+                    </div>
+                </details>
+
+                {{-- Ayuda --}}
+                <a href="{{ route('help') }}"
+                   class="block px-2 py-1.5 rounded {{ $navItem(['help']) }}">Ayuda</a>
+            </nav>
+
+            <div class="p-2 border-t divider">
                 <button id="theme-toggle" type="button"
-                        class="btn-ghost ml-2"
-                        aria-label="Cambiar tema"
-                        title="Cambiar tema">
+                        class="btn-ghost w-full justify-start"
+                        aria-label="Cambiar tema" title="Cambiar tema">
                     <span data-icon-moon aria-hidden="true">☾</span>
                     <span data-icon-sun  aria-hidden="true" class="hidden">☀</span>
+                    <span>Tema</span>
                 </button>
-            </nav>
+            </div>
+        </aside>
+
+        {{-- ─────────────── Contenido ─────────────── --}}
+        <div class="flex-1 min-w-0 flex flex-col">
+            <main class="flex-1">
+                <div class="max-w-6xl mx-auto px-6 py-8">
+                    @if (session('status'))
+                        {{-- Lo recoge app.js y lo muestra como toast inferior --}}
+                        <div id="flash-data" data-message="{{ session('status') }}" hidden></div>
+                    @endif
+
+                    @if (session('overlap'))
+                        {{-- Aviso de solapamiento: app.js lo muestra con SweetAlert --}}
+                        <script type="application/json" id="overlap-data">@json(session('overlap'))</script>
+                    @endif
+
+                    @yield('content')
+                </div>
+            </main>
+
+            <footer class="px-6 py-4 text-xs text-muted border-t divider">
+                Local · {{ config('tracker.display_timezone') }} · BBDD: {{ basename(config('database.connections.sqlite.database')) }}
+            </footer>
         </div>
-    </header>
-
-    <main class="max-w-6xl mx-auto px-6 py-8">
-        @if (session('status'))
-            {{-- Lo recoge app.js y lo muestra como toast inferior --}}
-            <div id="flash-data" data-message="{{ session('status') }}" hidden></div>
-        @endif
-
-        @if (session('overlap'))
-            {{-- Aviso de solapamiento: app.js lo muestra con SweetAlert --}}
-            <script type="application/json" id="overlap-data">@json(session('overlap'))</script>
-        @endif
-
-        @yield('content')
-    </main>
-
-    <footer class="max-w-6xl mx-auto px-6 py-6 text-xs text-muted">
-        Local · {{ config('tracker.display_timezone') }} · BBDD: {{ basename(config('database.connections.sqlite.database')) }}
-    </footer>
+    </div>
 </body>
 </html>
