@@ -93,6 +93,14 @@ Cada hito debe poder usarse antes de pasar al siguiente: nada queda a medias.
 4. Estadísticas: dashboards de horas por proyecto/mes.
 5. Multi-locale: inglés.
 
+### Módulos nuevos (plan aparte, rama propia)
+
+Más allá del tracking, la app crece como suite de productividad personal
+con dos módulos, cada uno con su propio plan y su propia rama:
+
+- **TODO / Kanban** — ver [`15-kanban-plan.md`](15-kanban-plan.md).
+- **Notas** — ver [`16-notes-plan.md`](16-notes-plan.md).
+
 ---
 
 ## Versión 2.0 (visión)
