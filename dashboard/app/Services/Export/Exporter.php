@@ -3,6 +3,7 @@
 namespace App\Services\Export;
 
 use App\Enums\BlockStatus;
+use App\Models\ManualEntry;
 use App\Models\Project;
 use App\Services\Export\Renderers\CsvRenderer;
 use App\Services\Export\Renderers\MarkdownRenderer;
@@ -11,6 +12,7 @@ use App\Services\Export\Renderers\TxtRenderer;
 use App\Services\SessionBuilder;
 use App\Services\Summaries\SummaryGenerator;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Collection;
 
 /**
  * Orquestador del export. Construye un Report a partir de time_blocks via
@@ -37,10 +39,16 @@ class Exporter
         $grand  = 0;
 
         while ($cursor->lt($until)) {
-            $sessions = $this->sessions->buildForDay($cursor);
+            // Sesiones automáticas + entradas manuales del día, en orden.
+            $items = collect($this->sessions->buildForDay($cursor))
+                ->concat($this->manualEntriesForDay($cursor, $tz)
+                    ->map(fn (ManualEntry $e) => $this->manualEntryAsSession($e, $tz)))
+                ->sortBy(fn (array $s) => $s['starts_at_local'])
+                ->values();
+
             $filtered = [];
 
-            foreach ($sessions as $s) {
+            foreach ($items as $s) {
                 // Filtro idle
                 if ($s['status'] === BlockStatus::Idle->value && ! $query->includeIdle) {
                     continue;
@@ -169,5 +177,50 @@ class Exporter
         }
         usort($out, fn ($a, $b) => $b['minutes'] <=> $a['minutes']);
         return $out;
+    }
+
+    /**
+     * Entradas manuales cuyo inicio cae en el día local indicado.
+     *
+     * @return Collection<int,ManualEntry>
+     */
+    private function manualEntriesForDay(CarbonImmutable $localDay, string $tz): Collection
+    {
+        $startLocal = $localDay->setTimezone($tz)->startOfDay();
+
+        return ManualEntry::query()
+            ->with('project')
+            ->startingBetween(
+                $startLocal->setTimezone('UTC'),
+                $startLocal->addDay()->setTimezone('UTC'),
+            )
+            ->orderBy('starts_at')
+            ->get();
+    }
+
+    /**
+     * Da a una entrada manual la forma de "sesión" para que el resto del
+     * pipeline (filtros, agrupación, renderers) la trate igual.
+     *
+     * @return array<string,mixed>
+     */
+    private function manualEntryAsSession(ManualEntry $entry, string $tz): array
+    {
+        $summary = $entry->title;
+        if ($entry->notes) {
+            $summary .= ' — ' . $entry->notes;
+        }
+
+        return [
+            'project'          => $entry->project,
+            'status'           => 'manual',     // no es idle → pasa el filtro idle
+            'confidence'       => null,         // null → pasa el filtro de confianza
+            'confidence_label' => 'manual · ' . $entry->kind->label(),
+            'starts_at_local'  => $entry->starts_at->copy()->setTimezone($tz),
+            'ends_at_local'    => $entry->ends_at->copy()->setTimezone($tz),
+            'duration_minutes' => $entry->durationMinutes(),
+            'evidence'         => collect(),
+            'summary'          => $summary,
+        ];
     }
 }

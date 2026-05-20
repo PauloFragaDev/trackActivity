@@ -237,6 +237,11 @@ php artisan tracker:doctor    # dashboard side</code></pre>
             <li><strong>CSV</strong> con BOM UTF-8 (abre bien en Excel) y columnas estándar.</li>
         </ul>
         <p class="text-sm mt-3">
+            El export incluye tanto las sesiones reconstruidas como las
+            <strong>entradas manuales</strong> (reuniones), marcadas como
+            <code class="chip">manual · …</code>, y sus minutos cuentan en los totales.
+        </p>
+        <p class="text-sm mt-3">
             Agrupación <code class="chip">project-day</code>: un único resumen por (proyecto, día);
             útil cuando el timesheet solo acepta totales diarios.
         </p>

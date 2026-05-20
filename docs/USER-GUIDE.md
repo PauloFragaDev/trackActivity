@@ -333,6 +333,11 @@ Sin `--output` escribe a stdout (útil para pipes).
 - **CSV**: BOM UTF-8 (compatible con Excel en Windows), columnas
   estándar `date,start,end,duration_minutes,project_code,project_name,confidence,summary,evidence`.
 
+El export incluye tanto las sesiones reconstruidas como las **entradas
+manuales** (reuniones, correcciones): aparecen en orden, marcadas como
+`manual · <tipo>` en la columna de confianza, y sus minutos suman en los
+totales.
+
 ---
 
 ## 9. Auto-actualización (scheduler)
