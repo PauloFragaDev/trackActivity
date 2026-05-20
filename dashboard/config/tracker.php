@@ -38,11 +38,4 @@ return [
         'engine' => env('TRACKER_SUMMARY_ENGINE', 'template'),  // template | llm
         'locale' => env('TRACKER_SUMMARY_LOCALE', 'es'),
     ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Filament admin
-    |--------------------------------------------------------------------------
-    */
-    'filament_enabled' => (bool) env('FILAMENT_ENABLED', false),
 ];

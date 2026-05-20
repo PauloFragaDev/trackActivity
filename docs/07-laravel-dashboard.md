@@ -1,6 +1,6 @@
 # 07 · Dashboard Laravel (`dashboard/`)
 
-Aplicación Laravel 11 que lee la BBDD SQLite escrita por el daemon, agrega los eventos en bloques, los puntúa, genera resúmenes y los presenta en una UI minimalista (Blade + Tailwind), opcionalmente con un panel admin Filament.
+Aplicación Laravel 11 que lee la BBDD SQLite escrita por el daemon, agrega los eventos en bloques, los puntúa, genera resúmenes y los presenta en una UI minimalista (Blade + Tailwind), con CRUD propio de proyectos y mappings.
 
 ---
 
@@ -10,31 +10,23 @@ Sigue la convención estándar de Laravel, con las siguientes adiciones específ
 
 ```
 dashboard/
-├── README.md
 ├── composer.json
 ├── .env.example
+├── phpunit.xml
 ├── app/
 │   ├── Console/Commands/
 │   │   ├── RebuildBlocksCommand.php        # tracker:rebuild-blocks
-│   │   ├── PruneEventsCommand.php          # tracker:prune-events
 │   │   ├── GenerateSummariesCommand.php    # tracker:generate-summaries
-│   │   ├── ExportRangeCommand.php          # tracker:export
-│   │   └── Mapping/AddMappingCommand.php   # tracker:mapping:add
-│   ├── Filament/
-│   │   └── Resources/
-│   │       ├── ProjectResource.php
-│   │       ├── ProjectMappingResource.php
-│   │       ├── ScoringRuleResource.php
-│   │       └── TimeBlockResource.php
-│   ├── Http/
-│   │   ├── Controllers/
-│   │   │   ├── TimelineController.php
-│   │   │   ├── CalendarController.php
-│   │   │   ├── TimeBlockController.php
-│   │   │   └── ExportController.php
-│   │   └── Requests/
-│   │       ├── UpdateTimeBlockRequest.php
-│   │       └── MergeBlocksRequest.php
+│   │   ├── ExportCommand.php               # tracker:export
+│   │   ├── PruneEventsCommand.php          # tracker:prune-events
+│   │   └── DoctorCommand.php               # tracker:doctor
+│   ├── Http/Controllers/
+│   │   ├── TimelineController.php          # day / week
+│   │   ├── CalendarController.php
+│   │   ├── TimeBlockController.php         # edición manual de sesiones
+│   │   ├── ProjectController.php           # CRUD proyectos + mappings
+│   │   ├── ExportController.php
+│   │   └── HelpController.php
 │   ├── Models/
 │   │   ├── Project.php
 │   │   ├── Repository.php
@@ -44,50 +36,44 @@ dashboard/
 │   │   ├── TimeBlock.php
 │   │   ├── TimeBlockEvidence.php
 │   │   └── GeneratedSummary.php
-│   ├── Services/
-│   │   ├── Aggregator.php
-│   │   ├── Scorer.php
-│   │   ├── ConfidenceCalculator.php
-│   │   ├── SummaryGenerator.php
-│   │   ├── MappingResolver.php
-│   │   └── Exporter.php
-│   └── View/Components/
-│       ├── Timeline/
-│       │   ├── DayView.php
-│       │   ├── BlockCard.php
-│       │   └── EvidenceList.php
-│       └── Calendar/
-│           └── WeekView.php
+│   ├── Providers/AppServiceProvider.php
+│   └── Services/
+│       ├── Aggregator.php                  # eventos → time_blocks
+│       ├── SessionBuilder.php              # time_blocks → sesiones (UI)
+│       ├── Scoring/
+│       │   ├── Scorer.php
+│       │   ├── MappingResolver.php
+│       │   └── ScoringResult.php
+│       ├── Summaries/
+│       │   ├── SummaryGenerator.php
+│       │   └── EvidenceExtractor.php
+│       └── Export/
+│           ├── Exporter.php
+│           ├── ExportQuery.php
+│           ├── Report.php
+│           └── Renderers/                  # Txt / Markdown / Csv
 ├── database/
-│   ├── migrations/
-│   │   ├── 0001_create_projects_table.php
-│   │   ├── 0002_create_repositories_table.php
-│   │   ├── 0003_create_project_mappings_table.php
-│   │   ├── 0004_create_scoring_rules_table.php
-│   │   ├── 0005_create_activity_events_table.php
-│   │   ├── 0006_create_time_blocks_table.php
-│   │   ├── 0007_create_time_block_evidence_table.php
-│   │   └── 0008_create_generated_summaries_table.php
+│   ├── migrations/                         # 8 tablas (2026_01_01_0000NN_*)
 │   └── seeders/
+│       ├── DatabaseSeeder.php
 │       ├── ProjectsSeeder.php
 │       ├── ScoringRulesSeeder.php
 │       └── MappingsSeeder.php
 ├── resources/
 │   ├── views/
 │   │   ├── layouts/app.blade.php
-│   │   ├── timeline/day.blade.php
-│   │   ├── timeline/week.blade.php
+│   │   ├── timeline/{day,week}.blade.php
 │   │   ├── calendar/index.blade.php
-│   │   └── components/
+│   │   ├── projects/{index,edit}.blade.php
+│   │   ├── export/form.blade.php
+│   │   └── help/index.blade.php
 │   ├── css/app.css
 │   └── js/app.js
 ├── routes/
 │   ├── web.php
 │   └── console.php
-├── tailwind.config.js
-├── vite.config.js
 └── tests/
-    ├── Feature/
+    ├── Feature/                            # SessionBuilder, TimeBlockController, scoring…
     └── Unit/
 ```
 
@@ -250,18 +236,20 @@ Stack: **Blade + Tailwind + Alpine.js** (lo que ya viene con Laravel Breeze sin 
 
 ---
 
-## Filament (opcional)
+## Gestión del catálogo (proyectos y mappings)
 
-Activable con `FILAMENT_ENABLED=true`. Pensado para edición rápida del catálogo:
+El catálogo se administra con un CRUD propio en Blade, sin dependencias
+de terceros:
 
-| Resource | Acciones |
-|----------|----------|
-| `ProjectResource` | CRUD de proyectos. |
-| `ProjectMappingResource` | CRUD de mappings con preview de matches. |
-| `ScoringRuleResource` | Edición de pesos. |
-| `TimeBlockResource` | Vista de auditoría: lista, filtros por fecha/proyecto/status, edición. |
+| Ruta | Acciones |
+|------|----------|
+| `/projects` | Lista de proyectos con su número de mappings. |
+| `/projects/create`, `/projects/{p}/edit` | Alta y edición de proyecto (code, name, color, description). |
+| `/projects/{p}/edit` | Gestión inline de los mappings del proyecto: alta, baja y toggle activo. |
 
-Si Filament está desactivado, los CRUDs se hacen vía comandos artisan o editando seeders.
+Las `scoring_rules` (pesos) no tienen UI: se cargan vía `ScoringRulesSeeder`
+y se ajustan por SQL si hace falta. Un panel admin (p. ej. Filament) para
+editarlas queda fuera del MVP — ver [`14-mvp-roadmap.md`](14-mvp-roadmap.md).
 
 ---
 

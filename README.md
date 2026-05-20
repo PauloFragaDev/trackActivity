@@ -23,7 +23,6 @@ Cuando trabajas a diario sobre múltiples proyectos de software, registrar el ti
 | Captura de actividad (daemon) | Python 3.11+ |
 | Almacenamiento | SQLite |
 | Dashboard / UI | Laravel 11 + Blade + TailwindCSS |
-| Admin (opcional) | Filament |
 | SO objetivo | Linux (Ubuntu 22.04+) |
 
 ---

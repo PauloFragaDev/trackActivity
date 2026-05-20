@@ -86,13 +86,12 @@ class TimelineController extends Controller
                 ->values();
 
             foreach ($byProject as $row) {
-                $key = $row['project']?->code ?? '__none__';
-                $weekTotals->put(
-                    $key,
-                    ($weekTotals->get($key)['minutes'] ?? 0) + $row['minutes']
-                        ? ['project' => $row['project'], 'minutes' => ($weekTotals->get($key)['minutes'] ?? 0) + $row['minutes']]
-                        : ['project' => $row['project'], 'minutes' => $row['minutes']]
-                );
+                $key  = $row['project']?->code ?? '__none__';
+                $prev = $weekTotals->get($key)['minutes'] ?? 0;
+                $weekTotals->put($key, [
+                    'project' => $row['project'],
+                    'minutes' => $prev + $row['minutes'],
+                ]);
             }
 
             $days[] = [
