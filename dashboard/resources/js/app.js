@@ -212,4 +212,9 @@ window.addEventListener('DOMContentLoaded', () => {
     if (document.querySelector('[data-note-editor]')) {
         import('./notes-editor.js').then((m) => m.initNoteEditor());
     }
+
+    // Tablero Kanban: se carga de forma diferida solo en /tasks.
+    if (document.querySelector('[data-task-board]')) {
+        import('./kanban.js').then((m) => m.initKanban());
+    }
 });

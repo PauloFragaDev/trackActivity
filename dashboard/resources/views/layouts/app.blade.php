@@ -125,6 +125,10 @@
                     </div>
                 </details>
 
+                {{-- Tareas --}}
+                <a href="{{ route('tasks.index') }}"
+                   class="block px-2 py-1.5 rounded {{ $navItem(['tasks.*']) }}">Tareas</a>
+
                 {{-- Configuración --}}
                 <details class="group" @if (request()->routeIs('projects.*', 'export.*', 'data.*')) open @endif>
                     <summary class="flex items-center gap-1.5 px-2 py-1.5 rounded cursor-pointer select-none list-none
