@@ -62,7 +62,6 @@
                                 <button type="submit" class="btn-ghost text-xs text-rose-600 dark:text-rose-400" title="Eliminar carpeta">🗑</button>
                             </form>
                         @endif
-                        <button type="button" class="btn-ghost text-xs" data-modal-open="#folder-new" title="Nueva carpeta">+ carpeta</button>
                         <button type="button" class="btn text-xs" data-modal-open="#note-new">+ Nota</button>
                     </div>
                 @endif
@@ -207,37 +206,6 @@
     </div>
 
     {{-- ─────────────── Modales ─────────────── --}}
-    <dialog id="folder-new" class="modal">
-        <form method="POST" action="{{ route('note-folders.store') }}" class="space-y-3">
-            @csrf
-            <div class="flex items-center justify-between">
-                <h3 class="text-base font-semibold">Nueva carpeta</h3>
-                <button type="button" class="btn-ghost" data-modal-close aria-label="Cerrar">✕</button>
-            </div>
-            <label class="label">
-                <span>Nombre</span>
-                <input type="text" name="name" required maxlength="120" class="input mt-1" placeholder="Ideas, Trabajo…">
-            </label>
-            <label class="label">
-                <span>Icono</span>
-                <div class="mt-1">@include('notes.partials.icon-field', ['value' => ''])</div>
-            </label>
-            <label class="label">
-                <span>Dentro de</span>
-                <select name="parent_id" class="select mt-1">
-                    <option value="">— Carpeta raíz —</option>
-                    @foreach ($folders->sortBy('name') as $f)
-                        <option value="{{ $f->id }}" @selected($folderId === $f->id)>{{ $f->name }}</option>
-                    @endforeach
-                </select>
-            </label>
-            <div class="flex justify-end gap-2 pt-1">
-                <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
-                <button type="submit" class="btn">Crear</button>
-            </div>
-        </form>
-    </dialog>
-
     <dialog id="note-new" class="modal">
         <form method="POST" action="{{ route('notes.store') }}" class="space-y-3">
             @csrf

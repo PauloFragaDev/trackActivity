@@ -27,8 +27,9 @@
             ? 'bg-ink-100 dark:bg-ink-800 text-ink-900 dark:text-ink-50 font-medium'
             : 'text-ink-600 dark:text-ink-300 hover:bg-ink-100 dark:hover:bg-ink-800';
 
-        // Árbol de carpetas de Notas para el menú lateral.
+        // Árbol de carpetas y notas favoritas (fijadas) para el menú lateral.
         $sidebarFolders = \App\Models\NoteFolder::orderBy('name')->get();
+        $sidebarPinned  = \App\Models\Note::where('pinned', true)->orderBy('title')->get();
     @endphp
 
     <div class="flex min-h-screen">
@@ -85,13 +86,32 @@
                         Notas
                     </summary>
                     <div class="mt-0.5 ml-2 space-y-0.5">
+                        {{-- Favoritos: notas fijadas (★) --}}
+                        @foreach ($sidebarPinned as $fav)
+                            <a href="{{ route('notes.index', ['note' => $fav->id]) }}"
+                               class="block px-2 py-1.5 rounded text-sm truncate
+                                      {{ (int) request()->query('note') === $fav->id ? 'bg-ink-100 dark:bg-ink-800 text-ink-900 dark:text-ink-50 font-medium' : 'text-ink-600 dark:text-ink-300 hover:bg-ink-100 dark:hover:bg-ink-800' }}"
+                               title="{{ $fav->title }}">
+                                <span class="text-amber-500">★</span> {{ $fav->title }}
+                            </a>
+                        @endforeach
+                        @if ($sidebarPinned->isNotEmpty())
+                            <div class="my-1 border-t divider"></div>
+                        @endif
+
+                        {{-- Árbol de carpetas --}}
                         @foreach ($sidebarFolders->whereNull('parent_id')->sortBy('name') as $folder)
                             @include('layouts.partials.sidebar-folder', ['folder' => $folder, 'depth' => 0])
                         @endforeach
+
                         <a href="{{ route('notes.index', ['trash' => 1]) }}"
                            class="block px-2 py-1.5 rounded {{ request()->boolean('trash') ? 'bg-ink-100 dark:bg-ink-800 text-ink-900 dark:text-ink-50 font-medium' : 'text-ink-600 dark:text-ink-300 hover:bg-ink-100 dark:hover:bg-ink-800' }}">
                             🗑 Papelera
                         </a>
+                        <button type="button" data-modal-open="#folder-new"
+                                class="w-full text-left block px-2 py-1.5 rounded text-ink-600 dark:text-ink-300 hover:bg-ink-100 dark:hover:bg-ink-800">
+                            + Nueva carpeta
+                        </button>
                     </div>
                 </details>
 
@@ -155,6 +175,38 @@
         <input type="text" data-qs-input autocomplete="off"
                placeholder="Buscar nota…" class="input">
         <ul data-qs-results class="mt-2 max-h-80 overflow-y-auto space-y-0.5"></ul>
+    </dialog>
+
+    {{-- Modal "Nueva carpeta": accesible desde el sidebar en cualquier página --}}
+    <dialog id="folder-new" class="modal">
+        <form method="POST" action="{{ route('note-folders.store') }}" class="space-y-3">
+            @csrf
+            <div class="flex items-center justify-between">
+                <h3 class="text-base font-semibold">Nueva carpeta</h3>
+                <button type="button" class="btn-ghost" data-modal-close aria-label="Cerrar">✕</button>
+            </div>
+            <label class="label">
+                <span>Nombre</span>
+                <input type="text" name="name" required maxlength="120" class="input mt-1" placeholder="Ideas, Trabajo…">
+            </label>
+            <label class="label">
+                <span>Icono</span>
+                <div class="mt-1">@include('notes.partials.icon-field', ['value' => ''])</div>
+            </label>
+            <label class="label">
+                <span>Dentro de</span>
+                <select name="parent_id" class="select mt-1">
+                    <option value="">— Carpeta raíz —</option>
+                    @foreach ($sidebarFolders->sortBy('name') as $f)
+                        <option value="{{ $f->id }}">{{ $f->name }}</option>
+                    @endforeach
+                </select>
+            </label>
+            <div class="flex justify-end gap-2 pt-1">
+                <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
+                <button type="submit" class="btn">Crear</button>
+            </div>
+        </form>
     </dialog>
 </body>
 </html>
