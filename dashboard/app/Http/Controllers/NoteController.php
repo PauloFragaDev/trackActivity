@@ -56,6 +56,17 @@ class NoteController extends Controller
             $currentNote = $noteId ? Note::find($noteId) : $notes->first();
         }
 
+        // Ruta de carpetas (breadcrumb) de la nota abierta, de raíz a hoja.
+        $breadcrumb = [];
+        if ($currentNote && $currentNote->folder_id) {
+            $fid   = $currentNote->folder_id;
+            $guard = 0;
+            while ($fid && $guard++ < 20 && $folder = $folders->firstWhere('id', $fid)) {
+                array_unshift($breadcrumb, $folder);
+                $fid = $folder->parent_id;
+            }
+        }
+
         return view('notes.index', [
             'folders'       => $folders,
             'currentFolder' => $currentFolder,
@@ -65,6 +76,7 @@ class NoteController extends Controller
             'search'        => $search,
             'isTrash'       => $isTrash,
             'trashCount'    => $trashCount,
+            'breadcrumb'    => $breadcrumb,
         ]);
     }
 

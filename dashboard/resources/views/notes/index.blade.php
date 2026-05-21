@@ -156,6 +156,16 @@
                       class="flex-1 min-h-0 flex flex-col gap-3">
                     @csrf
                     @method('PATCH')
+                    @if (! empty($breadcrumb))
+                        {{-- Ruta de carpetas (breadcrumb) --}}
+                        <nav class="shrink-0 flex items-center gap-1 flex-wrap text-xs text-muted">
+                            @foreach ($breadcrumb as $crumb)
+                                <a href="{{ route('notes.index', ['folder' => $crumb->id]) }}"
+                                   class="hover:underline">{{ $crumb->icon ?: '📁' }} {{ $crumb->name }}</a>
+                                @unless ($loop->last)<span class="text-faint">/</span>@endunless
+                            @endforeach
+                        </nav>
+                    @endif
                     {{-- Cabecera tipo Notion: icono + título grande --}}
                     <div class="shrink-0 flex items-start gap-2">
                         <details class="shrink-0 relative">

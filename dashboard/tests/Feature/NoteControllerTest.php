@@ -162,4 +162,16 @@ class NoteControllerTest extends TestCase
         $this->assertStringNotContainsString('*', $preview);
         $this->assertStringContainsString('uno', $preview);
     }
+
+    public function test_breadcrumb_is_the_folder_ancestor_path(): void
+    {
+        $parent = NoteFolder::create(['name' => 'Proyectos']);
+        $child  = NoteFolder::create(['name' => 'Web', 'parent_id' => $parent->id]);
+        $note   = Note::create(['title' => 'Mi nota', 'folder_id' => $child->id]);
+
+        $breadcrumb = $this->get("/notes?note={$note->id}")->assertOk()->viewData('breadcrumb');
+
+        // De raíz a hoja: [Proyectos, Web].
+        $this->assertSame(['Proyectos', 'Web'], collect($breadcrumb)->pluck('name')->all());
+    }
 }
