@@ -177,12 +177,28 @@
                             <input type="checkbox" name="pinned" value="1" class="accent-emerald-500" @checked($currentNote->pinned)>
                             Fijada
                         </label>
+                        <button type="button" class="btn-ghost text-sm" data-copy-link
+                                data-url="{{ route('notes.index', ['note' => $currentNote->id]) }}">Copiar enlace</button>
                         <div class="ml-auto flex items-center gap-3">
                             <span data-autosave-status class="text-xs text-muted"></span>
                             <button type="submit" class="btn">Guardar</button>
                         </div>
                     </div>
                 </form>
+
+                @if ($backlinks->isNotEmpty())
+                    {{-- Backlinks: notas que enlazan a esta --}}
+                    <div class="mt-3 shrink-0 flex items-start gap-2 text-sm">
+                        <span class="text-muted shrink-0 pt-1">🔗 Enlazada desde:</span>
+                        <div class="flex flex-wrap gap-1.5">
+                            @foreach ($backlinks as $bl)
+                                <a href="{{ route('notes.index', ['note' => $bl->id]) }}"
+                                   class="chip hover:bg-ink-200 dark:hover:bg-ink-700">{{ $bl->icon ?: '📄' }} {{ $bl->title }}</a>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
                 <form method="POST" action="{{ route('notes.destroy', $currentNote) }}" class="mt-3 text-right shrink-0"
                       data-confirm="¿Eliminar la nota «{{ $currentNote->title }}»?">
                     @csrf @method('DELETE')

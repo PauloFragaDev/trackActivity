@@ -105,6 +105,18 @@ window.addEventListener('DOMContentLoaded', () => {
         input.addEventListener('input', sync);
     });
 
+    // Copiar el enlace de una nota al portapapeles.
+    document.querySelectorAll('[data-copy-link]').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText(btn.dataset.url);
+                window.toast('Enlace copiado');
+            } catch {
+                window.toast('No se pudo copiar el enlace');
+            }
+        });
+    });
+
     // Confirmaciones: <form data-confirm="mensaje"> pide confirmación con
     // SweetAlert en vez del confirm() nativo del navegador.
     document.querySelectorAll('form[data-confirm]').forEach((form) => {

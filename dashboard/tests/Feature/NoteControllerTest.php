@@ -185,4 +185,15 @@ class NoteControllerTest extends TestCase
             ->assertJsonFragment(['title' => 'Alfa'])
             ->assertJsonMissing(['title' => 'Beta']);
     }
+
+    public function test_backlinks_list_notes_that_link_here(): void
+    {
+        $target = Note::create(['title' => 'Destino']);
+        Note::create(['title' => 'Origen', 'body' => "ver [esto](/notes?note={$target->id})"]);
+        Note::create(['title' => 'Ajena', 'body' => 'sin enlaces']);
+
+        $backlinks = $this->get("/notes?note={$target->id}")->assertOk()->viewData('backlinks');
+
+        $this->assertSame(['Origen'], collect($backlinks)->pluck('title')->all());
+    }
 }

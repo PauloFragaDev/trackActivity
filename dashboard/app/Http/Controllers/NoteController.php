@@ -68,6 +68,16 @@ class NoteController extends Controller
             }
         }
 
+        // Backlinks: notas cuyo cuerpo enlaza a la nota abierta (?note=ID).
+        $backlinks = collect();
+        if ($currentNote) {
+            $backlinks = Note::query()
+                ->where('id', '!=', $currentNote->id)
+                ->get(['id', 'title', 'icon', 'body'])
+                ->filter(fn (Note $n) => preg_match('/[?&]note=' . $currentNote->id . '\b/', (string) $n->body))
+                ->values();
+        }
+
         return view('notes.index', [
             'folders'       => $folders,
             'currentFolder' => $currentFolder,
@@ -78,6 +88,7 @@ class NoteController extends Controller
             'isTrash'       => $isTrash,
             'trashCount'    => $trashCount,
             'breadcrumb'    => $breadcrumb,
+            'backlinks'     => $backlinks,
         ]);
     }
 
