@@ -116,6 +116,34 @@
         padding: 0.62rem 1rem;
         box-shadow: 0 14px 34px -12px rgb(0 0 0 / 0.45);
     }
+
+    /* Diálogos SweetAlert — alineados con el sistema de diseño */
+    .swal2-popup.app-swal {
+        @apply rounded-lg border border-ink-200 bg-white text-ink-900;
+        @apply dark:border-ink-800 dark:bg-ink-900 dark:text-ink-100;
+        padding: 1.5rem 1.5rem 1.25rem;
+        box-shadow: 0 24px 60px -15px rgb(0 0 0 / 0.5);
+    }
+    .app-swal .swal2-title {
+        @apply text-ink-900 dark:text-ink-100;
+        font-size: 1.1rem;
+        font-weight: 600;
+        padding: 0.5rem 0 0;
+    }
+    .app-swal .swal2-html-container {
+        @apply text-ink-600 dark:text-ink-400;
+        font-size: 0.9rem;
+        margin: 0.4rem 0 0;
+    }
+    .app-swal .swal2-actions {
+        gap: 0.5rem;
+        margin-top: 1.4rem;
+    }
+    /* Botones: usan las clases .btn-* de la app (buttonsStyling: false) */
+    .app-swal .swal2-actions .btn-danger,
+    .app-swal .swal2-actions .btn-ghost {
+        margin: 0;
+    }
 }
 
 @keyframes modal-pop {
