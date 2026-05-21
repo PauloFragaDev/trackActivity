@@ -55,11 +55,11 @@
                     <span class="text-sm font-medium truncate">{{ $currentFolder?->name ?? 'Notas' }}</span>
                     <div class="flex items-center gap-1 shrink-0">
                         @if ($currentFolder)
-                            <button type="button" class="btn-ghost text-xs" data-modal-open="#folder-edit" title="Renombrar carpeta">✎</button>
+                            <button type="button" class="btn-ghost text-xs" data-modal-open="#folder-edit" title="Renombrar carpeta" aria-label="Renombrar carpeta">✎</button>
                             <form method="POST" action="{{ route('note-folders.destroy', $currentFolder) }}" class="inline"
                                   data-confirm="¿Eliminar la carpeta «{{ $currentFolder->name }}»? Sus notas y subcarpetas pasarán a la raíz.">
                                 @csrf @method('DELETE')
-                                <button type="submit" class="btn-ghost text-xs text-rose-600 dark:text-rose-400" title="Eliminar carpeta">🗑</button>
+                                <button type="submit" class="btn-ghost text-xs text-rose-600 dark:text-rose-400" title="Eliminar carpeta" aria-label="Eliminar carpeta">🗑</button>
                             </form>
                         @endif
                         <button type="button" class="btn text-xs" data-modal-open="#note-new">+ Nota</button>
@@ -109,7 +109,8 @@
                                 @method('PATCH')
                                 <button type="submit"
                                         class="px-2 py-1.5 {{ $n->pinned ? 'text-amber-500' : 'text-faint hover:text-amber-500' }}"
-                                        title="{{ $n->pinned ? 'Desfijar' : 'Fijar' }}">★</button>
+                                        title="{{ $n->pinned ? 'Desfijar' : 'Fijar' }}"
+                                        aria-label="{{ $n->pinned ? 'Desfijar nota' : 'Fijar nota' }}">★</button>
                             </form>
                         </div>
                     @empty
@@ -148,9 +149,9 @@
                             </div>
                         </details>
                         <input type="text" name="title" required maxlength="200"
-                               value="{{ old('title', $currentNote->title) }}" placeholder="Título"
-                               class="flex-1 min-w-0 bg-transparent border-0 px-0 py-1 text-2xl font-bold tracking-tight
-                                      placeholder:text-ink-300 dark:placeholder:text-ink-600 focus:outline-none focus:ring-0">
+                               value="{{ old('title', $currentNote->title) }}" placeholder="Título" aria-label="Título de la nota"
+                               class="flex-1 min-w-0 bg-transparent border-0 px-0 py-1 text-2xl font-bold tracking-tight rounded
+                                      placeholder:text-ink-300 dark:placeholder:text-ink-600">
                     </div>
                     <textarea name="body" rows="18"
                               class="textarea font-mono flex-1 min-h-0"

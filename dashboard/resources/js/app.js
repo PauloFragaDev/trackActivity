@@ -56,6 +56,7 @@ const SWAL_BASE = {
 window.toast = (message) => {
     Toastify({
         text: message,
+        ariaLive: 'polite',
         duration: 3200,
         gravity: 'bottom',
         position: 'center',
