@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CalendarController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\HelpController;
 use App\Http\Controllers\ManualEntryController;
@@ -10,6 +11,9 @@ use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\TimeBlockController;
 use App\Http\Controllers\TimelineController;
 use Illuminate\Support\Facades\Route;
+
+// ─────────────────── Inicio ───────────────────
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
 // ─────────────────── Timeline ───────────────────
 Route::get('/',           [TimelineController::class, 'today'])->name('timeline.today');

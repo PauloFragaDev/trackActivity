@@ -1,0 +1,59 @@
+@extends('layouts.app')
+
+@section('title', 'Inicio')
+
+@section('content')
+    @php
+        $fmt = fn (int $m) => $m <= 0 ? '—' : ($m >= 60 ? intdiv($m, 60) . 'h ' . ($m % 60) . 'm' : $m . 'm');
+        $now = \Carbon\CarbonImmutable::now($tz);
+    @endphp
+
+    <div class="mb-5">
+        <h1 class="text-xl font-semibold tracking-tight">Inicio</h1>
+        <p class="text-sm text-muted mt-1">{{ ucfirst($now->locale('es')->isoFormat('dddd, D [de] MMMM')) }}</p>
+    </div>
+
+    {{-- Semana actual --}}
+    <section class="mb-6">
+        <h2 class="text-xs font-medium uppercase tracking-wider text-muted mb-2">Esta semana</h2>
+        <div class="grid grid-cols-7 gap-2">
+            @foreach ($week as $d)
+                <a href="{{ route('timeline.day', ['date' => $d['date']->format('Y-m-d')]) }}"
+                   class="card p-3 text-center transition hover:border-emerald-400/60
+                          {{ $d['is_today'] ? 'ring-2 ring-emerald-400' : '' }}">
+                    <div class="text-[11px] uppercase tracking-wide text-muted">{{ $d['date']->locale('es')->isoFormat('ddd') }}</div>
+                    <div class="text-lg font-semibold leading-tight">{{ $d['date']->format('j') }}</div>
+                    <div class="text-xs mt-0.5 {{ $d['minutes'] > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-faint' }}">
+                        {{ $fmt($d['minutes']) }}
+                    </div>
+                </a>
+            @endforeach
+        </div>
+    </section>
+
+    {{-- Últimas notas + Tareas en curso --}}
+    <div class="grid gap-4 md:grid-cols-2">
+        <section class="card p-4">
+            <h2 class="text-sm font-semibold mb-3">Últimas notas</h2>
+            <div class="space-y-0.5">
+                @forelse ($recentNotes as $n)
+                    <a href="{{ route('notes.index', ['note' => $n->id]) }}"
+                       class="flex items-center gap-1.5 px-2 py-1.5 rounded text-sm hover:bg-ink-100 dark:hover:bg-ink-800">
+                        <span>{{ $n->icon ?: '📄' }}</span>
+                        <span class="flex-1 truncate">{{ $n->title }}</span>
+                        <span class="shrink-0 text-xs text-faint">{{ $n->updated_at->diffForHumans() }}</span>
+                    </a>
+                @empty
+                    <p class="text-sm text-muted">Aún no hay notas.</p>
+                @endforelse
+            </div>
+        </section>
+
+        <section class="card p-4">
+            <h2 class="text-sm font-semibold mb-3">Tareas en curso</h2>
+            <p class="text-sm text-muted">
+                Aquí aparecerán las tareas en <em>Doing</em> cuando se implemente el módulo de tareas (Kanban).
+            </p>
+        </section>
+    </div>
+@endsection

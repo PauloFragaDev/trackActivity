@@ -44,7 +44,7 @@
                     <span data-icon-collapse aria-hidden="true">«</span>
                     <span data-icon-expand   aria-hidden="true">»</span>
                 </button>
-                <a href="{{ route('timeline.today') }}"
+                <a href="{{ route('dashboard') }}"
                    class="sidebar-full flex items-center gap-2 font-semibold tracking-tight whitespace-nowrap">
                     <span class="inline-block w-2 h-2 rounded-full bg-emerald-400"></span>
                     trackActivity
@@ -60,6 +60,10 @@
                     <span>Buscar</span>
                     <span class="ml-auto text-[10px] text-faint">Ctrl K</span>
                 </button>
+
+                {{-- Inicio --}}
+                <a href="{{ route('dashboard') }}"
+                   class="block px-2 py-1.5 rounded {{ $navItem(['dashboard']) }}">Inicio</a>
 
                 {{-- Tracking --}}
                 <details class="group" @if (request()->routeIs('timeline.*', 'calendar.*')) open @endif>
