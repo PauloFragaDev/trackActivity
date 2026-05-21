@@ -260,6 +260,76 @@ Texto humano por bloque. **Uno por bloque** (`time_block_id` único).
 
 ---
 
+### `manual_entries`
+
+Tramos añadidos a mano (reuniones, correcciones). Capa independiente del tracking automático.
+
+| Columna | Tipo | Restricciones | Descripción |
+|---------|------|--------------|-------------|
+| `id` | INTEGER | PK | |
+| `starts_at` / `ends_at` | DATETIME | NOT NULL | En UTC; rango arbitrario. |
+| `project_id` | INTEGER | FK → projects.id, NULL | Proyecto opcional. |
+| `task_id` | INTEGER | FK → tasks.id, NULL, nullOnDelete | Tarea opcional; permite acumular tiempo por tarea. |
+| `kind` | TEXT | NOT NULL | `meeting`, `focus`, `other` (enum `EntryKind`). |
+| `title` | TEXT | NOT NULL | |
+| `notes` | TEXT | NULL | |
+| `created_at` / `updated_at` | DATETIME | NOT NULL | |
+
+---
+
+### `note_folders`
+
+Carpetas de notas, anidables.
+
+| Columna | Tipo | Restricciones | Descripción |
+|---------|------|--------------|-------------|
+| `id` | INTEGER | PK | |
+| `name` | TEXT | NOT NULL | |
+| `icon` | TEXT | NULL | Emoji. |
+| `parent_id` | INTEGER | FK → note_folders.id, NULL, nullOnDelete | Carpeta padre. |
+| `position` | INTEGER | NOT NULL DEFAULT 0 | |
+| `created_at` / `updated_at` | DATETIME | NOT NULL | |
+
+---
+
+### `notes`
+
+Notas; el cuerpo se guarda como Markdown. Borrado suave (`deleted_at`).
+
+| Columna | Tipo | Restricciones | Descripción |
+|---------|------|--------------|-------------|
+| `id` | INTEGER | PK | |
+| `folder_id` | INTEGER | FK → note_folders.id, NULL, nullOnDelete | |
+| `project_id` | INTEGER | FK → projects.id, NULL, nullOnDelete | Proyecto opcional. |
+| `title` | TEXT | NOT NULL | |
+| `icon` | TEXT | NULL | Emoji. |
+| `body` | TEXT | NULL | Contenido en Markdown. |
+| `pinned` | BOOLEAN | NOT NULL DEFAULT false | |
+| `position` | INTEGER | NOT NULL DEFAULT 0 | |
+| `deleted_at` | DATETIME | NULL | Borrado suave (papelera). |
+| `created_at` / `updated_at` | DATETIME | NOT NULL | |
+
+---
+
+### `tasks`
+
+Tareas del tablero Kanban.
+
+| Columna | Tipo | Restricciones | Descripción |
+|---------|------|--------------|-------------|
+| `id` | INTEGER | PK | |
+| `project_id` | INTEGER | FK → projects.id, NULL, nullOnDelete | Proyecto opcional. |
+| `title` | TEXT | NOT NULL | |
+| `description` | TEXT | NULL | |
+| `status` | TEXT | NOT NULL DEFAULT `todo` | Columna del tablero (enum `TaskStatus`). |
+| `priority` | TEXT | NULL | Enum `TaskPriority`. |
+| `due_date` | DATE | NULL | |
+| `position` | INTEGER | NOT NULL DEFAULT 0 | Orden dentro de la columna. |
+| `completed_at` | DATETIME | NULL | Se rellena al pasar a `done`. |
+| `created_at` / `updated_at` | DATETIME | NOT NULL | |
+
+---
+
 ## PRAGMAs recomendados
 
 Aplicar al abrir la conexión (ambos lados):

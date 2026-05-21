@@ -16,6 +16,19 @@ Cuando trabajas a diario sobre múltiples proyectos de software, registrar el ti
 
 ---
 
+## Funcionalidades
+
+- **Tracking automático** — timeline diario, vista semanal y calendario mensual; bloques de tiempo con proyecto inferido y resúmenes generados.
+- **Inicio** — la semana de un vistazo, *heatmap* de actividad del último año, widget "ahora mismo" y accesos rápidos.
+- **Entradas manuales** — añadir reuniones o corregir tramos a mano.
+- **Notas** — bloc de notas con carpetas, editor WYSIWYG sobre Markdown, búsqueda, papelera, enlaces entre notas y vínculo opcional a proyectos.
+- **Tareas (Kanban)** — tablero con *drag & drop*, tareas vinculadas a proyectos y a tiempo registrado.
+- **Exportación** — al timesheet (TXT/Markdown/CSV) y de todos tus datos (notas `.md`, JSON).
+- **Copias de seguridad** — snapshot diario automático de la BBDD; backup y restauración con un clic.
+- **Paleta de comandos** (`Ctrl/Cmd + K`) para navegar al instante.
+
+---
+
 ## Stack tecnológico
 
 | Componente | Tecnología |
@@ -89,6 +102,9 @@ La documentación está organizada modularmente en [`/docs`](docs):
 | 12 | [Exportación](docs/12-export-system.md) | TXT / Markdown / CSV |
 | 13 | [Guía de desarrollo](docs/13-development-guide.md) | Setup, convenciones |
 | 14 | [Roadmap MVP](docs/14-mvp-roadmap.md) | Alcance v1 |
+| 15 | [Plan Kanban](docs/15-kanban-plan.md) | Módulo de tareas |
+| 16 | [Plan Notas](docs/16-notes-plan.md) | Módulo de notas |
+| — | [Guía de usuario](docs/USER-GUIDE.md) | Manual de uso del dashboard |
 
 ---
 
@@ -133,7 +149,9 @@ Detalle completo en [`docs/03-installation.md`](docs/03-installation.md).
 
 ## Estado actual
 
-Repositorio en fase de **documentación previa al desarrollo**. Ver [`docs/14-mvp-roadmap.md`](docs/14-mvp-roadmap.md) para el alcance de la v1.
+Aplicación **funcional**: el tracking, el dashboard, las notas, el tablero de
+tareas, la exportación y las copias de seguridad están operativos. El desarrollo
+continúa de forma incremental.
 
 ---
 
