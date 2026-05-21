@@ -29,7 +29,9 @@ export function initQuickSwitcher() {
             const on = i === active;
             el.classList.toggle('bg-ink-100', on);
             el.classList.toggle('dark:bg-ink-800', on);
+            el.setAttribute('aria-selected', on ? 'true' : 'false');
         });
+        input.setAttribute('aria-activedescendant', els[active].id);
         els[active].scrollIntoView({ block: 'nearest' });
     };
 
@@ -40,12 +42,13 @@ export function initQuickSwitcher() {
             .slice(0, 40);
 
         if (matched.length === 0) {
-            list.innerHTML = '<li class="px-3 py-2 text-sm text-muted">Sin resultados</li>';
+            list.innerHTML = '<li role="presentation" class="px-3 py-2 text-sm text-muted">Sin resultados</li>';
+            input.removeAttribute('aria-activedescendant');
             return;
         }
-        list.innerHTML = matched.map((n) => `
-            <li>
-                <a href="/notes?note=${n.id}" data-qs-item
+        list.innerHTML = matched.map((n, i) => `
+            <li role="presentation">
+                <a href="/notes?note=${n.id}" data-qs-item role="option" id="qs-opt-${i}" aria-selected="false"
                    class="block px-3 py-2 rounded text-sm truncate">
                     ${n.icon ? escape(n.icon) + ' ' : ''}<span class="font-medium">${escape(n.title || '(sin título)')}</span>${
                         n.folder ? `<span class="text-faint"> · ${escape(n.folder)}</span>` : ''

@@ -32,6 +32,12 @@
         $sidebarPinned  = \App\Models\Note::where('pinned', true)->orderBy('title')->get();
     @endphp
 
+    <a href="#main-content"
+       class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50
+              focus:px-3 focus:py-2 focus:rounded focus:bg-ink-900 focus:text-white focus:shadow-lg">
+        Saltar al contenido
+    </a>
+
     <div class="flex min-h-screen">
         {{-- ─────────────── Sidebar ─────────────── --}}
         <aside id="sidebar"
@@ -152,7 +158,7 @@
 
         {{-- ─────────────── Contenido ─────────────── --}}
         <div class="flex-1 min-w-0 flex flex-col">
-            <main class="flex-1">
+            <main id="main-content" tabindex="-1" class="flex-1 scroll-mt-4">
                 <div class="@yield('container', 'max-w-6xl mx-auto') px-6 py-8">
                     @if (session('status'))
                         {{-- Lo recoge app.js y lo muestra como toast inferior --}}
@@ -175,10 +181,12 @@
     </div>
 
     {{-- Quick switcher (Ctrl/Cmd+K): buscar y saltar a una nota --}}
-    <dialog id="quick-switcher" class="modal">
-        <input type="text" data-qs-input autocomplete="off"
-               placeholder="Buscar nota…" class="input">
-        <ul data-qs-results class="mt-2 max-h-80 overflow-y-auto space-y-0.5"></ul>
+    <dialog id="quick-switcher" class="modal" aria-label="Buscar nota">
+        <input type="text" data-qs-input autocomplete="off" placeholder="Buscar nota…" class="input"
+               role="combobox" aria-expanded="true" aria-controls="qs-results"
+               aria-autocomplete="list" aria-label="Buscar nota">
+        <ul id="qs-results" data-qs-results role="listbox" aria-label="Resultados"
+            class="mt-2 max-h-80 overflow-y-auto space-y-0.5"></ul>
     </dialog>
 
     {{-- Modal "Nueva carpeta": accesible desde el sidebar en cualquier página --}}

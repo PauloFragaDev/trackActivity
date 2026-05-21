@@ -56,6 +56,7 @@ const SWAL_BASE = {
 window.toast = (message) => {
     Toastify({
         text: message,
+        ariaLive: 'polite',
         duration: 3200,
         gravity: 'bottom',
         position: 'center',
@@ -102,6 +103,18 @@ window.addEventListener('DOMContentLoaded', () => {
             btn.addEventListener('click', () => { input.value = btn.dataset.iconValue; sync(); });
         });
         input.addEventListener('input', sync);
+    });
+
+    // Copiar el enlace de una nota al portapapeles.
+    document.querySelectorAll('[data-copy-link]').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText(btn.dataset.url);
+                window.toast('Enlace copiado');
+            } catch {
+                window.toast('No se pudo copiar el enlace');
+            }
+        });
     });
 
     // Confirmaciones: <form data-confirm="mensaje"> pide confirmación con

@@ -211,3 +211,33 @@ html.dark * {
 ::-webkit-scrollbar-thumb:hover { background: rgb(148 163 184); }
 html.dark ::-webkit-scrollbar-thumb { background: rgb(51 65 85); }
 html.dark ::-webkit-scrollbar-thumb:hover { background: rgb(71 85 105); }
+
+/* ─────────────── Accesibilidad ─────────────── */
+
+/* Indicador de foco visible para navegación por teclado. Los inputs ya
+   llevan su anillo (.input); esto cubre botones, enlaces y demás. */
+:focus-visible {
+    outline: 2px solid #10b981;   /* emerald-500 */
+    outline-offset: 2px;
+}
+
+/* Respeta la preferencia del sistema de movimiento reducido. */
+@media (prefers-reduced-motion: reduce) {
+    *, ::before, ::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* Notas · las citas del editor se muestran como "callout" (caja destacada) */
+[data-note-editor] .milkdown blockquote {
+    border-left: 3px solid #10b981;
+    background: rgb(16 185 129 / 0.08);
+    border-radius: 0 0.4rem 0.4rem 0;
+    padding: 0.55rem 0.9rem;
+}
+html.dark [data-note-editor] .milkdown blockquote {
+    background: rgb(16 185 129 / 0.14);
+}
