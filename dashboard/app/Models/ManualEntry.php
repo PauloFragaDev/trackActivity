@@ -16,7 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class ManualEntry extends Model
 {
     protected $fillable = [
-        'starts_at', 'ends_at', 'project_id', 'kind', 'title', 'notes',
+        'starts_at', 'ends_at', 'project_id', 'task_id', 'kind', 'title', 'notes',
     ];
 
     protected $casts = [
@@ -28,6 +28,11 @@ class ManualEntry extends Model
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
+    }
+
+    public function task(): BelongsTo
+    {
+        return $this->belongsTo(Task::class);
     }
 
     /** Duración en minutos (mínimo 1). */

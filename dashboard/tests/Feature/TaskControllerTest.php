@@ -84,5 +84,19 @@ class TaskControllerTest extends TestCase
 
         $this->assertNotNull($task->fresh()->completed_at);
     }
+
+    public function test_logged_minutes_sum_the_linked_manual_entries(): void
+    {
+        $task = Task::create(['title' => 'T', 'status' => 'todo']);
+        \App\Models\ManualEntry::create([
+            'starts_at' => '2026-05-21 09:00:00',
+            'ends_at'   => '2026-05-21 10:30:00',
+            'kind'      => 'meeting',
+            'title'     => 'Reunión',
+            'task_id'   => $task->id,
+        ]);
+
+        $this->assertSame(90, $task->fresh()->loggedMinutes());
+    }
 }
 

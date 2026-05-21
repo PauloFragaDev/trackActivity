@@ -2,6 +2,7 @@
     $overdue = $task->due_date
         && $task->status !== \App\Enums\TaskStatus::Done
         && $task->due_date->isPast() && ! $task->due_date->isToday();
+    $logged = $task->loggedMinutes();
 @endphp
 <div class="task-card card p-2.5 cursor-grab active:cursor-grabbing"
      data-task-id="{{ $task->id }}"
@@ -16,7 +17,7 @@
         <button type="button" data-task-edit class="btn-ghost text-xs shrink-0 -mr-1 -mt-1"
                 title="Editar tarea" aria-label="Editar tarea">✎</button>
     </div>
-    @if ($task->project || $task->priority || $task->due_date)
+    @if ($task->project || $task->priority || $task->due_date || $logged > 0)
         <div class="flex flex-wrap items-center gap-1 mt-2">
             @if ($task->project)
                 <span class="chip">
@@ -29,6 +30,9 @@
             @endif
             @if ($task->due_date)
                 <span class="chip {{ $overdue ? 'text-rose-600 dark:text-rose-400 font-medium' : '' }}">{{ $task->due_date->format('d/m') }}</span>
+            @endif
+            @if ($logged > 0)
+                <span class="chip" title="Tiempo registrado">⏱ {{ $logged >= 60 ? intdiv($logged, 60) . 'h ' . ($logged % 60) . 'm' : $logged . 'm' }}</span>
             @endif
         </div>
     @endif

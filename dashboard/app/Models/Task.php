@@ -6,6 +6,7 @@ use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Tarea del tablero Kanban. `completed_at` se sincroniza con el estado Done.
@@ -47,5 +48,16 @@ class Task extends Model
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
+    }
+
+    public function manualEntries(): HasMany
+    {
+        return $this->hasMany(ManualEntry::class);
+    }
+
+    /** Minutos totales registrados contra la tarea vía entradas manuales. */
+    public function loggedMinutes(): int
+    {
+        return (int) $this->manualEntries->sum(fn (ManualEntry $e) => $e->durationMinutes());
     }
 }
