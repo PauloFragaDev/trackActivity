@@ -72,6 +72,12 @@ function openModal(selector) {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
+    // Sidebar plegable: alterna el estado y lo persiste.
+    document.getElementById('sidebar-toggle')?.addEventListener('click', () => {
+        const collapsed = document.documentElement.classList.toggle('sidebar-collapsed');
+        localStorage.setItem('sidebar', collapsed ? 'collapsed' : 'expanded');
+    });
+
     // Confirmaciones: <form data-confirm="mensaje"> pide confirmación con
     // SweetAlert en vez del confirm() nativo del navegador.
     document.querySelectorAll('form[data-confirm]').forEach((form) => {

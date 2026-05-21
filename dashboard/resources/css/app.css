@@ -150,3 +150,17 @@
     from { opacity: 0; transform: translateY(10px) scale(0.985); }
     to   { opacity: 1; transform: translateY(0) scale(1); }
 }
+
+/* Sidebar plegable */
+#sidebar {
+    transition: width 0.16s ease;
+}
+html.sidebar-collapsed #sidebar {
+    width: 3rem;
+}
+html.sidebar-collapsed #sidebar .sidebar-full {
+    display: none;
+}
+[data-icon-expand] { display: none; }
+html.sidebar-collapsed [data-icon-collapse] { display: none; }
+html.sidebar-collapsed [data-icon-expand]   { display: inline; }

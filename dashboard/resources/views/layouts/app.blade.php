@@ -4,13 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'trackActivity')</title>
-    {{-- Aplicamos el tema antes de pintar para evitar flash --}}
+    {{-- Estado de tema y sidebar antes de pintar, para evitar parpadeo --}}
     <script>
         (() => {
             const stored = localStorage.getItem('theme');
             const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            const initial = stored || (prefersDark ? 'dark' : 'light');
-            document.documentElement.classList.toggle('dark', initial === 'dark');
+            document.documentElement.classList.toggle('dark', (stored || (prefersDark ? 'dark' : 'light')) === 'dark');
+            if (localStorage.getItem('sidebar') === 'collapsed') {
+                document.documentElement.classList.add('sidebar-collapsed');
+            }
         })();
     </script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -25,15 +27,24 @@
 
     <div class="flex min-h-screen">
         {{-- ─────────────── Sidebar ─────────────── --}}
-        <aside class="w-56 shrink-0 flex flex-col sticky top-0 h-screen
+        <aside id="sidebar"
+               class="w-56 shrink-0 flex flex-col sticky top-0 h-screen overflow-hidden
                       bg-white dark:bg-ink-900 border-r divider">
-            <a href="{{ route('timeline.today') }}"
-               class="flex items-center gap-2 px-4 py-3.5 font-semibold tracking-tight border-b divider">
-                <span class="inline-block w-2 h-2 rounded-full bg-emerald-400"></span>
-                trackActivity
-            </a>
+            {{-- Cabecera: plegar/desplegar + marca --}}
+            <div class="flex items-center gap-2 p-2 border-b divider">
+                <button id="sidebar-toggle" type="button" class="btn-ghost shrink-0"
+                        aria-label="Plegar o desplegar el menú" title="Plegar / desplegar menú">
+                    <span data-icon-collapse aria-hidden="true">«</span>
+                    <span data-icon-expand   aria-hidden="true">»</span>
+                </button>
+                <a href="{{ route('timeline.today') }}"
+                   class="sidebar-full flex items-center gap-2 font-semibold tracking-tight whitespace-nowrap">
+                    <span class="inline-block w-2 h-2 rounded-full bg-emerald-400"></span>
+                    trackActivity
+                </a>
+            </div>
 
-            <nav class="flex-1 overflow-y-auto p-2 space-y-0.5 text-sm">
+            <nav class="sidebar-full flex-1 overflow-y-auto p-2 space-y-0.5 text-sm">
                 {{-- Tracking --}}
                 <details class="group" @if (request()->routeIs('timeline.*', 'calendar.*')) open @endif>
                     <summary class="flex items-center gap-1.5 px-2 py-1.5 rounded cursor-pointer select-none list-none
@@ -75,7 +86,7 @@
                    class="block px-2 py-1.5 rounded {{ $navItem(['help']) }}">Ayuda</a>
             </nav>
 
-            <div class="p-2 border-t divider">
+            <div class="sidebar-full p-2 border-t divider">
                 <button id="theme-toggle" type="button"
                         class="btn-ghost w-full justify-start"
                         aria-label="Cambiar tema" title="Cambiar tema">
@@ -89,7 +100,7 @@
         {{-- ─────────────── Contenido ─────────────── --}}
         <div class="flex-1 min-w-0 flex flex-col">
             <main class="flex-1">
-                <div class="max-w-6xl mx-auto px-6 py-8">
+                <div class="@yield('container', 'max-w-6xl mx-auto') px-6 py-8">
                     @if (session('status'))
                         {{-- Lo recoge app.js y lo muestra como toast inferior --}}
                         <div id="flash-data" data-message="{{ session('status') }}" hidden></div>

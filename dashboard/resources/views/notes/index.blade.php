@@ -1,6 +1,8 @@
 @extends('layouts.app')
 
 @section('title', 'Notas')
+{{-- Notas usa todo el ancho del área de contenido (sin el cap max-w-6xl) --}}
+@section('container', '')
 
 @section('content')
     <div class="mb-4">
