@@ -20,11 +20,11 @@
         </div>
     @endif
 
-    <div class="card grid overflow-hidden" style="grid-template-columns: 210px 270px 1fr; min-height: 72vh">
+    <div class="card grid overflow-hidden" style="grid-template-columns: 210px 270px 1fr; height: 78vh">
 
         {{-- ─── Panel 1 · Carpetas ─── --}}
         <aside class="border-r divider flex flex-col">
-            <div class="p-2 space-y-0.5 flex-1 overflow-y-auto">
+            <div class="p-2 space-y-0.5 flex-1 min-h-0 overflow-y-auto">
                 <a href="{{ route('notes.index') }}"
                    class="block px-2 py-1 rounded text-sm
                           {{ ! $folderId ? 'surface-soft font-medium' : 'text-muted hover:bg-ink-100 dark:hover:bg-ink-800' }}">
@@ -72,7 +72,7 @@
                 @endif
             </div>
             {{-- Lista --}}
-            <div class="flex-1 overflow-y-auto p-2 space-y-1">
+            <div class="flex-1 min-h-0 overflow-y-auto p-2 space-y-1">
                 @forelse ($notes as $n)
                     @php
                         $noteLink = $search !== ''
@@ -104,19 +104,19 @@
         </div>
 
         {{-- ─── Panel 3 · Editor ─── --}}
-        <div class="p-4">
+        <div class="p-4 flex flex-col h-full min-h-0">
             @if ($currentNote)
-                <form method="POST" action="{{ route('notes.update', $currentNote) }}" data-note-form class="flex flex-col h-full gap-3">
+                <form method="POST" action="{{ route('notes.update', $currentNote) }}" data-note-form class="flex-1 min-h-0 flex flex-col gap-3">
                     @csrf
                     @method('PATCH')
                     <input type="text" name="title" required maxlength="200"
                            value="{{ old('title', $currentNote->title) }}"
                            class="input text-base font-semibold">
                     <textarea name="body" rows="16"
-                              class="textarea font-mono flex-1"
+                              class="textarea font-mono flex-1 min-h-0"
                               placeholder="Escribe en Markdown…">{{ old('body', $currentNote->body) }}</textarea>
                     {{-- El editor WYSIWYG (Crepe) se monta aquí; ver resources/js/notes-editor.js --}}
-                    <div data-note-editor hidden class="flex-1 min-h-[20rem]"></div>
+                    <div data-note-editor hidden class="flex-1 min-h-0 overflow-y-auto"></div>
                     <div class="flex items-center gap-3 flex-wrap">
                         <label class="inline-flex items-center gap-1.5 text-sm">
                             <span class="text-muted">Carpeta</span>
@@ -140,13 +140,13 @@
                         </div>
                     </div>
                 </form>
-                <form method="POST" action="{{ route('notes.destroy', $currentNote) }}" class="mt-3 text-right"
+                <form method="POST" action="{{ route('notes.destroy', $currentNote) }}" class="mt-3 text-right shrink-0"
                       data-confirm="¿Eliminar la nota «{{ $currentNote->title }}»?">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn-ghost text-rose-600 dark:text-rose-400 text-sm">Eliminar nota</button>
                 </form>
             @else
-                <div class="h-full flex items-center justify-center text-center text-muted">
+                <div class="flex-1 flex items-center justify-center text-center text-muted">
                     <div>
                         <p class="text-base">Ninguna nota seleccionada.</p>
                         <p class="text-sm mt-1">Crea una con <strong>+ Nota</strong> o elige una de la lista.</p>
