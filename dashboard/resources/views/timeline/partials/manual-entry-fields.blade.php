@@ -3,7 +3,10 @@
     de edición. Espera: $projects (Collection), $tz (string) y, opcionalmente,
     $entry (ManualEntry|null) para prerrellenar.
 --}}
-@php $e = $entry ?? null; @endphp
+@php
+    $e     = $entry ?? null;
+    $tasks = $tasks ?? \App\Models\Task::orderBy('title')->get();
+@endphp
 
 <div class="grid grid-cols-2 gap-3">
     <label class="label">
@@ -50,6 +53,17 @@
         </select>
     </label>
 </div>
+
+<label class="label">
+    <span>Tarea (opcional)</span>
+    <select name="task_id" class="select mt-1">
+        <option value="">— Sin tarea —</option>
+        @foreach ($tasks as $t)
+            <option value="{{ $t->id }}"
+                @selected((int) old('task_id', $e?->task_id) === $t->id)>{{ $t->title }}</option>
+        @endforeach
+    </select>
+</label>
 
 <label class="label">
     <span>Notas (opcional)</span>

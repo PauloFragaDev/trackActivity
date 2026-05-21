@@ -185,5 +185,26 @@
                 </div>
             @endif
         </section>
+
+        @php $projectNotes = $project->notes()->orderByDesc('updated_at')->get(); @endphp
+        <section class="mt-8">
+            <h2 class="text-base font-semibold mb-3">Notas</h2>
+            @if ($projectNotes->isEmpty())
+                <div class="card p-6 text-center text-muted text-sm">
+                    Sin notas vinculadas a este proyecto.
+                </div>
+            @else
+                <div class="card divide-y divider">
+                    @foreach ($projectNotes as $note)
+                        <a href="{{ route('notes.index', ['note' => $note->id]) }}"
+                           class="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-ink-100 dark:hover:bg-ink-800">
+                            <span>{{ $note->icon ?: '📄' }}</span>
+                            <span class="flex-1 truncate">{{ $note->title }}</span>
+                            <span class="shrink-0 text-xs text-faint">{{ $note->updated_at->diffForHumans() }}</span>
+                        </a>
+                    @endforeach
+                </div>
+            @endif
+        </section>
     @endunless
 @endsection

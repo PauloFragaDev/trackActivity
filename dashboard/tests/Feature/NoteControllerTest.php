@@ -196,4 +196,12 @@ class NoteControllerTest extends TestCase
 
         $this->assertSame(['Origen'], collect($backlinks)->pluck('title')->all());
     }
+
+    public function test_a_note_can_be_linked_to_a_project(): void
+    {
+        $project = \App\Models\Project::create(['code' => 'PX', 'name' => 'Proyecto X', 'color' => '#888888']);
+
+        $this->post('/notes', ['title' => 'Con proyecto', 'project_id' => $project->id])->assertRedirect();
+        $this->assertSame($project->id, Note::firstOrFail()->project_id);
+    }
 }

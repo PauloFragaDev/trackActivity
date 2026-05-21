@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Note;
 use App\Models\NoteFolder;
+use App\Models\Project;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -89,6 +90,7 @@ class NoteController extends Controller
             'trashCount'    => $trashCount,
             'breadcrumb'    => $breadcrumb,
             'backlinks'     => $backlinks,
+            'projects'      => Project::orderBy('code')->get(),
         ]);
     }
 
@@ -111,17 +113,19 @@ class NoteController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'title'     => ['required', 'string', 'max:200'],
-            'icon'      => ['nullable', 'string', 'max:16'],
-            'folder_id' => ['nullable', 'integer', 'exists:note_folders,id'],
-            'body'      => ['nullable', 'string'],
+            'title'      => ['required', 'string', 'max:200'],
+            'icon'       => ['nullable', 'string', 'max:16'],
+            'folder_id'  => ['nullable', 'integer', 'exists:note_folders,id'],
+            'project_id' => ['nullable', 'integer', 'exists:projects,id'],
+            'body'       => ['nullable', 'string'],
         ]);
 
         $note = Note::create([
-            'title'     => $data['title'],
-            'icon'      => $data['icon'] ?? null,
-            'folder_id' => $data['folder_id'] ?? null,
-            'body'      => $data['body'] ?? null,
+            'title'      => $data['title'],
+            'icon'       => $data['icon'] ?? null,
+            'folder_id'  => $data['folder_id'] ?? null,
+            'project_id' => $data['project_id'] ?? null,
+            'body'       => $data['body'] ?? null,
         ]);
 
         return redirect()
@@ -132,18 +136,20 @@ class NoteController extends Controller
     public function update(Request $request, Note $note): RedirectResponse|Response
     {
         $data = $request->validate([
-            'title'     => ['required', 'string', 'max:200'],
-            'icon'      => ['nullable', 'string', 'max:16'],
-            'body'      => ['nullable', 'string'],
-            'folder_id' => ['nullable', 'integer', 'exists:note_folders,id'],
+            'title'      => ['required', 'string', 'max:200'],
+            'icon'       => ['nullable', 'string', 'max:16'],
+            'body'       => ['nullable', 'string'],
+            'folder_id'  => ['nullable', 'integer', 'exists:note_folders,id'],
+            'project_id' => ['nullable', 'integer', 'exists:projects,id'],
         ]);
 
         $note->update([
-            'title'     => $data['title'],
-            'icon'      => $data['icon'] ?? null,
-            'body'      => $data['body'] ?? null,
-            'folder_id' => $data['folder_id'] ?? null,
-            'pinned'    => $request->boolean('pinned'),
+            'title'      => $data['title'],
+            'icon'       => $data['icon'] ?? null,
+            'body'       => $data['body'] ?? null,
+            'folder_id'  => $data['folder_id'] ?? null,
+            'project_id' => $data['project_id'] ?? null,
+            'pinned'     => $request->boolean('pinned'),
         ]);
 
         // Autosave del editor (AJAX): responde 204, sin redirección.
