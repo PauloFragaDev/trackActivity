@@ -230,3 +230,14 @@ html.dark ::-webkit-scrollbar-thumb:hover { background: rgb(71 85 105); }
         scroll-behavior: auto !important;
     }
 }
+
+/* Notas · las citas del editor se muestran como "callout" (caja destacada) */
+[data-note-editor] .milkdown blockquote {
+    border-left: 3px solid #10b981;
+    background: rgb(16 185 129 / 0.08);
+    border-radius: 0 0.4rem 0.4rem 0;
+    padding: 0.55rem 0.9rem;
+}
+html.dark [data-note-editor] .milkdown blockquote {
+    background: rgb(16 185 129 / 0.14);
+}
