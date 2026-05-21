@@ -20,11 +20,19 @@
         </div>
     @endif
 
-    <div class="card grid" style="grid-template-columns: 210px 270px 1fr">
+    <div class="card flex" style="height: 78vh">
 
-        {{-- ─── Panel 1 · Carpetas ─── --}}
-        <aside class="border-r divider flex flex-col">
-            <div class="p-2 space-y-0.5 flex-1 min-h-0 overflow-y-auto">
+        {{-- ─── Panel 1 · Carpetas (plegable) ─── --}}
+        <aside id="notes-folders" class="w-52 shrink-0 border-r divider flex flex-col">
+            <div class="flex items-center gap-1 p-2 border-b divider">
+                <button type="button" class="btn-ghost shrink-0" data-panel-toggle="folders"
+                        title="Plegar / desplegar carpetas" aria-label="Plegar carpetas">
+                    <span data-pc-collapse aria-hidden="true">«</span>
+                    <span data-pc-expand   aria-hidden="true">»</span>
+                </button>
+                <span class="panel-full text-[11px] uppercase tracking-wider text-muted">Carpetas</span>
+            </div>
+            <div class="panel-full p-2 space-y-0.5 flex-1 min-h-0 overflow-y-auto">
                 <a href="{{ route('notes.index') }}"
                    class="block px-2 py-1 rounded text-sm
                           {{ ! $folderId ? 'surface-soft font-medium' : 'text-muted hover:bg-ink-100 dark:hover:bg-ink-800' }}">
@@ -34,24 +42,28 @@
                     @include('notes.partials.folder-node', ['folder' => $folder, 'depth' => 0])
                 @endforeach
             </div>
-            <div class="p-2 border-t divider">
+            <div class="panel-full p-2 border-t divider">
                 <button type="button" class="btn-ghost w-full justify-center text-xs" data-modal-open="#folder-new">
                     + Nueva carpeta
                 </button>
             </div>
         </aside>
 
-        {{-- ─── Panel 2 · Lista de notas ─── --}}
-        <div class="border-r divider flex flex-col">
-            {{-- Buscador --}}
-            <div class="p-2 border-b divider">
-                <form method="GET" action="{{ route('notes.index') }}">
+        {{-- ─── Panel 2 · Lista de notas (plegable) ─── --}}
+        <div id="notes-list" class="w-64 shrink-0 border-r divider flex flex-col">
+            <div class="flex items-center gap-1 p-2 border-b divider">
+                <button type="button" class="btn-ghost shrink-0" data-panel-toggle="list"
+                        title="Plegar / desplegar notas" aria-label="Plegar notas">
+                    <span data-pc-collapse aria-hidden="true">«</span>
+                    <span data-pc-expand   aria-hidden="true">»</span>
+                </button>
+                <form method="GET" action="{{ route('notes.index') }}" class="panel-full flex-1 min-w-0">
                     <input type="search" name="q" value="{{ $search }}"
                            placeholder="Buscar notas…" class="input text-sm">
                 </form>
             </div>
             {{-- Cabecera: carpeta actual o resultados de búsqueda --}}
-            <div class="p-3 border-b divider flex items-center justify-between gap-2">
+            <div class="panel-full p-3 border-b divider flex items-center justify-between gap-2">
                 @if ($search !== '')
                     <span class="text-sm font-medium truncate">Búsqueda: «{{ $search }}»</span>
                     <a href="{{ route('notes.index', ['folder' => $folderId]) }}"
@@ -72,7 +84,7 @@
                 @endif
             </div>
             {{-- Lista --}}
-            <div class="flex-1 min-h-0 overflow-y-auto p-2 space-y-1">
+            <div class="panel-full flex-1 min-h-0 overflow-y-auto p-2 space-y-1">
                 @forelse ($notes as $n)
                     @php
                         $noteLink = $search !== ''
@@ -104,21 +116,23 @@
         </div>
 
         {{-- ─── Panel 3 · Editor ─── --}}
-        <div class="p-4 flex flex-col">
+        <div class="flex-1 min-w-0 p-4 flex flex-col">
             @if ($currentNote)
-                <form method="POST" action="{{ route('notes.update', $currentNote) }}" data-note-form class="flex flex-col gap-3">
+                <form method="POST" action="{{ route('notes.update', $currentNote) }}" data-note-form
+                      class="flex-1 min-h-0 flex flex-col gap-3">
                     @csrf
                     @method('PATCH')
                     <input type="text" name="title" required maxlength="200"
                            value="{{ old('title', $currentNote->title) }}"
                            class="input text-base font-semibold">
                     <textarea name="body" rows="18"
-                              class="textarea font-mono"
+                              class="textarea font-mono flex-1 min-h-0"
                               placeholder="Escribe en Markdown…">{{ old('body', $currentNote->body) }}</textarea>
                     {{-- El editor WYSIWYG (Crepe) se monta aquí; ver resources/js/notes-editor.js.
-                         Sin overflow propio: el menú "/" no debe recortarse; crece y la página hace scroll. --}}
-                    <div data-note-editor hidden class="min-h-[24rem]"></div>
-                    <div class="flex items-center gap-3 flex-wrap">
+                         Altura fija: el contenido scrollea dentro de .ProseMirror (CSS en app.css);
+                         el editor en sí no lleva overflow, para que el menú "/" no se recorte. --}}
+                    <div data-note-editor hidden class="flex-1 min-h-0"></div>
+                    <div class="flex items-center gap-3 flex-wrap shrink-0">
                         <label class="inline-flex items-center gap-1.5 text-sm">
                             <span class="text-muted">Carpeta</span>
                             <select name="folder_id" class="select" style="width:auto">
@@ -147,7 +161,7 @@
                     <button type="submit" class="btn-ghost text-rose-600 dark:text-rose-400 text-sm">Eliminar nota</button>
                 </form>
             @else
-                <div class="min-h-[24rem] flex-1 flex items-center justify-center text-center text-muted">
+                <div class="flex-1 flex items-center justify-center text-center text-muted">
                     <div>
                         <p class="text-base">Ninguna nota seleccionada.</p>
                         <p class="text-sm mt-1">Crea una con <strong>+ Nota</strong> o elige una de la lista.</p>

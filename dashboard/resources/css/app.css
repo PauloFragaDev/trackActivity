@@ -164,3 +164,54 @@ html.sidebar-collapsed #sidebar .sidebar-full {
 [data-icon-expand] { display: none; }
 html.sidebar-collapsed [data-icon-collapse] { display: none; }
 html.sidebar-collapsed [data-icon-expand]   { display: inline; }
+
+/* Notas · paneles plegables (carpetas y lista) */
+#notes-folders, #notes-list { transition: width 0.15s ease; }
+html.notes-folders-collapsed #notes-folders { width: 2.5rem; }
+html.notes-folders-collapsed #notes-folders .panel-full { display: none; }
+html.notes-list-collapsed    #notes-list    { width: 2.5rem; }
+html.notes-list-collapsed    #notes-list    .panel-full { display: none; }
+[data-pc-expand] { display: none; }
+html.notes-folders-collapsed #notes-folders [data-pc-collapse] { display: none; }
+html.notes-folders-collapsed #notes-folders [data-pc-expand]   { display: inline; }
+html.notes-list-collapsed    #notes-list    [data-pc-collapse] { display: none; }
+html.notes-list-collapsed    #notes-list    [data-pc-expand]   { display: inline; }
+
+/* Notas · editor Crepe de altura fija: el contenido scrollea dentro de
+   .ProseMirror; el editor en sí no lleva overflow para no recortar el
+   menú "/" (que es hermano de .ProseMirror dentro de .milkdown). */
+[data-note-editor]:not([hidden]) {
+    display: flex;
+    flex-direction: column;
+}
+[data-note-editor] .milkdown {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+[data-note-editor] .milkdown .ProseMirror {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+/* Scrollbar minimalista, acorde a la app */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(203 213 225) transparent;
+}
+html.dark * {
+    scrollbar-color: rgb(51 65 85) transparent;
+}
+::-webkit-scrollbar { width: 9px; height: 9px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+    background: rgb(203 213 225);
+    border-radius: 9999px;
+    border: 3px solid transparent;
+    background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover { background: rgb(148 163 184); }
+html.dark ::-webkit-scrollbar-thumb { background: rgb(51 65 85); }
+html.dark ::-webkit-scrollbar-thumb:hover { background: rgb(71 85 105); }

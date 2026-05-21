@@ -13,6 +13,11 @@
             if (localStorage.getItem('sidebar') === 'collapsed') {
                 document.documentElement.classList.add('sidebar-collapsed');
             }
+            ['folders', 'list'].forEach((p) => {
+                if (localStorage.getItem('notes-' + p) === 'collapsed') {
+                    document.documentElement.classList.add('notes-' + p + '-collapsed');
+                }
+            });
         })();
     </script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])

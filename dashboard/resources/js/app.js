@@ -78,6 +78,15 @@ window.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('sidebar', collapsed ? 'collapsed' : 'expanded');
     });
 
+    // Paneles plegables de Notas (carpetas y lista).
+    document.querySelectorAll('[data-panel-toggle]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const key = btn.dataset.panelToggle;   // 'folders' | 'list'
+            const collapsed = document.documentElement.classList.toggle(`notes-${key}-collapsed`);
+            localStorage.setItem(`notes-${key}`, collapsed ? 'collapsed' : 'expanded');
+        });
+    });
+
     // Confirmaciones: <form data-confirm="mensaje"> pide confirmación con
     // SweetAlert en vez del confirm() nativo del navegador.
     document.querySelectorAll('form[data-confirm]').forEach((form) => {
