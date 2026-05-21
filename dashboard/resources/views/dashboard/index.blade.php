@@ -13,6 +13,14 @@
         <p class="text-sm text-muted mt-1">{{ ucfirst($now->locale('es')->isoFormat('dddd, D [de] MMMM')) }}</p>
     </div>
 
+    @if ($trackerStaleSince)
+        <div class="card p-3 mb-5 text-sm border-amber-400/60 bg-amber-50 dark:bg-amber-500/10
+                    text-amber-800 dark:text-amber-300">
+            ⚠ El tracker no registra actividad desde {{ $trackerStaleSince->locale('es')->diffForHumans() }}.
+            Comprueba que el daemon esté en marcha.
+        </div>
+    @endif
+
     {{-- Semana actual --}}
     <section class="mb-6">
         <h2 class="text-xs font-medium uppercase tracking-wider text-muted mb-2">Esta semana</h2>

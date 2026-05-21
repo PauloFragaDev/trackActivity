@@ -3,7 +3,9 @@
 namespace Tests\Feature;
 
 use App\Models\Note;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class DashboardControllerTest extends TestCase
@@ -20,5 +22,25 @@ class DashboardControllerTest extends TestCase
         Note::create(['title' => 'Nota muy reciente']);
 
         $this->get('/dashboard')->assertOk()->assertSee('Nota muy reciente');
+    }
+
+    public function test_dashboard_warns_when_the_tracker_is_stale(): void
+    {
+        DB::table('activity_events')->insert([
+            'occurred_at' => CarbonImmutable::now('UTC')->subHours(2)->format('Y-m-d H:i:s'),
+            'source'      => 'window',
+        ]);
+
+        $this->get('/dashboard')->assertOk()->assertSee('no registra actividad');
+    }
+
+    public function test_dashboard_does_not_warn_when_the_tracker_is_recent(): void
+    {
+        DB::table('activity_events')->insert([
+            'occurred_at' => CarbonImmutable::now('UTC')->subMinutes(2)->format('Y-m-d H:i:s'),
+            'source'      => 'window',
+        ]);
+
+        $this->get('/dashboard')->assertOk()->assertDontSee('no registra actividad');
     }
 }

@@ -126,7 +126,7 @@
                 </details>
 
                 {{-- Configuración --}}
-                <details class="group" @if (request()->routeIs('projects.*', 'export.*')) open @endif>
+                <details class="group" @if (request()->routeIs('projects.*', 'export.*', 'data.*')) open @endif>
                     <summary class="flex items-center gap-1.5 px-2 py-1.5 rounded cursor-pointer select-none list-none
                                     text-[11px] uppercase tracking-wider text-muted hover:bg-ink-100 dark:hover:bg-ink-800">
                         <span class="text-[9px] transition-transform group-open:rotate-90">▸</span>
@@ -137,6 +137,8 @@
                            class="block px-2 py-1.5 rounded {{ $navItem(['projects.*']) }}">Proyectos</a>
                         <a href="{{ route('export.form') }}"
                            class="block px-2 py-1.5 rounded {{ $navItem(['export.*']) }}">Export</a>
+                        <a href="{{ route('data.index') }}"
+                           class="block px-2 py-1.5 rounded {{ $navItem(['data.*']) }}">Datos</a>
                     </div>
                 </details>
 

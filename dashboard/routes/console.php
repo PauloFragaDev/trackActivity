@@ -29,3 +29,8 @@ Schedule::command('tracker:generate-summaries --since="2 hours ago"')
 Schedule::command('tracker:prune-events --older-than="90 days"')
     ->dailyAt('03:00')
     ->withoutOverlapping();
+
+// Copia de seguridad diaria de la base de datos (conserva las ultimas 14).
+Schedule::command('backup:snapshot')
+    ->dailyAt('04:00')
+    ->withoutOverlapping();
