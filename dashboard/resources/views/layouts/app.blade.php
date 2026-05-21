@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'trackActivity')</title>
     {{-- Estado de tema y sidebar antes de pintar, para evitar parpadeo --}}
     <script>
@@ -124,6 +125,10 @@
                         </button>
                     </div>
                 </details>
+
+                {{-- Tareas --}}
+                <a href="{{ route('tasks.index') }}"
+                   class="block px-2 py-1.5 rounded {{ $navItem(['tasks.*']) }}">Tareas</a>
 
                 {{-- Configuración --}}
                 <details class="group" @if (request()->routeIs('projects.*', 'export.*', 'data.*')) open @endif>

@@ -24,6 +24,7 @@ configuración y resolución de problemas, en una sola página.
 10. [Resolución de problemas](#10-resolución-de-problemas)
 11. [Privacidad y retención](#11-privacidad-y-retención)
 12. [Notas](#12-notas)
+13. [Tareas](#13-tareas)
 
 ---
 
@@ -485,6 +486,23 @@ notas · editor.
 - **Búsqueda** por título o contenido desde el cuadro de la lista;
   recorre todas las carpetas.
 - **Fijar** una nota (★) la mantiene arriba de su lista.
+
+---
+
+## 13. Tareas
+
+Un tablero **Kanban** de tareas personales. Se abre desde **Tareas** en
+el menú lateral. Cuatro columnas: Backlog, Por hacer, En curso y Hecho.
+
+- Crea y edita tareas en un modal: título, descripción, columna,
+  prioridad, fecha de vencimiento y un **proyecto** opcional (del mismo
+  catálogo que el tracking).
+- **Arrastra** las tarjetas entre columnas y dentro de cada una; el orden
+  se guarda automáticamente.
+- Cada tarjeta muestra su proyecto, prioridad y fecha de vencimiento
+  (resaltada si está vencida).
+- El tablero se filtra por proyecto y por prioridad.
+- Las tareas **En curso** aparecen también en la página de Inicio.
 
 ---
 

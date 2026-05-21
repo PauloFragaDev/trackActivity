@@ -9,6 +9,7 @@ use App\Http\Controllers\ManualEntryController;
 use App\Http\Controllers\NoteController;
 use App\Http\Controllers\NoteFolderController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TimeBlockController;
 use App\Http\Controllers\TimelineController;
 use Illuminate\Support\Facades\Route;
@@ -79,6 +80,13 @@ Route::delete('/notes/{note}',       [NoteController::class, 'destroy'])->name('
 Route::post('/note-folders',                [NoteFolderController::class, 'store'])->name('note-folders.store');
 Route::patch('/note-folders/{noteFolder}',  [NoteFolderController::class, 'update'])->name('note-folders.update');
 Route::delete('/note-folders/{noteFolder}', [NoteFolderController::class, 'destroy'])->name('note-folders.destroy');
+
+// ─────────────────── Tareas (Kanban) ───────────────────
+Route::get('/tasks',                [TaskController::class, 'index'])->name('tasks.index');
+Route::post('/tasks',               [TaskController::class, 'store'])->name('tasks.store');
+Route::patch('/tasks/{task}',       [TaskController::class, 'update'])->name('tasks.update');
+Route::patch('/tasks/{task}/move',  [TaskController::class, 'move'])->name('tasks.move');
+Route::delete('/tasks/{task}',      [TaskController::class, 'destroy'])->name('tasks.destroy');
 
 // ─────────────────── Ayuda ───────────────────
 Route::get('/help', [HelpController::class, 'index'])->name('help');
