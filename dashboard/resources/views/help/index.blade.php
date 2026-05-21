@@ -27,6 +27,7 @@
             <li><a class="underline hover:opacity-80" href="#scheduler">9. Auto-actualización</a></li>
             <li><a class="underline hover:opacity-80" href="#troubleshooting">10. Resolución de problemas</a></li>
             <li><a class="underline hover:opacity-80" href="#privacidad">11. Privacidad</a></li>
+            <li><a class="underline hover:opacity-80" href="#notas">12. Notas</a></li>
         </ol>
     </nav>
 
@@ -328,5 +329,27 @@ php artisan schedule:work</code></pre>
             Para retener menos histórico, ajusta <code class="chip">--older-than</code> en el
             scheduler de <code class="chip">tracker:prune-events</code>.
         </p>
+    </section>
+
+    {{-- 12 --}}
+    <section id="notas" class="card p-6 mb-6">
+        <h2 class="text-lg font-semibold mb-2">12. Notas</h2>
+        <p class="text-sm mb-3">
+            Un bloc de notas personal, independiente del tracking. Se abre desde
+            <a class="underline" href="{{ route('notes.index') }}">Notas</a> en el menú lateral.
+            Vista de tres paneles: <strong>carpetas</strong> · <strong>lista de notas</strong> ·
+            <strong>editor</strong>.
+        </p>
+        <ul class="text-sm space-y-1 list-disc pl-5">
+            <li><strong>Carpetas</strong> anidables para organizar las notas; una nota puede
+                estar en una carpeta o suelta en la raíz. Al borrar una carpeta, sus notas y
+                subcarpetas pasan a la raíz — no se pierde nada.</li>
+            <li><strong>Editor</strong> WYSIWYG sobre Markdown: formato en vivo, menú
+                <code class="chip">/</code> para insertar bloques y arrastre de bloques. El
+                contenido se guarda como Markdown, con <strong>autoguardado</strong>.</li>
+            <li><strong>Buscar</strong> por título o contenido desde el cuadro de búsqueda de la
+                lista; la búsqueda recorre todas las carpetas.</li>
+            <li><strong>Fijar</strong> una nota (★) la mantiene arriba de su lista.</li>
+        </ul>
     </section>
 @endsection

@@ -1,0 +1,125 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Note;
+use App\Models\NoteFolder;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\View\View;
+
+/**
+ * Notas: vista de carpetas + lista + editor, y CRUD de notas.
+ *
+ * El cuerpo se guarda como Markdown plano. En N1 el editor es un textarea;
+ * el editor WYSIWYG llega en N3 (ver docs/16-notes-plan.md).
+ */
+class NoteController extends Controller
+{
+    public function index(Request $request): View
+    {
+        $folders = NoteFolder::query()->orderBy('position')->orderBy('name')->get();
+
+        $search        = trim((string) $request->query('q', ''));
+        $folderId      = $request->integer('folder') ?: null;
+        $currentFolder = $folderId ? $folders->firstWhere('id', $folderId) : null;
+
+        $query = Note::query()->orderByDesc('pinned');
+
+        if ($search !== '') {
+            // Búsqueda en título y cuerpo, sobre todas las carpetas.
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('body', 'like', "%{$search}%");
+            })->orderByDesc('updated_at');
+        } else {
+            $query
+                ->when(
+                    $folderId,
+                    fn ($q) => $q->where('folder_id', $folderId),
+                    fn ($q) => $q->whereNull('folder_id'),
+                )
+                ->orderBy('position')
+                ->orderByDesc('updated_at');
+        }
+
+        $notes = $query->get();
+
+        $noteId      = $request->integer('note') ?: null;
+        $currentNote = $noteId ? Note::find($noteId) : $notes->first();
+
+        return view('notes.index', [
+            'folders'       => $folders,
+            'currentFolder' => $currentFolder,
+            'folderId'      => $folderId,
+            'notes'         => $notes,
+            'currentNote'   => $currentNote,
+            'search'        => $search,
+        ]);
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'title'     => ['required', 'string', 'max:200'],
+            'folder_id' => ['nullable', 'integer', 'exists:note_folders,id'],
+            'body'      => ['nullable', 'string'],
+        ]);
+
+        $note = Note::create([
+            'title'     => $data['title'],
+            'folder_id' => $data['folder_id'] ?? null,
+            'body'      => $data['body'] ?? null,
+        ]);
+
+        return redirect()
+            ->route('notes.index', ['folder' => $note->folder_id, 'note' => $note->id])
+            ->with('status', 'Nota creada.');
+    }
+
+    public function update(Request $request, Note $note): RedirectResponse|Response
+    {
+        $data = $request->validate([
+            'title'     => ['required', 'string', 'max:200'],
+            'body'      => ['nullable', 'string'],
+            'folder_id' => ['nullable', 'integer', 'exists:note_folders,id'],
+        ]);
+
+        $note->update([
+            'title'     => $data['title'],
+            'body'      => $data['body'] ?? null,
+            'folder_id' => $data['folder_id'] ?? null,
+            'pinned'    => $request->boolean('pinned'),
+        ]);
+
+        // Autosave del editor (AJAX): responde 204, sin redirección.
+        if ($request->expectsJson()) {
+            return response()->noContent();
+        }
+
+        return redirect()
+            ->route('notes.index', ['folder' => $note->folder_id, 'note' => $note->id])
+            ->with('status', 'Nota guardada.');
+    }
+
+    public function destroy(Note $note): RedirectResponse
+    {
+        $folderId = $note->folder_id;
+        $note->delete();
+
+        return redirect()
+            ->route('notes.index', ['folder' => $folderId])
+            ->with('status', 'Nota eliminada.');
+    }
+
+    /** Fija/desfija una nota (acción rápida desde la lista). */
+    public function togglePin(Note $note): RedirectResponse
+    {
+        $note->update(['pinned' => ! $note->pinned]);
+
+        return redirect()
+            ->route('notes.index', ['folder' => $note->folder_id, 'note' => $note->id])
+            ->with('status', $note->pinned ? 'Nota fijada.' : 'Nota desfijada.');
+    }
+}

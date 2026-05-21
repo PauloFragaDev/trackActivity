@@ -36,12 +36,20 @@ window.addEventListener('DOMContentLoaded', () => {
 // Confirmaciones (SweetAlert2) y toasts (Toastify-js).
 // ──────────────────────────────────────────────
 
-/** Colores de SweetAlert adaptados al tema activo. */
-function swalTheme() {
-    return document.documentElement.classList.contains('dark')
-        ? { background: '#1e293b', color: '#e2e8f0' }
-        : {};
-}
+/**
+ * Configuración común de SweetAlert, alineada con el diseño de la app.
+ * El aspecto del popup y de los botones se define en app.css
+ * (.app-swal + las clases .btn-* de la app, gracias a buttonsStyling:false).
+ */
+const SWAL_BASE = {
+    buttonsStyling: false,
+    reverseButtons: true,
+    customClass: {
+        popup: 'app-swal',
+        confirmButton: 'btn-danger',
+        cancelButton: 'btn-ghost',
+    },
+};
 
 /** Toast de feedback: entra y sale deslizándose desde abajo. */
 window.toast = (message) => {
@@ -64,6 +72,21 @@ function openModal(selector) {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
+    // Sidebar plegable: alterna el estado y lo persiste.
+    document.getElementById('sidebar-toggle')?.addEventListener('click', () => {
+        const collapsed = document.documentElement.classList.toggle('sidebar-collapsed');
+        localStorage.setItem('sidebar', collapsed ? 'collapsed' : 'expanded');
+    });
+
+    // Paneles plegables de Notas (carpetas y lista).
+    document.querySelectorAll('[data-panel-toggle]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const key = btn.dataset.panelToggle;   // 'folders' | 'list'
+            const collapsed = document.documentElement.classList.toggle(`notes-${key}-collapsed`);
+            localStorage.setItem(`notes-${key}`, collapsed ? 'collapsed' : 'expanded');
+        });
+    });
+
     // Confirmaciones: <form data-confirm="mensaje"> pide confirmación con
     // SweetAlert en vez del confirm() nativo del navegador.
     document.querySelectorAll('form[data-confirm]').forEach((form) => {
@@ -71,16 +94,13 @@ window.addEventListener('DOMContentLoaded', () => {
             if (form.dataset.confirmed === '1') return;   // ya confirmado: deja pasar
             e.preventDefault();
             Swal.fire({
+                ...SWAL_BASE,
                 title: form.dataset.confirmTitle || '¿Eliminar?',
                 text: form.dataset.confirm,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonText: form.dataset.confirmButton || 'Sí, eliminar',
                 cancelButtonText: 'Cancelar',
-                confirmButtonColor: '#e11d48',
-                cancelButtonColor: '#64748b',
-                reverseButtons: true,
-                ...swalTheme(),
             }).then((result) => {
                 if (result.isConfirmed) {
                     form.dataset.confirmed = '1';
@@ -116,16 +136,13 @@ window.addEventListener('DOMContentLoaded', () => {
     if (overlapEl) {
         const overlap = JSON.parse(overlapEl.textContent);
         Swal.fire({
+            ...SWAL_BASE,
             title: 'Solapamiento de horario',
             text: overlap.message,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonText: 'Reemplazar',
             cancelButtonText: 'Cancelar',
-            confirmButtonColor: '#e11d48',
-            cancelButtonColor: '#64748b',
-            reverseButtons: true,
-            ...swalTheme(),
         }).then((result) => {
             if (result.isConfirmed) {
                 const form = document.createElement('form');
@@ -159,5 +176,10 @@ window.addEventListener('DOMContentLoaded', () => {
     } else if (document.getElementById('form-errors')) {
         // Errores de validación: reabre el modal de alta con los datos.
         openModal('#manual-add');
+    }
+
+    // Editor de notas: Crepe se carga de forma diferida solo en /notes.
+    if (document.querySelector('[data-note-editor]')) {
+        import('./notes-editor.js').then((m) => m.initNoteEditor());
     }
 });

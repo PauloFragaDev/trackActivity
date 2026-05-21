@@ -4,6 +4,8 @@ use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\HelpController;
 use App\Http\Controllers\ManualEntryController;
+use App\Http\Controllers\NoteController;
+use App\Http\Controllers\NoteFolderController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\TimeBlockController;
 use App\Http\Controllers\TimelineController;
@@ -50,6 +52,17 @@ Route::delete('/projects/{project}',   [ProjectController::class, 'destroy'])->n
 Route::post('/projects/{project}/mappings',                   [ProjectController::class, 'storeMapping'])->name('projects.mappings.store');
 Route::delete('/projects/{project}/mappings/{mapping}',       [ProjectController::class, 'destroyMapping'])->name('projects.mappings.destroy');
 Route::patch('/projects/{project}/mappings/{mapping}/toggle', [ProjectController::class, 'toggleMapping'])->name('projects.mappings.toggle');
+
+// ─────────────────── Notas ───────────────────
+Route::get('/notes',           [NoteController::class, 'index'])->name('notes.index');
+Route::post('/notes',          [NoteController::class, 'store'])->name('notes.store');
+Route::patch('/notes/{note}',     [NoteController::class, 'update'])->name('notes.update');
+Route::patch('/notes/{note}/pin', [NoteController::class, 'togglePin'])->name('notes.pin');
+Route::delete('/notes/{note}',    [NoteController::class, 'destroy'])->name('notes.destroy');
+
+Route::post('/note-folders',                [NoteFolderController::class, 'store'])->name('note-folders.store');
+Route::patch('/note-folders/{noteFolder}',  [NoteFolderController::class, 'update'])->name('note-folders.update');
+Route::delete('/note-folders/{noteFolder}', [NoteFolderController::class, 'destroy'])->name('note-folders.destroy');
 
 // ─────────────────── Ayuda ───────────────────
 Route::get('/help', [HelpController::class, 'index'])->name('help');
