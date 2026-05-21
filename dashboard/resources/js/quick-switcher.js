@@ -1,8 +1,22 @@
 /**
- * Quick switcher (Ctrl/Cmd+K): busca y salta a una nota desde cualquier
- * página. La lista de notas se trae una vez por carga de página desde
- * /notes/quick y se filtra en cliente.
+ * Paleta de comandos (Ctrl/Cmd+K): navega a cualquier sección o salta a
+ * una nota desde cualquier página. Los comandos de navegación son fijos;
+ * la lista de notas se trae una vez por carga vía /notes/quick.
  */
+
+const COMMANDS = [
+    { icon: '🏠', label: 'Inicio',     href: '/dashboard' },
+    { icon: '🕘', label: 'Hoy',        href: '/' },
+    { icon: '📅', label: 'Semana',     href: '/week' },
+    { icon: '🗓', label: 'Mes',        href: '/calendar' },
+    { icon: '📝', label: 'Notas',      href: '/notes' },
+    { icon: '✅', label: 'Tareas',     href: '/tasks' },
+    { icon: '🗑', label: 'Papelera',   href: '/notes?trash=1' },
+    { icon: '📁', label: 'Proyectos',  href: '/projects' },
+    { icon: '💾', label: 'Datos',      href: '/data' },
+    { icon: '❓', label: 'Ayuda',      href: '/help' },
+];
+
 export function initQuickSwitcher() {
     const dlg = document.getElementById('quick-switcher');
     if (!dlg) return;
@@ -37,22 +51,34 @@ export function initQuickSwitcher() {
 
     const render = () => {
         const q = input.value.trim().toLowerCase();
-        const matched = (notes || [])
-            .filter((n) => q === '' || (n.title || '').toLowerCase().includes(q))
-            .slice(0, 40);
 
-        if (matched.length === 0) {
+        const rows = [
+            ...COMMANDS
+                .filter((c) => q === '' || c.label.toLowerCase().includes(q))
+                .map((c) => ({ href: c.href, icon: c.icon, label: c.label, meta: 'Ir a' })),
+            ...(notes || [])
+                .filter((n) => q === '' || (n.title || '').toLowerCase().includes(q))
+                .slice(0, 30)
+                .map((n) => ({
+                    href: `/notes?note=${n.id}`,
+                    icon: n.icon || '📄',
+                    label: n.title || '(sin título)',
+                    meta: n.folder || 'Nota',
+                })),
+        ];
+
+        if (rows.length === 0) {
             list.innerHTML = '<li role="presentation" class="px-3 py-2 text-sm text-muted">Sin resultados</li>';
             input.removeAttribute('aria-activedescendant');
             return;
         }
-        list.innerHTML = matched.map((n, i) => `
+        list.innerHTML = rows.map((r, i) => `
             <li role="presentation">
-                <a href="/notes?note=${n.id}" data-qs-item role="option" id="qs-opt-${i}" aria-selected="false"
-                   class="block px-3 py-2 rounded text-sm truncate">
-                    ${n.icon ? escape(n.icon) + ' ' : ''}<span class="font-medium">${escape(n.title || '(sin título)')}</span>${
-                        n.folder ? `<span class="text-faint"> · ${escape(n.folder)}</span>` : ''
-                    }
+                <a href="${r.href}" data-qs-item role="option" id="qs-opt-${i}" aria-selected="false"
+                   class="flex items-center gap-2 px-3 py-2 rounded text-sm">
+                    <span class="shrink-0">${escape(r.icon)}</span>
+                    <span class="flex-1 truncate">${escape(r.label)}</span>
+                    <span class="shrink-0 text-faint text-xs">${escape(r.meta)}</span>
                 </a>
             </li>`).join('');
         setActive(0);
@@ -62,17 +88,18 @@ export function initQuickSwitcher() {
         if (dlg.open) return;
         dlg.showModal();
         input.value = '';
+        render();          // los comandos se muestran al instante
+        input.focus();
+
         if (notes === null) {
-            list.innerHTML = '<li class="px-3 py-2 text-sm text-muted">Cargando…</li>';
             try {
                 const res = await fetch('/notes/quick', { headers: { Accept: 'application/json' } });
                 notes = res.ok ? await res.json() : [];
             } catch {
                 notes = [];
             }
+            render();      // re-render incorporando las notas
         }
-        render();
-        input.focus();
     };
 
     // Atajo global Ctrl/Cmd+K.

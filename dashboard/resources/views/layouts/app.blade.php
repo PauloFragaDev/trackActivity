@@ -189,9 +189,9 @@
 
     {{-- Quick switcher (Ctrl/Cmd+K): buscar y saltar a una nota --}}
     <dialog id="quick-switcher" class="modal" aria-label="Buscar nota">
-        <input type="text" data-qs-input autocomplete="off" placeholder="Buscar nota…" class="input"
+        <input type="text" data-qs-input autocomplete="off" placeholder="Buscar o ir a…" class="input"
                role="combobox" aria-expanded="true" aria-controls="qs-results"
-               aria-autocomplete="list" aria-label="Buscar nota">
+               aria-autocomplete="list" aria-label="Buscar o ir a una sección">
         <ul id="qs-results" data-qs-results role="listbox" aria-label="Resultados"
             class="mt-2 max-h-80 overflow-y-auto space-y-0.5"></ul>
     </dialog>
