@@ -23,6 +23,7 @@ configuración y resolución de problemas, en una sola página.
 9. [Auto-actualización (scheduler)](#9-auto-actualización-scheduler)
 10. [Resolución de problemas](#10-resolución-de-problemas)
 11. [Privacidad y retención](#11-privacidad-y-retención)
+12. [Notas](#12-notas)
 
 ---
 
@@ -465,6 +466,25 @@ archivo SQLite en tu disco.
 antiguos de 90 días (`tracker:prune-events --older-than="90 days"`).
 Los `time_blocks` y `generated_summaries` se conservan indefinidamente
 (son ligeros).
+
+---
+
+## 12. Notas
+
+Un bloc de notas personal, **independiente del tracking**. Se abre desde
+**Notas** en el menú lateral. Vista de tres paneles: carpetas · lista de
+notas · editor.
+
+- **Carpetas** anidables para organizar las notas; una nota puede estar
+  en una carpeta o suelta en la raíz. Al borrar una carpeta, sus notas y
+  subcarpetas pasan a la raíz — no se pierde contenido.
+- **Editor WYSIWYG sobre Markdown**: escribes con formato en vivo, menú
+  `/` para insertar bloques (encabezados, listas, checklists, código…) y
+  arrastre de bloques. El contenido se guarda como Markdown plano, con
+  **autoguardado**.
+- **Búsqueda** por título o contenido desde el cuadro de la lista;
+  recorre todas las carpetas.
+- **Fijar** una nota (★) la mantiene arriba de su lista.
 
 ---
 

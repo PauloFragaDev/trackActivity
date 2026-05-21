@@ -84,4 +84,28 @@ class NoteControllerTest extends TestCase
         $this->post('/notes', ['title' => 'N', 'folder_id' => 999999])
             ->assertSessionHasErrors('folder_id');
     }
+
+    public function test_search_matches_title_or_body(): void
+    {
+        Note::create(['title' => 'Pan casero', 'body' => 'mezclar harina y agua']);
+        Note::create(['title' => 'Comprar harina', 'body' => 'para el finde']);
+        Note::create(['title' => 'Pelicula', 'body' => 'verla el viernes']);
+
+        $res = $this->get('/notes?q=harina')->assertOk();
+        $res->assertSee('Pan casero');        // coincide por el cuerpo
+        $res->assertSee('Comprar harina');    // coincide por el título
+        $res->assertDontSee('Pelicula');
+    }
+
+    public function test_toggle_pin(): void
+    {
+        $note = Note::create(['title' => 'N']);
+        $this->assertFalse($note->pinned);
+
+        $this->patch("/notes/{$note->id}/pin")->assertRedirect();
+        $this->assertTrue($note->fresh()->pinned);
+
+        $this->patch("/notes/{$note->id}/pin")->assertRedirect();
+        $this->assertFalse($note->fresh()->pinned);
+    }
 }

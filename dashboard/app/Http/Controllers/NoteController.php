@@ -21,19 +21,30 @@ class NoteController extends Controller
     {
         $folders = NoteFolder::query()->orderBy('position')->orderBy('name')->get();
 
+        $search        = trim((string) $request->query('q', ''));
         $folderId      = $request->integer('folder') ?: null;
         $currentFolder = $folderId ? $folders->firstWhere('id', $folderId) : null;
 
-        $notes = Note::query()
-            ->when(
-                $folderId,
-                fn ($q) => $q->where('folder_id', $folderId),
-                fn ($q) => $q->whereNull('folder_id'),
-            )
-            ->orderByDesc('pinned')
-            ->orderBy('position')
-            ->orderByDesc('updated_at')
-            ->get();
+        $query = Note::query()->orderByDesc('pinned');
+
+        if ($search !== '') {
+            // Búsqueda en título y cuerpo, sobre todas las carpetas.
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('body', 'like', "%{$search}%");
+            })->orderByDesc('updated_at');
+        } else {
+            $query
+                ->when(
+                    $folderId,
+                    fn ($q) => $q->where('folder_id', $folderId),
+                    fn ($q) => $q->whereNull('folder_id'),
+                )
+                ->orderBy('position')
+                ->orderByDesc('updated_at');
+        }
+
+        $notes = $query->get();
 
         $noteId      = $request->integer('note') ?: null;
         $currentNote = $noteId ? Note::find($noteId) : $notes->first();
@@ -44,6 +55,7 @@ class NoteController extends Controller
             'folderId'      => $folderId,
             'notes'         => $notes,
             'currentNote'   => $currentNote,
+            'search'        => $search,
         ]);
     }
 
@@ -99,5 +111,15 @@ class NoteController extends Controller
         return redirect()
             ->route('notes.index', ['folder' => $folderId])
             ->with('status', 'Nota eliminada.');
+    }
+
+    /** Fija/desfija una nota (acción rápida desde la lista). */
+    public function togglePin(Note $note): RedirectResponse
+    {
+        $note->update(['pinned' => ! $note->pinned]);
+
+        return redirect()
+            ->route('notes.index', ['folder' => $note->folder_id, 'note' => $note->id])
+            ->with('status', $note->pinned ? 'Nota fijada.' : 'Nota desfijada.');
     }
 }

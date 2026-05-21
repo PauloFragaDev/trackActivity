@@ -41,34 +41,62 @@
 
         {{-- ─── Panel 2 · Lista de notas ─── --}}
         <div class="border-r divider flex flex-col">
-            <div class="p-3 border-b divider flex items-center justify-between gap-2">
-                <span class="text-sm font-medium truncate">{{ $currentFolder?->name ?? 'Sin carpeta' }}</span>
-                <div class="flex items-center gap-1 shrink-0">
-                    @if ($currentFolder)
-                        <button type="button" class="btn-ghost text-xs" data-modal-open="#folder-edit" title="Renombrar carpeta">✎</button>
-                        <form method="POST" action="{{ route('note-folders.destroy', $currentFolder) }}" class="inline"
-                              data-confirm="¿Eliminar la carpeta «{{ $currentFolder->name }}»? Sus notas y subcarpetas pasarán a la raíz.">
-                            @csrf @method('DELETE')
-                            <button type="submit" class="btn-ghost text-xs text-rose-600 dark:text-rose-400" title="Eliminar carpeta">🗑</button>
-                        </form>
-                    @endif
-                    <button type="button" class="btn text-xs" data-modal-open="#note-new">+ Nota</button>
-                </div>
+            {{-- Buscador --}}
+            <div class="p-2 border-b divider">
+                <form method="GET" action="{{ route('notes.index') }}">
+                    <input type="search" name="q" value="{{ $search }}"
+                           placeholder="Buscar notas…" class="input text-sm">
+                </form>
             </div>
+            {{-- Cabecera: carpeta actual o resultados de búsqueda --}}
+            <div class="p-3 border-b divider flex items-center justify-between gap-2">
+                @if ($search !== '')
+                    <span class="text-sm font-medium truncate">Búsqueda: «{{ $search }}»</span>
+                    <a href="{{ route('notes.index', ['folder' => $folderId]) }}"
+                       class="btn-ghost text-xs shrink-0">limpiar</a>
+                @else
+                    <span class="text-sm font-medium truncate">{{ $currentFolder?->name ?? 'Sin carpeta' }}</span>
+                    <div class="flex items-center gap-1 shrink-0">
+                        @if ($currentFolder)
+                            <button type="button" class="btn-ghost text-xs" data-modal-open="#folder-edit" title="Renombrar carpeta">✎</button>
+                            <form method="POST" action="{{ route('note-folders.destroy', $currentFolder) }}" class="inline"
+                                  data-confirm="¿Eliminar la carpeta «{{ $currentFolder->name }}»? Sus notas y subcarpetas pasarán a la raíz.">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="btn-ghost text-xs text-rose-600 dark:text-rose-400" title="Eliminar carpeta">🗑</button>
+                            </form>
+                        @endif
+                        <button type="button" class="btn text-xs" data-modal-open="#note-new">+ Nota</button>
+                    </div>
+                @endif
+            </div>
+            {{-- Lista --}}
             <div class="flex-1 overflow-y-auto p-2 space-y-1">
                 @forelse ($notes as $n)
-                    <a href="{{ route('notes.index', ['folder' => $folderId, 'note' => $n->id]) }}"
-                       class="block px-2 py-1.5 rounded
-                              {{ $currentNote && $currentNote->id === $n->id ? 'surface-soft' : 'hover:bg-ink-100 dark:hover:bg-ink-800' }}">
-                        <div class="text-sm font-medium truncate">
-                            @if ($n->pinned)<span class="text-amber-500" title="Fijada">★</span> @endif{{ $n->title }}
-                        </div>
-                        @if ($n->body)
-                            <div class="text-xs text-muted truncate">{{ Str::limit(trim($n->body), 64) }}</div>
-                        @endif
-                    </a>
+                    @php
+                        $noteLink = $search !== ''
+                            ? route('notes.index', ['q' => $search, 'note' => $n->id])
+                            : route('notes.index', ['folder' => $folderId, 'note' => $n->id]);
+                    @endphp
+                    <div class="flex items-start rounded
+                                {{ $currentNote && $currentNote->id === $n->id ? 'surface-soft' : 'hover:bg-ink-100 dark:hover:bg-ink-800' }}">
+                        <a href="{{ $noteLink }}" class="flex-1 min-w-0 px-2 py-1.5">
+                            <div class="text-sm font-medium truncate">{{ $n->title }}</div>
+                            @if ($n->body)
+                                <div class="text-xs text-muted truncate">{{ Str::limit(trim($n->body), 64) }}</div>
+                            @endif
+                        </a>
+                        <form method="POST" action="{{ route('notes.pin', $n) }}" class="shrink-0">
+                            @csrf
+                            @method('PATCH')
+                            <button type="submit"
+                                    class="px-2 py-1.5 {{ $n->pinned ? 'text-amber-500' : 'text-faint hover:text-amber-500' }}"
+                                    title="{{ $n->pinned ? 'Desfijar' : 'Fijar' }}">★</button>
+                        </form>
+                    </div>
                 @empty
-                    <p class="text-sm text-muted text-center py-6">Sin notas en esta carpeta.</p>
+                    <p class="text-sm text-muted text-center py-6">
+                        {{ $search !== '' ? 'Sin resultados.' : 'Sin notas en esta carpeta.' }}
+                    </p>
                 @endforelse
             </div>
         </div>

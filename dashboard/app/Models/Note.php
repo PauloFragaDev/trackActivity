@@ -12,6 +12,12 @@ class Note extends Model
 {
     protected $fillable = ['folder_id', 'title', 'body', 'pinned', 'position'];
 
+    /** Defaults en memoria (coinciden con los de la migración). */
+    protected $attributes = [
+        'pinned'   => false,
+        'position' => 0,
+    ];
+
     protected $casts = [
         'folder_id' => 'integer',
         'pinned'    => 'boolean',
