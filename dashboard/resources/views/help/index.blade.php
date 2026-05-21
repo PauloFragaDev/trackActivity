@@ -28,6 +28,7 @@
             <li><a class="underline hover:opacity-80" href="#troubleshooting">10. Resolución de problemas</a></li>
             <li><a class="underline hover:opacity-80" href="#privacidad">11. Privacidad</a></li>
             <li><a class="underline hover:opacity-80" href="#notas">12. Notas</a></li>
+            <li><a class="underline hover:opacity-80" href="#tareas">13. Tareas</a></li>
         </ol>
     </nav>
 
@@ -350,6 +351,26 @@ php artisan schedule:work</code></pre>
             <li><strong>Buscar</strong> por título o contenido desde el cuadro de búsqueda de la
                 lista; la búsqueda recorre todas las carpetas.</li>
             <li><strong>Fijar</strong> una nota (★) la mantiene arriba de su lista.</li>
+        </ul>
+    </section>
+
+    {{-- 13 --}}
+    <section id="tareas" class="card p-6 mb-6">
+        <h2 class="text-lg font-semibold mb-2">13. Tareas</h2>
+        <p class="text-sm mb-3">
+            Un tablero Kanban de tareas personales. Se abre desde
+            <a class="underline" href="{{ route('tasks.index') }}">Tareas</a> en el menú lateral.
+            Cuatro columnas: <strong>Backlog</strong>, <strong>Por hacer</strong>,
+            <strong>En curso</strong> y <strong>Hecho</strong>.
+        </p>
+        <ul class="text-sm space-y-1 list-disc pl-5">
+            <li>Crea y edita tareas en un modal: título, descripción, columna, prioridad,
+                fecha de vencimiento y un <strong>proyecto</strong> opcional.</li>
+            <li><strong>Arrastra</strong> las tarjetas entre columnas y dentro de cada una;
+                el orden se guarda solo.</li>
+            <li>Cada tarjeta muestra su proyecto, prioridad y fecha (resaltada si está vencida).</li>
+            <li>Filtra el tablero por proyecto y por prioridad.</li>
+            <li>Las tareas <strong>En curso</strong> aparecen también en el Inicio.</li>
         </ul>
     </section>
 @endsection

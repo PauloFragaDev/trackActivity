@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\TaskStatus;
 use App\Models\ActivityEvent;
 use App\Models\Note;
+use App\Models\Task;
 use App\Services\SessionBuilder;
 use Carbon\CarbonImmutable;
 use Illuminate\View\View;
@@ -49,6 +51,10 @@ class DashboardController extends Controller
         return view('dashboard.index', [
             'week'              => $week,
             'recentNotes'       => Note::orderByDesc('updated_at')->limit(8)->get(),
+            'doingTasks'        => Task::with('project')
+                ->where('status', TaskStatus::Doing->value)
+                ->orderBy('position')
+                ->get(),
             'tz'                => $tz,
             'trackerStaleSince' => $trackerStaleSince,
         ]);

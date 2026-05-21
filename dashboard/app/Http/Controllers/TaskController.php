@@ -20,9 +20,11 @@ class TaskController extends Controller
     public function index(Request $request): View
     {
         $projectId = $request->integer('project') ?: null;
+        $priority  = $request->input('priority') ?: null;
 
         $tasks = Task::with('project')
             ->when($projectId, fn ($q) => $q->where('project_id', $projectId))
+            ->when($priority, fn ($q) => $q->where('priority', $priority))
             ->orderBy('position')
             ->get()
             ->groupBy(fn (Task $t) => $t->status->value);
@@ -33,6 +35,7 @@ class TaskController extends Controller
             'tasks'      => $tasks,
             'projects'   => Project::orderBy('code')->get(),
             'projectId'  => $projectId,
+            'priority'   => $priority,
         ]);
     }
 

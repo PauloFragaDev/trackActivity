@@ -43,4 +43,14 @@ class DashboardControllerTest extends TestCase
 
         $this->get('/dashboard')->assertOk()->assertDontSee('no registra actividad');
     }
+
+    public function test_dashboard_shows_tasks_in_progress(): void
+    {
+        \App\Models\Task::create(['title' => 'Tarea en curso', 'status' => 'doing']);
+        \App\Models\Task::create(['title' => 'Tarea pendiente', 'status' => 'todo']);
+
+        $this->get('/dashboard')->assertOk()
+            ->assertSee('Tarea en curso')
+            ->assertDontSee('Tarea pendiente');
+    }
 }

@@ -6,11 +6,17 @@
 @section('content')
     <div class="mb-4 flex items-center justify-between gap-3 flex-wrap">
         <h1 class="text-xl font-semibold tracking-tight">Tareas</h1>
-        <form method="GET" action="{{ route('tasks.index') }}">
+        <form method="GET" action="{{ route('tasks.index') }}" class="flex gap-2">
             <select name="project" class="select text-sm" style="width:auto" onchange="this.form.submit()">
                 <option value="">Todos los proyectos</option>
                 @foreach ($projects as $pr)
                     <option value="{{ $pr->id }}" @selected($projectId === $pr->id)>{{ $pr->code }} · {{ $pr->name }}</option>
+                @endforeach
+            </select>
+            <select name="priority" class="select text-sm" style="width:auto" onchange="this.form.submit()">
+                <option value="">Toda prioridad</option>
+                @foreach ($priorities as $p)
+                    <option value="{{ $p->value }}" @selected($priority === $p->value)>{{ $p->label() }}</option>
                 @endforeach
             </select>
         </form>

@@ -58,10 +58,23 @@
         </section>
 
         <section class="card p-4">
-            <h2 class="text-sm font-semibold mb-3">Tareas en curso</h2>
-            <p class="text-sm text-muted">
-                Aquí aparecerán las tareas en <em>Doing</em> cuando se implemente el módulo de tareas (Kanban).
-            </p>
+            <div class="flex items-center justify-between mb-3">
+                <h2 class="text-sm font-semibold">Tareas en curso</h2>
+                <a href="{{ route('tasks.index') }}" class="text-xs text-muted hover:underline">Ver tablero</a>
+            </div>
+            <div class="space-y-0.5">
+                @forelse ($doingTasks as $t)
+                    <a href="{{ route('tasks.index') }}"
+                       class="flex items-center gap-2 px-2 py-1.5 rounded text-sm hover:bg-ink-100 dark:hover:bg-ink-800">
+                        <span class="flex-1 truncate">{{ $t->title }}</span>
+                        @if ($t->project)
+                            <span class="chip shrink-0">{{ $t->project->code }}</span>
+                        @endif
+                    </a>
+                @empty
+                    <p class="text-sm text-muted">No hay tareas en curso.</p>
+                @endforelse
+            </div>
         </section>
     </div>
 @endsection
