@@ -87,6 +87,19 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // Selector de icono (emoji): los presets rellenan el input[name=icon];
+    // si hay un <details> alrededor, se actualiza el icono que muestra.
+    document.querySelectorAll('[data-icon-field]').forEach((field) => {
+        const input = field.querySelector('input[name="icon"]');
+        if (!input) return;
+        const summary = field.closest('details')?.querySelector('summary');
+        const sync = () => { if (summary) summary.textContent = input.value.trim() || '📄'; };
+        field.querySelectorAll('[data-icon-set]').forEach((btn) => {
+            btn.addEventListener('click', () => { input.value = btn.dataset.iconValue; sync(); });
+        });
+        input.addEventListener('input', sync);
+    });
+
     // Confirmaciones: <form data-confirm="mensaje"> pide confirmación con
     // SweetAlert en vez del confirm() nativo del navegador.
     document.querySelectorAll('form[data-confirm]').forEach((form) => {

@@ -94,7 +94,9 @@
                     <div class="flex items-start rounded
                                 {{ $currentNote && $currentNote->id === $n->id ? 'surface-soft' : 'hover:bg-ink-100 dark:hover:bg-ink-800' }}">
                         <a href="{{ $noteLink }}" class="flex-1 min-w-0 px-2 py-1.5">
-                            <div class="text-sm font-medium truncate">{{ $n->title }}</div>
+                            <div class="text-sm font-medium truncate">
+                                <span class="mr-1">{{ $n->icon ?: '📄' }}</span>{{ $n->title }}
+                            </div>
                             @if ($n->body)
                                 <div class="text-xs text-muted truncate">{{ Str::limit(trim($n->body), 64) }}</div>
                             @endif
@@ -122,9 +124,20 @@
                       class="flex-1 min-h-0 flex flex-col gap-3">
                     @csrf
                     @method('PATCH')
-                    <input type="text" name="title" required maxlength="200"
-                           value="{{ old('title', $currentNote->title) }}"
-                           class="input text-base font-semibold">
+                    {{-- Cabecera tipo Notion: icono + título grande --}}
+                    <div class="shrink-0 flex items-start gap-2">
+                        <details class="shrink-0 relative">
+                            <summary class="list-none cursor-pointer select-none text-3xl leading-none px-1"
+                                     title="Cambiar icono">{{ $currentNote->icon ?: '📄' }}</summary>
+                            <div class="absolute z-10 mt-1 p-2 rounded border divider bg-white dark:bg-ink-900 shadow-lg">
+                                @include('notes.partials.icon-field', ['value' => $currentNote->icon])
+                            </div>
+                        </details>
+                        <input type="text" name="title" required maxlength="200"
+                               value="{{ old('title', $currentNote->title) }}" placeholder="Título"
+                               class="flex-1 min-w-0 bg-transparent border-0 px-0 py-1 text-2xl font-bold tracking-tight
+                                      placeholder:text-ink-300 dark:placeholder:text-ink-600 focus:outline-none focus:ring-0">
+                    </div>
                     <textarea name="body" rows="18"
                               class="textarea font-mono flex-1 min-h-0"
                               placeholder="Escribe en Markdown…">{{ old('body', $currentNote->body) }}</textarea>
@@ -184,6 +197,10 @@
                 <input type="text" name="name" required maxlength="120" class="input mt-1" placeholder="Ideas, Trabajo…">
             </label>
             <label class="label">
+                <span>Icono</span>
+                <div class="mt-1">@include('notes.partials.icon-field', ['value' => ''])</div>
+            </label>
+            <label class="label">
                 <span>Dentro de</span>
                 <select name="parent_id" class="select mt-1">
                     <option value="">— Carpeta raíz —</option>
@@ -211,6 +228,10 @@
                 <span>Título</span>
                 <input type="text" name="title" required maxlength="200" class="input mt-1" placeholder="Título de la nota">
             </label>
+            <label class="label">
+                <span>Icono</span>
+                <div class="mt-1">@include('notes.partials.icon-field', ['value' => ''])</div>
+            </label>
             <div class="flex justify-end gap-2 pt-1">
                 <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
                 <button type="submit" class="btn">Crear</button>
@@ -231,6 +252,10 @@
                     <span>Nombre</span>
                     <input type="text" name="name" required maxlength="120" class="input mt-1"
                            value="{{ $currentFolder->name }}">
+                </label>
+                <label class="label">
+                    <span>Icono</span>
+                    <div class="mt-1">@include('notes.partials.icon-field', ['value' => $currentFolder->icon])</div>
                 </label>
                 <div class="flex justify-end gap-2 pt-1">
                     <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>

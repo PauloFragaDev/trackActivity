@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class NoteFolder extends Model
 {
-    protected $fillable = ['name', 'parent_id', 'position'];
+    protected $fillable = ['name', 'icon', 'parent_id', 'position'];
 
     protected $casts = [
         'parent_id' => 'integer',

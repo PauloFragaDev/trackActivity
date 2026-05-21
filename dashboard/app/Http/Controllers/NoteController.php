@@ -63,12 +63,14 @@ class NoteController extends Controller
     {
         $data = $request->validate([
             'title'     => ['required', 'string', 'max:200'],
+            'icon'      => ['nullable', 'string', 'max:16'],
             'folder_id' => ['nullable', 'integer', 'exists:note_folders,id'],
             'body'      => ['nullable', 'string'],
         ]);
 
         $note = Note::create([
             'title'     => $data['title'],
+            'icon'      => $data['icon'] ?? null,
             'folder_id' => $data['folder_id'] ?? null,
             'body'      => $data['body'] ?? null,
         ]);
@@ -82,12 +84,14 @@ class NoteController extends Controller
     {
         $data = $request->validate([
             'title'     => ['required', 'string', 'max:200'],
+            'icon'      => ['nullable', 'string', 'max:16'],
             'body'      => ['nullable', 'string'],
             'folder_id' => ['nullable', 'integer', 'exists:note_folders,id'],
         ]);
 
         $note->update([
             'title'     => $data['title'],
+            'icon'      => $data['icon'] ?? null,
             'body'      => $data['body'] ?? null,
             'folder_id' => $data['folder_id'] ?? null,
             'pinned'    => $request->boolean('pinned'),

@@ -108,4 +108,14 @@ class NoteControllerTest extends TestCase
         $this->patch("/notes/{$note->id}/pin")->assertRedirect();
         $this->assertFalse($note->fresh()->pinned);
     }
+
+    public function test_store_and_update_save_the_icon(): void
+    {
+        $this->post('/notes', ['title' => 'Con icono', 'icon' => '🎯'])->assertRedirect();
+        $note = Note::firstOrFail();
+        $this->assertSame('🎯', $note->icon);
+
+        $this->patch("/notes/{$note->id}", ['title' => 'Con icono', 'icon' => '🚀'])->assertRedirect();
+        $this->assertSame('🚀', $note->fresh()->icon);
+    }
 }

@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class Note extends Model
 {
-    protected $fillable = ['folder_id', 'title', 'body', 'pinned', 'position'];
+    protected $fillable = ['folder_id', 'title', 'icon', 'body', 'pinned', 'position'];
 
     /** Defaults en memoria (coinciden con los de la migración). */
     protected $attributes = [

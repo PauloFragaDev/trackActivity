@@ -11,7 +11,7 @@
                 : 'text-muted hover:bg-ink-100 dark:hover:bg-ink-800' }}"
    style="padding-left: {{ 0.5 + $depth * 0.9 }}rem"
    title="{{ $folder->name }}">
-    {{ $folder->name }}
+    <span class="mr-0.5">{{ $folder->icon ?: '📁' }}</span>{{ $folder->name }}
 </a>
 
 @foreach ($folders->where('parent_id', $folder->id)->sortBy('name') as $child)
