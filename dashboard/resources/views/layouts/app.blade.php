@@ -28,6 +28,9 @@
         $navItem = fn (array $routes) => request()->routeIs(...$routes)
             ? 'bg-ink-100 dark:bg-ink-800 text-ink-900 dark:text-ink-50 font-medium'
             : 'text-ink-600 dark:text-ink-300 hover:bg-ink-100 dark:hover:bg-ink-800';
+
+        // Árbol de carpetas de Notas para el menú lateral.
+        $sidebarFolders = \App\Models\NoteFolder::orderBy('name')->get();
     @endphp
 
     <div class="flex min-h-screen">
@@ -67,9 +70,31 @@
                     </div>
                 </details>
 
-                {{-- Notas --}}
-                <a href="{{ route('notes.index') }}"
-                   class="block px-2 py-1.5 rounded {{ $navItem(['notes.*']) }}">Notas</a>
+                {{-- Notas: grupo desplegable con el árbol de carpetas --}}
+                <details class="group" @if (request()->routeIs('notes.*')) open @endif>
+                    <summary class="flex items-center gap-1.5 px-2 py-1.5 rounded cursor-pointer select-none list-none
+                                    text-[11px] uppercase tracking-wider text-muted hover:bg-ink-100 dark:hover:bg-ink-800">
+                        <span class="text-[9px] transition-transform group-open:rotate-90">▸</span>
+                        Notas
+                    </summary>
+                    <div class="mt-0.5 ml-2 space-y-0.5">
+                        @php
+                            $notesRoot = request()->routeIs('notes.*')
+                                && ! request()->query('folder') && ! request()->boolean('trash') && ! request()->query('q');
+                        @endphp
+                        <a href="{{ route('notes.index') }}"
+                           class="block px-2 py-1.5 rounded {{ $notesRoot ? 'bg-ink-100 dark:bg-ink-800 text-ink-900 dark:text-ink-50 font-medium' : 'text-ink-600 dark:text-ink-300 hover:bg-ink-100 dark:hover:bg-ink-800' }}">
+                            Todas las notas
+                        </a>
+                        @foreach ($sidebarFolders->whereNull('parent_id')->sortBy('name') as $folder)
+                            @include('layouts.partials.sidebar-folder', ['folder' => $folder, 'depth' => 0])
+                        @endforeach
+                        <a href="{{ route('notes.index', ['trash' => 1]) }}"
+                           class="block px-2 py-1.5 rounded {{ request()->boolean('trash') ? 'bg-ink-100 dark:bg-ink-800 text-ink-900 dark:text-ink-50 font-medium' : 'text-ink-600 dark:text-ink-300 hover:bg-ink-100 dark:hover:bg-ink-800' }}">
+                            🗑 Papelera
+                        </a>
+                    </div>
+                </details>
 
                 {{-- Configuración --}}
                 <details class="group" @if (request()->routeIs('projects.*', 'export.*')) open @endif>
