@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DataController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\HelpController;
 use App\Http\Controllers\ManualEntryController;
@@ -43,6 +44,12 @@ Route::delete('/manual-entries/{manualEntry}',  [ManualEntryController::class, '
 // ─────────────────── Export ───────────────────
 Route::get('/export',  [ExportController::class, 'form'])->name('export.form');
 Route::post('/export', [ExportController::class, 'download'])->name('export.download');
+
+// ─────────────────── Datos (copias, restaurar, exportar) ───────────────────
+Route::get('/data',                [DataController::class, 'index'])->name('data.index');
+Route::post('/data/backup',        [DataController::class, 'backupNow'])->name('data.backup');
+Route::get('/data/backup/{name}',  [DataController::class, 'downloadBackup'])->name('data.backup.download');
+Route::post('/data/restore',       [DataController::class, 'restore'])->name('data.restore');
 
 // ─────────────────── Proyectos (CRUD) ───────────────────
 Route::get('/projects',                [ProjectController::class, 'index'])->name('projects.index');

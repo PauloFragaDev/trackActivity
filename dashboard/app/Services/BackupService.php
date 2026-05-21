@@ -20,22 +20,21 @@ class BackupService
         return (string) config('database.connections.sqlite.database');
     }
 
-    /** Carpeta de copias; se crea si no existe. */
+    /** Carpeta donde viven las copias (hermana del fichero SQLite). */
     public function directory(): string
     {
-        $dir = dirname($this->databasePath()) . '/backups';
-
-        if (! is_dir($dir)) {
-            mkdir($dir, 0775, true);
-        }
-
-        return $dir;
+        return dirname($this->databasePath()) . '/backups';
     }
 
     /** Crea una copia consistente de la BBDD y devuelve su ruta. */
     public function create(string $prefix = 'activity'): string
     {
-        $dest = $this->directory() . '/' . $prefix . '-' . now()->format('Y-m-d-His') . '.db';
+        $dir = $this->directory();
+        if (! is_dir($dir)) {
+            mkdir($dir, 0775, true);
+        }
+
+        $dest = $dir . '/' . $prefix . '-' . now()->format('Y-m-d-His') . '.db';
 
         // VACUUM INTO: copia consistente aunque haya escrituras concurrentes.
         DB::statement("VACUUM INTO '" . str_replace("'", "''", $dest) . "'");
