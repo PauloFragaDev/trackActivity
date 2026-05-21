@@ -6,6 +6,7 @@ use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
 use App\Models\Project;
 use App\Models\Task;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -57,6 +58,50 @@ class TaskController extends Controller
         $task->delete();
 
         return redirect()->route('tasks.index')->with('status', 'Tarea eliminada.');
+    }
+
+    /** Mueve una tarea de columna / posición (endpoint AJAX del drag & drop). */
+    public function move(Request $request, Task $task): JsonResponse
+    {
+        $data = $request->validate([
+            'status'   => ['required', Rule::enum(TaskStatus::class)],
+            'position' => ['required', 'integer', 'min:0'],
+        ]);
+
+        $oldStatus = $task->status->value;
+
+        $task->status = TaskStatus::from($data['status']);
+        $task->save();   // el hook saving sincroniza completed_at
+
+        $this->reindex($data['status'], $task->id, (int) $data['position']);
+        if ($oldStatus !== $data['status']) {
+            $this->reindex($oldStatus);
+        }
+
+        return response()->json(['ok' => true]);
+    }
+
+    /**
+     * Reescribe las posiciones 0..n de una columna. Si se pasa $insertId,
+     * esa tarea se coloca en la posición $insertAt.
+     */
+    private function reindex(string $status, ?int $insertId = null, int $insertAt = 0): void
+    {
+        $ids = Task::query()
+            ->where('status', $status)
+            ->when($insertId !== null, fn ($q) => $q->where('id', '!=', $insertId))
+            ->orderBy('position')
+            ->orderBy('id')
+            ->pluck('id')
+            ->all();
+
+        if ($insertId !== null) {
+            array_splice($ids, max(0, min($insertAt, count($ids))), 0, [$insertId]);
+        }
+
+        foreach ($ids as $i => $id) {
+            Task::where('id', $id)->update(['position' => $i]);
+        }
     }
 
     /** @return array<string,mixed> */

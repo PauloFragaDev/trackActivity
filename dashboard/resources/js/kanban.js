@@ -1,10 +1,13 @@
 /**
- * Tablero Kanban: alta/edición de tareas en modal.
- * (El drag & drop se añade en el hito K3.)
+ * Tablero Kanban: alta/edición de tareas en modal y drag & drop entre
+ * columnas (SortableJS), que persiste vía PATCH /tasks/{id}/move.
  */
+import Sortable from 'sortablejs';
+
 export function initKanban() {
     const newModal  = document.getElementById('task-new');
     const editModal = document.getElementById('task-edit');
+    const csrf      = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
 
     // El "+" de cada columna preselecciona esa columna en el modal de alta.
     document.querySelectorAll('[data-add-status]').forEach((btn) => {
@@ -42,4 +45,32 @@ export function initKanban() {
             });
         });
     }
+
+    // Drag & drop entre columnas.
+    document.querySelectorAll('[data-task-list]').forEach((list) => {
+        new Sortable(list, {
+            group: 'kanban',
+            animation: 150,
+            draggable: '.task-card',
+            ghostClass: 'opacity-50',
+            onEnd: (evt) => {
+                if (evt.from === evt.to && evt.oldIndex === evt.newIndex) return;
+
+                const card   = evt.item;
+                const status = evt.to.dataset.taskList;
+
+                fetch(`/tasks/${card.dataset.taskId}/move`, {
+                    method: 'POST',
+                    body: new URLSearchParams({
+                        _token: csrf,
+                        _method: 'PATCH',
+                        status,
+                        position: String(evt.newIndex),
+                    }),
+                }).catch(() => {});
+
+                card.dataset.status = status;   // mantener el dato sincronizado
+            },
+        });
+    });
 }
