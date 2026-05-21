@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityEvent;
 use App\Models\Note;
 use App\Services\SessionBuilder;
 use Carbon\CarbonImmutable;
@@ -33,10 +34,23 @@ class DashboardController extends Controller
             ];
         }
 
+        // Salud del tracker: si el último evento es muy viejo, probablemente
+        // el daemon esté parado. (Si no hay ningún evento, no se avisa: puede
+        // ser una instalación nueva donde el tracker aún no ha corrido.)
+        $lastEvent = ActivityEvent::max('occurred_at');
+        $trackerStaleSince = null;
+        if ($lastEvent !== null) {
+            $last = CarbonImmutable::parse($lastEvent, 'UTC');
+            if (abs($last->diffInMinutes(CarbonImmutable::now('UTC'))) >= 20) {
+                $trackerStaleSince = $last;
+            }
+        }
+
         return view('dashboard.index', [
-            'week'        => $week,
-            'recentNotes' => Note::orderByDesc('updated_at')->limit(8)->get(),
-            'tz'          => $tz,
+            'week'              => $week,
+            'recentNotes'       => Note::orderByDesc('updated_at')->limit(8)->get(),
+            'tz'                => $tz,
+            'trackerStaleSince' => $trackerStaleSince,
         ]);
     }
 }
