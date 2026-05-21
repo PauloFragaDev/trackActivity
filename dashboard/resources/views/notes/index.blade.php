@@ -173,6 +173,18 @@
                                 @endforeach
                             </select>
                         </label>
+                        <label class="inline-flex items-center gap-1.5 text-sm">
+                            <span class="text-muted">Proyecto</span>
+                            <select name="project_id" class="select" style="width:auto">
+                                <option value="">— Sin proyecto —</option>
+                                @foreach ($projects as $pr)
+                                    <option value="{{ $pr->id }}"
+                                        @selected((int) old('project_id', $currentNote->project_id) === $pr->id)>
+                                        {{ $pr->code }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </label>
                         <label class="inline-flex items-center gap-2 text-sm">
                             <input type="checkbox" name="pinned" value="1" class="accent-emerald-500" @checked($currentNote->pinned)>
                             Fijada
@@ -238,6 +250,15 @@
             <label class="label">
                 <span>Icono</span>
                 <div class="mt-1">@include('notes.partials.icon-field', ['value' => ''])</div>
+            </label>
+            <label class="label">
+                <span>Proyecto</span>
+                <select name="project_id" class="select mt-1">
+                    <option value="">— Sin proyecto —</option>
+                    @foreach ($projects as $pr)
+                        <option value="{{ $pr->id }}">{{ $pr->code }} · {{ $pr->name }}</option>
+                    @endforeach
+                </select>
             </label>
             <div class="flex justify-end gap-2 pt-1">
                 <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>

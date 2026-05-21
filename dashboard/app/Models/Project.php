@@ -23,4 +23,14 @@ class Project extends Model
     {
         return $this->hasMany(TimeBlock::class, 'dominant_project_id');
     }
+
+    public function notes(): HasMany
+    {
+        return $this->hasMany(Note::class);
+    }
+
+    public function tasks(): HasMany
+    {
+        return $this->hasMany(Task::class);
+    }
 }

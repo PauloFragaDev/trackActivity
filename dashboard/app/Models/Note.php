@@ -15,7 +15,7 @@ class Note extends Model
 {
     use SoftDeletes;
 
-    protected $fillable = ['folder_id', 'title', 'icon', 'body', 'pinned', 'position'];
+    protected $fillable = ['folder_id', 'project_id', 'title', 'icon', 'body', 'pinned', 'position'];
 
     /** Defaults en memoria (coinciden con los de la migración). */
     protected $attributes = [
@@ -24,14 +24,20 @@ class Note extends Model
     ];
 
     protected $casts = [
-        'folder_id' => 'integer',
-        'pinned'    => 'boolean',
-        'position'  => 'integer',
+        'folder_id'  => 'integer',
+        'project_id' => 'integer',
+        'pinned'     => 'boolean',
+        'position'   => 'integer',
     ];
 
     public function folder(): BelongsTo
     {
         return $this->belongsTo(NoteFolder::class, 'folder_id');
+    }
+
+    public function project(): BelongsTo
+    {
+        return $this->belongsTo(Project::class);
     }
 
     /**
