@@ -21,6 +21,24 @@
         </div>
     @endif
 
+    @if ($latestEvent)
+        <div class="card p-3 mb-5 flex items-center gap-2 text-sm">
+            <span class="text-muted shrink-0">Ahora mismo</span>
+            <span class="flex-1 min-w-0 truncate">
+                @if ($latestEvent->source === 'idle')
+                    <span class="text-muted">Inactivo</span>
+                @else
+                    {{ $latestEvent->app ?: 'Actividad' }}
+                    @if ($latestEvent->title)<span class="text-muted"> · {{ $latestEvent->title }}</span>@endif
+                    @if ($latestEvent->repo_name)
+                        <span class="chip ml-1">{{ $latestEvent->repo_name }}@if ($latestEvent->branch):{{ $latestEvent->branch }}@endif</span>
+                    @endif
+                @endif
+            </span>
+            <span class="shrink-0 text-xs text-faint">{{ $latestEvent->occurred_at->locale('es')->diffForHumans() }}</span>
+        </div>
+    @endif
+
     {{-- Semana actual --}}
     <section class="mb-6">
         <h2 class="text-xs font-medium uppercase tracking-wider text-muted mb-2">Esta semana</h2>
@@ -36,6 +54,40 @@
                     </div>
                 </a>
             @endforeach
+        </div>
+    </section>
+
+    {{-- Heatmap de actividad del último año --}}
+    <section class="mb-6">
+        <h2 class="text-xs font-medium uppercase tracking-wider text-muted mb-2">Actividad del último año</h2>
+        @php
+            $heatLevel = fn ($m) => $m === null ? -1
+                : ($m == 0 ? 0 : ($m < 90 ? 1 : ($m < 210 ? 2 : ($m < 360 ? 3 : 4))));
+            $heatClass = [
+                0 => 'bg-ink-100 dark:bg-ink-800',
+                1 => 'bg-emerald-200 dark:bg-emerald-900',
+                2 => 'bg-emerald-300 dark:bg-emerald-700',
+                3 => 'bg-emerald-400 dark:bg-emerald-600',
+                4 => 'bg-emerald-500 dark:bg-emerald-400',
+            ];
+        @endphp
+        <div class="card p-3 overflow-x-auto">
+            <div class="flex gap-[3px]">
+                @foreach ($heatmap as $week)
+                    <div class="flex flex-col gap-[3px]">
+                        @foreach ($week as $d)
+                            @php $lv = $heatLevel($d['minutes']); @endphp
+                            @if ($lv < 0)
+                                <div class="w-2.5 h-2.5"></div>
+                            @else
+                                <a href="{{ route('timeline.day', ['date' => $d['date']->format('Y-m-d')]) }}"
+                                   class="w-2.5 h-2.5 rounded-sm {{ $heatClass[$lv] }}"
+                                   title="{{ $d['date']->locale('es')->isoFormat('D MMM YYYY') }} · {{ $fmt($d['minutes']) }}"></a>
+                            @endif
+                        @endforeach
+                    </div>
+                @endforeach
+            </div>
         </div>
     </section>
 
