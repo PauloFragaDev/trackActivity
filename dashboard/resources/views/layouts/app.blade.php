@@ -51,6 +51,15 @@
             </div>
 
             <nav class="sidebar-full flex-1 overflow-y-auto p-2 space-y-0.5 text-sm">
+                {{-- Buscar (quick switcher) --}}
+                <button type="button" data-qs-open
+                        class="w-full flex items-center gap-1.5 px-2 py-1.5 rounded
+                               text-ink-600 dark:text-ink-300 hover:bg-ink-100 dark:hover:bg-ink-800">
+                    <span aria-hidden="true">🔍</span>
+                    <span>Buscar</span>
+                    <span class="ml-auto text-[10px] text-faint">Ctrl K</span>
+                </button>
+
                 {{-- Tracking --}}
                 <details class="group" @if (request()->routeIs('timeline.*', 'calendar.*')) open @endif>
                     <summary class="flex items-center gap-1.5 px-2 py-1.5 rounded cursor-pointer select-none list-none
@@ -140,5 +149,12 @@
             </footer>
         </div>
     </div>
+
+    {{-- Quick switcher (Ctrl/Cmd+K): buscar y saltar a una nota --}}
+    <dialog id="quick-switcher" class="modal">
+        <input type="text" data-qs-input autocomplete="off"
+               placeholder="Buscar nota…" class="input">
+        <ul data-qs-results class="mt-2 max-h-80 overflow-y-auto space-y-0.5"></ul>
+    </dialog>
 </body>
 </html>

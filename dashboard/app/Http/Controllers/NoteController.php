@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Note;
 use App\Models\NoteFolder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -78,6 +79,22 @@ class NoteController extends Controller
             'trashCount'    => $trashCount,
             'breadcrumb'    => $breadcrumb,
         ]);
+    }
+
+    /** Lista ligera de notas (JSON) para el quick switcher (Ctrl+K). */
+    public function quick(): JsonResponse
+    {
+        $notes = Note::with('folder:id,name')
+            ->orderByDesc('updated_at')
+            ->get(['id', 'title', 'icon', 'folder_id'])
+            ->map(fn (Note $n) => [
+                'id'     => $n->id,
+                'title'  => $n->title,
+                'icon'   => $n->icon,
+                'folder' => $n->folder?->name,
+            ]);
+
+        return response()->json($notes);
     }
 
     public function store(Request $request): RedirectResponse

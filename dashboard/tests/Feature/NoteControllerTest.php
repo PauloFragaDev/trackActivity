@@ -174,4 +174,15 @@ class NoteControllerTest extends TestCase
         // De raíz a hoja: [Proyectos, Web].
         $this->assertSame(['Proyectos', 'Web'], collect($breadcrumb)->pluck('name')->all());
     }
+
+    public function test_quick_returns_active_notes_as_json(): void
+    {
+        Note::create(['title' => 'Alfa']);
+        Note::create(['title' => 'Beta'])->delete();   // en la papelera
+
+        $this->getJson('/notes/quick')
+            ->assertOk()
+            ->assertJsonFragment(['title' => 'Alfa'])
+            ->assertJsonMissing(['title' => 'Beta']);
+    }
 }
