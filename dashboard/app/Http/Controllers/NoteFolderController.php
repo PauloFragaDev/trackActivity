@@ -17,11 +17,13 @@ class NoteFolderController extends Controller
     {
         $data = $request->validate([
             'name'      => ['required', 'string', 'max:120'],
+            'icon'      => ['nullable', 'string', 'max:16'],
             'parent_id' => ['nullable', 'integer', 'exists:note_folders,id'],
         ]);
 
         $folder = NoteFolder::create([
             'name'      => $data['name'],
+            'icon'      => $data['icon'] ?? null,
             'parent_id' => $data['parent_id'] ?? null,
         ]);
 
@@ -34,9 +36,13 @@ class NoteFolderController extends Controller
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:120'],
+            'icon' => ['nullable', 'string', 'max:16'],
         ]);
 
-        $noteFolder->update(['name' => $data['name']]);
+        $noteFolder->update([
+            'name' => $data['name'],
+            'icon' => $data['icon'] ?? null,
+        ]);
 
         return redirect()
             ->route('notes.index', ['folder' => $noteFolder->id])

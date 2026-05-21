@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Note;
 use App\Models\NoteFolder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -21,33 +22,51 @@ class NoteController extends Controller
     {
         $folders = NoteFolder::query()->orderBy('position')->orderBy('name')->get();
 
+        $isTrash       = $request->boolean('trash');
         $search        = trim((string) $request->query('q', ''));
         $folderId      = $request->integer('folder') ?: null;
         $currentFolder = $folderId ? $folders->firstWhere('id', $folderId) : null;
+        $trashCount    = Note::onlyTrashed()->count();
 
-        $query = Note::query()->orderByDesc('pinned');
-
-        if ($search !== '') {
-            // Búsqueda en título y cuerpo, sobre todas las carpetas.
-            $query->where(function ($q) use ($search) {
-                $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('body', 'like', "%{$search}%");
-            })->orderByDesc('updated_at');
+        if ($isTrash) {
+            // Papelera: notas eliminadas (soft-deleted).
+            $notes       = Note::onlyTrashed()->orderByDesc('deleted_at')->get();
+            $currentNote = null;
         } else {
-            $query
-                ->when(
-                    $folderId,
-                    fn ($q) => $q->where('folder_id', $folderId),
-                    fn ($q) => $q->whereNull('folder_id'),
-                )
-                ->orderBy('position')
-                ->orderByDesc('updated_at');
+            $query = Note::query()->orderByDesc('pinned');
+
+            if ($search !== '') {
+                // Búsqueda en título y cuerpo, sobre todas las carpetas.
+                $query->where(function ($q) use ($search) {
+                    $q->where('title', 'like', "%{$search}%")
+                      ->orWhere('body', 'like', "%{$search}%");
+                })->orderByDesc('updated_at');
+            } else {
+                $query
+                    ->when(
+                        $folderId,
+                        fn ($q) => $q->where('folder_id', $folderId),
+                        fn ($q) => $q->whereNull('folder_id'),
+                    )
+                    ->orderBy('position')
+                    ->orderByDesc('updated_at');
+            }
+
+            $notes       = $query->get();
+            $noteId      = $request->integer('note') ?: null;
+            $currentNote = $noteId ? Note::find($noteId) : $notes->first();
         }
 
-        $notes = $query->get();
-
-        $noteId      = $request->integer('note') ?: null;
-        $currentNote = $noteId ? Note::find($noteId) : $notes->first();
+        // Ruta de carpetas (breadcrumb) de la nota abierta, de raíz a hoja.
+        $breadcrumb = [];
+        if ($currentNote && $currentNote->folder_id) {
+            $fid   = $currentNote->folder_id;
+            $guard = 0;
+            while ($fid && $guard++ < 20 && $folder = $folders->firstWhere('id', $fid)) {
+                array_unshift($breadcrumb, $folder);
+                $fid = $folder->parent_id;
+            }
+        }
 
         return view('notes.index', [
             'folders'       => $folders,
@@ -56,19 +75,40 @@ class NoteController extends Controller
             'notes'         => $notes,
             'currentNote'   => $currentNote,
             'search'        => $search,
+            'isTrash'       => $isTrash,
+            'trashCount'    => $trashCount,
+            'breadcrumb'    => $breadcrumb,
         ]);
+    }
+
+    /** Lista ligera de notas (JSON) para el quick switcher (Ctrl+K). */
+    public function quick(): JsonResponse
+    {
+        $notes = Note::with('folder:id,name')
+            ->orderByDesc('updated_at')
+            ->get(['id', 'title', 'icon', 'folder_id'])
+            ->map(fn (Note $n) => [
+                'id'     => $n->id,
+                'title'  => $n->title,
+                'icon'   => $n->icon,
+                'folder' => $n->folder?->name,
+            ]);
+
+        return response()->json($notes);
     }
 
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
             'title'     => ['required', 'string', 'max:200'],
+            'icon'      => ['nullable', 'string', 'max:16'],
             'folder_id' => ['nullable', 'integer', 'exists:note_folders,id'],
             'body'      => ['nullable', 'string'],
         ]);
 
         $note = Note::create([
             'title'     => $data['title'],
+            'icon'      => $data['icon'] ?? null,
             'folder_id' => $data['folder_id'] ?? null,
             'body'      => $data['body'] ?? null,
         ]);
@@ -82,12 +122,14 @@ class NoteController extends Controller
     {
         $data = $request->validate([
             'title'     => ['required', 'string', 'max:200'],
+            'icon'      => ['nullable', 'string', 'max:16'],
             'body'      => ['nullable', 'string'],
             'folder_id' => ['nullable', 'integer', 'exists:note_folders,id'],
         ]);
 
         $note->update([
             'title'     => $data['title'],
+            'icon'      => $data['icon'] ?? null,
             'body'      => $data['body'] ?? null,
             'folder_id' => $data['folder_id'] ?? null,
             'pinned'    => $request->boolean('pinned'),
@@ -106,11 +148,32 @@ class NoteController extends Controller
     public function destroy(Note $note): RedirectResponse
     {
         $folderId = $note->folder_id;
-        $note->delete();
+        $note->delete();   // soft delete: pasa a la papelera
 
         return redirect()
             ->route('notes.index', ['folder' => $folderId])
-            ->with('status', 'Nota eliminada.');
+            ->with('status', 'Nota movida a la papelera.');
+    }
+
+    /** Restaura una nota desde la papelera. */
+    public function restore(int $id): RedirectResponse
+    {
+        $note = Note::onlyTrashed()->findOrFail($id);
+        $note->restore();
+
+        return redirect()
+            ->route('notes.index', ['folder' => $note->folder_id, 'note' => $note->id])
+            ->with('status', 'Nota restaurada.');
+    }
+
+    /** Vacía la papelera: borra definitivamente las notas eliminadas. */
+    public function emptyTrash(): RedirectResponse
+    {
+        Note::onlyTrashed()->forceDelete();
+
+        return redirect()
+            ->route('notes.index')
+            ->with('status', 'Papelera vaciada.');
     }
 
     /** Fija/desfija una nota (acción rápida desde la lista). */

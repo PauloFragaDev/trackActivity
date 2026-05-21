@@ -13,11 +13,9 @@
             if (localStorage.getItem('sidebar') === 'collapsed') {
                 document.documentElement.classList.add('sidebar-collapsed');
             }
-            ['folders', 'list'].forEach((p) => {
-                if (localStorage.getItem('notes-' + p) === 'collapsed') {
-                    document.documentElement.classList.add('notes-' + p + '-collapsed');
-                }
-            });
+            if (localStorage.getItem('notes-list') === 'collapsed') {
+                document.documentElement.classList.add('notes-list-collapsed');
+            }
         })();
     </script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -28,6 +26,10 @@
         $navItem = fn (array $routes) => request()->routeIs(...$routes)
             ? 'bg-ink-100 dark:bg-ink-800 text-ink-900 dark:text-ink-50 font-medium'
             : 'text-ink-600 dark:text-ink-300 hover:bg-ink-100 dark:hover:bg-ink-800';
+
+        // Árbol de carpetas y notas favoritas (fijadas) para el menú lateral.
+        $sidebarFolders = \App\Models\NoteFolder::orderBy('name')->get();
+        $sidebarPinned  = \App\Models\Note::where('pinned', true)->orderBy('title')->get();
     @endphp
 
     <div class="flex min-h-screen">
@@ -42,7 +44,7 @@
                     <span data-icon-collapse aria-hidden="true">«</span>
                     <span data-icon-expand   aria-hidden="true">»</span>
                 </button>
-                <a href="{{ route('timeline.today') }}"
+                <a href="{{ route('dashboard') }}"
                    class="sidebar-full flex items-center gap-2 font-semibold tracking-tight whitespace-nowrap">
                     <span class="inline-block w-2 h-2 rounded-full bg-emerald-400"></span>
                     trackActivity
@@ -50,6 +52,19 @@
             </div>
 
             <nav class="sidebar-full flex-1 overflow-y-auto p-2 space-y-0.5 text-sm">
+                {{-- Buscar (quick switcher) --}}
+                <button type="button" data-qs-open
+                        class="w-full flex items-center gap-1.5 px-2 py-1.5 rounded
+                               text-ink-600 dark:text-ink-300 hover:bg-ink-100 dark:hover:bg-ink-800">
+                    <span aria-hidden="true">🔍</span>
+                    <span>Buscar</span>
+                    <span class="ml-auto text-[10px] text-faint">Ctrl K</span>
+                </button>
+
+                {{-- Inicio --}}
+                <a href="{{ route('dashboard') }}"
+                   class="block px-2 py-1.5 rounded {{ $navItem(['dashboard']) }}">Inicio</a>
+
                 {{-- Tracking --}}
                 <details class="group" @if (request()->routeIs('timeline.*', 'calendar.*')) open @endif>
                     <summary class="flex items-center gap-1.5 px-2 py-1.5 rounded cursor-pointer select-none list-none
@@ -67,9 +82,42 @@
                     </div>
                 </details>
 
-                {{-- Notas --}}
-                <a href="{{ route('notes.index') }}"
-                   class="block px-2 py-1.5 rounded {{ $navItem(['notes.*']) }}">Notas</a>
+                {{-- Notas: grupo desplegable con el árbol de carpetas --}}
+                <details class="group" @if (request()->routeIs('notes.*')) open @endif>
+                    <summary class="flex items-center gap-1.5 px-2 py-1.5 rounded cursor-pointer select-none list-none
+                                    text-[11px] uppercase tracking-wider text-muted hover:bg-ink-100 dark:hover:bg-ink-800">
+                        <span class="text-[9px] transition-transform group-open:rotate-90">▸</span>
+                        Notas
+                    </summary>
+                    <div class="mt-0.5 ml-2 space-y-0.5">
+                        {{-- Favoritos: notas fijadas (★) --}}
+                        @foreach ($sidebarPinned as $fav)
+                            <a href="{{ route('notes.index', ['note' => $fav->id]) }}"
+                               class="block px-2 py-1.5 rounded text-sm truncate
+                                      {{ (int) request()->query('note') === $fav->id ? 'bg-ink-100 dark:bg-ink-800 text-ink-900 dark:text-ink-50 font-medium' : 'text-ink-600 dark:text-ink-300 hover:bg-ink-100 dark:hover:bg-ink-800' }}"
+                               title="{{ $fav->title }}">
+                                <span class="text-amber-500">★</span> {{ $fav->title }}
+                            </a>
+                        @endforeach
+                        @if ($sidebarPinned->isNotEmpty())
+                            <div class="my-1 border-t divider"></div>
+                        @endif
+
+                        {{-- Árbol de carpetas --}}
+                        @foreach ($sidebarFolders->whereNull('parent_id')->sortBy('name') as $folder)
+                            @include('layouts.partials.sidebar-folder', ['folder' => $folder, 'depth' => 0])
+                        @endforeach
+
+                        <a href="{{ route('notes.index', ['trash' => 1]) }}"
+                           class="block px-2 py-1.5 rounded {{ request()->boolean('trash') ? 'bg-ink-100 dark:bg-ink-800 text-ink-900 dark:text-ink-50 font-medium' : 'text-ink-600 dark:text-ink-300 hover:bg-ink-100 dark:hover:bg-ink-800' }}">
+                            🗑 Papelera
+                        </a>
+                        <button type="button" data-modal-open="#folder-new"
+                                class="w-full text-left block px-2 py-1.5 rounded text-ink-600 dark:text-ink-300 hover:bg-ink-100 dark:hover:bg-ink-800">
+                            + Nueva carpeta
+                        </button>
+                    </div>
+                </details>
 
                 {{-- Configuración --}}
                 <details class="group" @if (request()->routeIs('projects.*', 'export.*')) open @endif>
@@ -125,5 +173,44 @@
             </footer>
         </div>
     </div>
+
+    {{-- Quick switcher (Ctrl/Cmd+K): buscar y saltar a una nota --}}
+    <dialog id="quick-switcher" class="modal">
+        <input type="text" data-qs-input autocomplete="off"
+               placeholder="Buscar nota…" class="input">
+        <ul data-qs-results class="mt-2 max-h-80 overflow-y-auto space-y-0.5"></ul>
+    </dialog>
+
+    {{-- Modal "Nueva carpeta": accesible desde el sidebar en cualquier página --}}
+    <dialog id="folder-new" class="modal">
+        <form method="POST" action="{{ route('note-folders.store') }}" class="space-y-3">
+            @csrf
+            <div class="flex items-center justify-between">
+                <h3 class="text-base font-semibold">Nueva carpeta</h3>
+                <button type="button" class="btn-ghost" data-modal-close aria-label="Cerrar">✕</button>
+            </div>
+            <label class="label">
+                <span>Nombre</span>
+                <input type="text" name="name" required maxlength="120" class="input mt-1" placeholder="Ideas, Trabajo…">
+            </label>
+            <label class="label">
+                <span>Icono</span>
+                <div class="mt-1">@include('notes.partials.icon-field', ['value' => ''])</div>
+            </label>
+            <label class="label">
+                <span>Dentro de</span>
+                <select name="parent_id" class="select mt-1">
+                    <option value="">— Carpeta raíz —</option>
+                    @foreach ($sidebarFolders->sortBy('name') as $f)
+                        <option value="{{ $f->id }}">{{ $f->name }}</option>
+                    @endforeach
+                </select>
+            </label>
+            <div class="flex justify-end gap-2 pt-1">
+                <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
+                <button type="submit" class="btn">Crear</button>
+            </div>
+        </form>
+    </dialog>
 </body>
 </html>

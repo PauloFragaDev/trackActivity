@@ -66,4 +66,14 @@ class NoteFolderControllerTest extends TestCase
     {
         $this->post('/note-folders', [])->assertSessionHasErrors('name');
     }
+
+    public function test_store_and_update_save_the_icon(): void
+    {
+        $this->post('/note-folders', ['name' => 'Con icono', 'icon' => '📁'])->assertRedirect();
+        $folder = NoteFolder::firstOrFail();
+        $this->assertSame('📁', $folder->icon);
+
+        $this->patch("/note-folders/{$folder->id}", ['name' => 'Con icono', 'icon' => '🗂'])->assertRedirect();
+        $this->assertSame('🗂', $folder->fresh()->icon);
+    }
 }

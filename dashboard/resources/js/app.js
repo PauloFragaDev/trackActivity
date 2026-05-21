@@ -3,6 +3,7 @@ import Swal from 'sweetalert2';
 import 'sweetalert2/dist/sweetalert2.min.css';
 import Toastify from 'toastify-js';
 import 'toastify-js/src/toastify.css';
+import { initQuickSwitcher } from './quick-switcher.js';
 
 // ──────────────────────────────────────────────
 // Theme toggle (claro/oscuro) con persistencia.
@@ -85,6 +86,22 @@ window.addEventListener('DOMContentLoaded', () => {
             const collapsed = document.documentElement.classList.toggle(`notes-${key}-collapsed`);
             localStorage.setItem(`notes-${key}`, collapsed ? 'collapsed' : 'expanded');
         });
+    });
+
+    // Quick switcher (Ctrl/Cmd+K).
+    initQuickSwitcher();
+
+    // Selector de icono (emoji): los presets rellenan el input[name=icon];
+    // si hay un <details> alrededor, se actualiza el icono que muestra.
+    document.querySelectorAll('[data-icon-field]').forEach((field) => {
+        const input = field.querySelector('input[name="icon"]');
+        if (!input) return;
+        const summary = field.closest('details')?.querySelector('summary');
+        const sync = () => { if (summary) summary.textContent = input.value.trim() || '📄'; };
+        field.querySelectorAll('[data-icon-set]').forEach((btn) => {
+            btn.addEventListener('click', () => { input.value = btn.dataset.iconValue; sync(); });
+        });
+        input.addEventListener('input', sync);
     });
 
     // Confirmaciones: <form data-confirm="mensaje"> pide confirmación con

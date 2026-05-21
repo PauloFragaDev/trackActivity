@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CalendarController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\HelpController;
 use App\Http\Controllers\ManualEntryController;
@@ -10,6 +11,9 @@ use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\TimeBlockController;
 use App\Http\Controllers\TimelineController;
 use Illuminate\Support\Facades\Route;
+
+// ─────────────────── Inicio ───────────────────
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
 // ─────────────────── Timeline ───────────────────
 Route::get('/',           [TimelineController::class, 'today'])->name('timeline.today');
@@ -55,10 +59,13 @@ Route::patch('/projects/{project}/mappings/{mapping}/toggle', [ProjectController
 
 // ─────────────────── Notas ───────────────────
 Route::get('/notes',           [NoteController::class, 'index'])->name('notes.index');
+Route::get('/notes/quick',     [NoteController::class, 'quick'])->name('notes.quick');
 Route::post('/notes',          [NoteController::class, 'store'])->name('notes.store');
-Route::patch('/notes/{note}',     [NoteController::class, 'update'])->name('notes.update');
-Route::patch('/notes/{note}/pin', [NoteController::class, 'togglePin'])->name('notes.pin');
-Route::delete('/notes/{note}',    [NoteController::class, 'destroy'])->name('notes.destroy');
+Route::delete('/notes/trash',  [NoteController::class, 'emptyTrash'])->name('notes.trash.empty');
+Route::patch('/notes/{note}',        [NoteController::class, 'update'])->name('notes.update');
+Route::patch('/notes/{note}/pin',    [NoteController::class, 'togglePin'])->name('notes.pin');
+Route::patch('/notes/{id}/restore',  [NoteController::class, 'restore'])->name('notes.restore');
+Route::delete('/notes/{note}',       [NoteController::class, 'destroy'])->name('notes.destroy');
 
 Route::post('/note-folders',                [NoteFolderController::class, 'store'])->name('note-folders.store');
 Route::patch('/note-folders/{noteFolder}',  [NoteFolderController::class, 'update'])->name('note-folders.update');
