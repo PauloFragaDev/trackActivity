@@ -165,17 +165,13 @@ html.sidebar-collapsed #sidebar .sidebar-full {
 html.sidebar-collapsed [data-icon-collapse] { display: none; }
 html.sidebar-collapsed [data-icon-expand]   { display: inline; }
 
-/* Notas · paneles plegables (carpetas y lista) */
-#notes-folders, #notes-list { transition: width 0.15s ease; }
-html.notes-folders-collapsed #notes-folders { width: 2.5rem; }
-html.notes-folders-collapsed #notes-folders .panel-full { display: none; }
-html.notes-list-collapsed    #notes-list    { width: 2.5rem; }
-html.notes-list-collapsed    #notes-list    .panel-full { display: none; }
+/* Notas · panel de la lista de notas, plegable */
+#notes-list { transition: width 0.15s ease; }
+html.notes-list-collapsed #notes-list { width: 2.5rem; }
+html.notes-list-collapsed #notes-list .panel-full { display: none; }
 [data-pc-expand] { display: none; }
-html.notes-folders-collapsed #notes-folders [data-pc-collapse] { display: none; }
-html.notes-folders-collapsed #notes-folders [data-pc-expand]   { display: inline; }
-html.notes-list-collapsed    #notes-list    [data-pc-collapse] { display: none; }
-html.notes-list-collapsed    #notes-list    [data-pc-expand]   { display: inline; }
+html.notes-list-collapsed #notes-list [data-pc-collapse] { display: none; }
+html.notes-list-collapsed #notes-list [data-pc-expand]   { display: inline; }
 
 /* Notas · editor Crepe de altura fija: el contenido scrollea dentro de
    .ProseMirror; el editor en sí no lleva overflow para no recortar el

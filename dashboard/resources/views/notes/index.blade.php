@@ -22,35 +22,7 @@
 
     <div class="card flex" style="height: 78vh">
 
-        {{-- ─── Panel 1 · Carpetas (plegable) ─── --}}
-        <aside id="notes-folders" class="w-52 shrink-0 border-r divider flex flex-col">
-            <div class="flex items-center gap-1 p-2 border-b divider">
-                <button type="button" class="btn-ghost shrink-0" data-panel-toggle="folders"
-                        title="Plegar / desplegar carpetas" aria-label="Plegar carpetas">
-                    <span data-pc-collapse aria-hidden="true">«</span>
-                    <span data-pc-expand   aria-hidden="true">»</span>
-                </button>
-                <span class="panel-full text-[11px] uppercase tracking-wider text-muted">Carpetas</span>
-            </div>
-            <div class="panel-full p-2 space-y-0.5 flex-1 min-h-0 overflow-y-auto">
-                @foreach ($folders->whereNull('parent_id')->sortBy('name') as $folder)
-                    @include('notes.partials.folder-node', ['folder' => $folder, 'depth' => 0])
-                @endforeach
-            </div>
-            <div class="panel-full p-2 border-t divider space-y-1">
-                <a href="{{ route('notes.index', ['trash' => 1]) }}"
-                   class="flex items-center justify-between gap-2 px-2 py-1 rounded text-sm
-                          {{ $isTrash ? 'surface-soft font-medium' : 'text-muted hover:bg-ink-100 dark:hover:bg-ink-800' }}">
-                    <span>🗑 Papelera</span>
-                    <span class="chip">{{ $trashCount }}</span>
-                </a>
-                <button type="button" class="btn-ghost w-full justify-center text-xs" data-modal-open="#folder-new">
-                    + Nueva carpeta
-                </button>
-            </div>
-        </aside>
-
-        {{-- ─── Panel 2 · Lista de notas (plegable) ─── --}}
+        {{-- ─── Lista de notas (plegable) ─── --}}
         <div id="notes-list" class="w-64 shrink-0 border-r divider flex flex-col">
             <div class="flex items-center gap-1 p-2 border-b divider">
                 <button type="button" class="btn-ghost shrink-0" data-panel-toggle="list"
@@ -90,6 +62,7 @@
                                 <button type="submit" class="btn-ghost text-xs text-rose-600 dark:text-rose-400" title="Eliminar carpeta">🗑</button>
                             </form>
                         @endif
+                        <button type="button" class="btn-ghost text-xs" data-modal-open="#folder-new" title="Nueva carpeta">+ carpeta</button>
                         <button type="button" class="btn text-xs" data-modal-open="#note-new">+ Nota</button>
                     </div>
                 @endif
@@ -149,7 +122,7 @@
             </div>
         </div>
 
-        {{-- ─── Panel 3 · Editor ─── --}}
+        {{-- ─── Editor ─── --}}
         <div class="flex-1 min-w-0 p-4 flex flex-col">
             @if ($currentNote)
                 <form method="POST" action="{{ route('notes.update', $currentNote) }}" data-note-form

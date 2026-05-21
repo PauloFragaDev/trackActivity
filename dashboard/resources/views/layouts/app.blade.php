@@ -13,11 +13,9 @@
             if (localStorage.getItem('sidebar') === 'collapsed') {
                 document.documentElement.classList.add('sidebar-collapsed');
             }
-            ['folders', 'list'].forEach((p) => {
-                if (localStorage.getItem('notes-' + p) === 'collapsed') {
-                    document.documentElement.classList.add('notes-' + p + '-collapsed');
-                }
-            });
+            if (localStorage.getItem('notes-list') === 'collapsed') {
+                document.documentElement.classList.add('notes-list-collapsed');
+            }
         })();
     </script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -78,14 +76,6 @@
                         Notas
                     </summary>
                     <div class="mt-0.5 ml-2 space-y-0.5">
-                        @php
-                            $notesRoot = request()->routeIs('notes.*')
-                                && ! request()->query('folder') && ! request()->boolean('trash') && ! request()->query('q');
-                        @endphp
-                        <a href="{{ route('notes.index') }}"
-                           class="block px-2 py-1.5 rounded {{ $notesRoot ? 'bg-ink-100 dark:bg-ink-800 text-ink-900 dark:text-ink-50 font-medium' : 'text-ink-600 dark:text-ink-300 hover:bg-ink-100 dark:hover:bg-ink-800' }}">
-                            Todas las notas
-                        </a>
                         @foreach ($sidebarFolders->whereNull('parent_id')->sortBy('name') as $folder)
                             @include('layouts.partials.sidebar-folder', ['folder' => $folder, 'depth' => 0])
                         @endforeach
