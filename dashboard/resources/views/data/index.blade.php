@@ -74,4 +74,14 @@
             <button type="submit" class="btn-ghost text-sm">Restaurar</button>
         </form>
     </section>
+
+    {{-- ─── Exportar ─── --}}
+    <section class="card p-5">
+        <h2 class="text-base font-semibold mb-1">Exportar</h2>
+        <p class="text-sm text-muted mb-4">Saca tus datos en formatos abiertos, sin depender de la aplicación.</p>
+        <div class="flex gap-2 flex-wrap">
+            <a href="{{ route('data.export.notes') }}" class="btn-ghost text-sm">Exportar notas (.md)</a>
+            <a href="{{ route('data.export.data') }}" class="btn-ghost text-sm">Exportar datos (JSON)</a>
+        </div>
+    </section>
 @endsection

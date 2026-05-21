@@ -50,6 +50,8 @@ Route::get('/data',                [DataController::class, 'index'])->name('data
 Route::post('/data/backup',        [DataController::class, 'backupNow'])->name('data.backup');
 Route::get('/data/backup/{name}',  [DataController::class, 'downloadBackup'])->name('data.backup.download');
 Route::post('/data/restore',       [DataController::class, 'restore'])->name('data.restore');
+Route::get('/data/export/notes',   [DataController::class, 'exportNotes'])->name('data.export.notes');
+Route::get('/data/export/data',    [DataController::class, 'exportData'])->name('data.export.data');
 
 // ─────────────────── Proyectos (CRUD) ───────────────────
 Route::get('/projects',                [ProjectController::class, 'index'])->name('projects.index');
