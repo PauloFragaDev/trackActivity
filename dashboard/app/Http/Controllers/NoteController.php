@@ -21,33 +21,40 @@ class NoteController extends Controller
     {
         $folders = NoteFolder::query()->orderBy('position')->orderBy('name')->get();
 
+        $isTrash       = $request->boolean('trash');
         $search        = trim((string) $request->query('q', ''));
         $folderId      = $request->integer('folder') ?: null;
         $currentFolder = $folderId ? $folders->firstWhere('id', $folderId) : null;
+        $trashCount    = Note::onlyTrashed()->count();
 
-        $query = Note::query()->orderByDesc('pinned');
-
-        if ($search !== '') {
-            // Búsqueda en título y cuerpo, sobre todas las carpetas.
-            $query->where(function ($q) use ($search) {
-                $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('body', 'like', "%{$search}%");
-            })->orderByDesc('updated_at');
+        if ($isTrash) {
+            // Papelera: notas eliminadas (soft-deleted).
+            $notes       = Note::onlyTrashed()->orderByDesc('deleted_at')->get();
+            $currentNote = null;
         } else {
-            $query
-                ->when(
-                    $folderId,
-                    fn ($q) => $q->where('folder_id', $folderId),
-                    fn ($q) => $q->whereNull('folder_id'),
-                )
-                ->orderBy('position')
-                ->orderByDesc('updated_at');
+            $query = Note::query()->orderByDesc('pinned');
+
+            if ($search !== '') {
+                // Búsqueda en título y cuerpo, sobre todas las carpetas.
+                $query->where(function ($q) use ($search) {
+                    $q->where('title', 'like', "%{$search}%")
+                      ->orWhere('body', 'like', "%{$search}%");
+                })->orderByDesc('updated_at');
+            } else {
+                $query
+                    ->when(
+                        $folderId,
+                        fn ($q) => $q->where('folder_id', $folderId),
+                        fn ($q) => $q->whereNull('folder_id'),
+                    )
+                    ->orderBy('position')
+                    ->orderByDesc('updated_at');
+            }
+
+            $notes       = $query->get();
+            $noteId      = $request->integer('note') ?: null;
+            $currentNote = $noteId ? Note::find($noteId) : $notes->first();
         }
-
-        $notes = $query->get();
-
-        $noteId      = $request->integer('note') ?: null;
-        $currentNote = $noteId ? Note::find($noteId) : $notes->first();
 
         return view('notes.index', [
             'folders'       => $folders,
@@ -56,6 +63,8 @@ class NoteController extends Controller
             'notes'         => $notes,
             'currentNote'   => $currentNote,
             'search'        => $search,
+            'isTrash'       => $isTrash,
+            'trashCount'    => $trashCount,
         ]);
     }
 
@@ -110,11 +119,32 @@ class NoteController extends Controller
     public function destroy(Note $note): RedirectResponse
     {
         $folderId = $note->folder_id;
-        $note->delete();
+        $note->delete();   // soft delete: pasa a la papelera
 
         return redirect()
             ->route('notes.index', ['folder' => $folderId])
-            ->with('status', 'Nota eliminada.');
+            ->with('status', 'Nota movida a la papelera.');
+    }
+
+    /** Restaura una nota desde la papelera. */
+    public function restore(int $id): RedirectResponse
+    {
+        $note = Note::onlyTrashed()->findOrFail($id);
+        $note->restore();
+
+        return redirect()
+            ->route('notes.index', ['folder' => $note->folder_id, 'note' => $note->id])
+            ->with('status', 'Nota restaurada.');
+    }
+
+    /** Vacía la papelera: borra definitivamente las notas eliminadas. */
+    public function emptyTrash(): RedirectResponse
+    {
+        Note::onlyTrashed()->forceDelete();
+
+        return redirect()
+            ->route('notes.index')
+            ->with('status', 'Papelera vaciada.');
     }
 
     /** Fija/desfija una nota (acción rápida desde la lista). */

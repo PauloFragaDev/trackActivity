@@ -65,13 +65,14 @@ class NoteControllerTest extends TestCase
         $this->assertFalse($note->fresh()->pinned);
     }
 
-    public function test_destroy_deletes_a_note(): void
+    public function test_destroy_moves_a_note_to_the_trash(): void
     {
         $note = Note::create(['title' => 'N']);
 
         $this->delete("/notes/{$note->id}")->assertRedirect();
 
-        $this->assertDatabaseMissing('notes', ['id' => $note->id]);
+        // Borrado suave: la nota va a la papelera, no se borra de la BBDD.
+        $this->assertSoftDeleted('notes', ['id' => $note->id]);
     }
 
     public function test_store_rejects_missing_title(): void
@@ -117,5 +118,48 @@ class NoteControllerTest extends TestCase
 
         $this->patch("/notes/{$note->id}", ['title' => 'Con icono', 'icon' => '🚀'])->assertRedirect();
         $this->assertSame('🚀', $note->fresh()->icon);
+    }
+
+    public function test_restore_brings_a_note_back_from_the_trash(): void
+    {
+        $note = Note::create(['title' => 'Borrable']);
+        $this->delete("/notes/{$note->id}")->assertRedirect();
+        $this->assertSoftDeleted('notes', ['id' => $note->id]);
+
+        $this->patch("/notes/{$note->id}/restore")->assertRedirect();
+        $this->assertNotSoftDeleted('notes', ['id' => $note->id]);
+    }
+
+    public function test_empty_trash_force_deletes_trashed_notes(): void
+    {
+        $kept    = Note::create(['title' => 'Activa']);
+        $trashed = Note::create(['title' => 'En papelera']);
+        $trashed->delete();
+
+        $this->delete('/notes/trash')->assertRedirect();
+
+        $this->assertDatabaseMissing('notes', ['id' => $trashed->id]);
+        $this->assertDatabaseHas('notes', ['id' => $kept->id]);
+    }
+
+    public function test_trash_view_lists_only_deleted_notes(): void
+    {
+        Note::create(['title' => 'Nota activa']);
+        Note::create(['title' => 'Nota en papelera'])->delete();
+
+        $this->get('/notes?trash=1')->assertOk()
+            ->assertSee('Nota en papelera')
+            ->assertDontSee('Nota activa');
+    }
+
+    public function test_preview_strips_markdown(): void
+    {
+        $note = Note::create(['title' => 'P', 'body' => "## Título\n<br>\n* uno\n* dos"]);
+
+        $preview = $note->preview();
+        $this->assertStringNotContainsString('#', $preview);
+        $this->assertStringNotContainsString('<br>', $preview);
+        $this->assertStringNotContainsString('*', $preview);
+        $this->assertStringContainsString('uno', $preview);
     }
 }
