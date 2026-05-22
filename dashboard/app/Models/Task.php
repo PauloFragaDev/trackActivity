@@ -16,6 +16,7 @@ class Task extends Model
     protected $fillable = [
         'project_id', 'title', 'description', 'status', 'priority',
         'due_date', 'position', 'completed_at',
+        'github_item_id', 'github_synced_at',
     ];
 
     /** Defaults en memoria (coinciden con los de la migración). */
@@ -29,8 +30,9 @@ class Task extends Model
         'status'       => TaskStatus::class,
         'priority'     => TaskPriority::class,
         'due_date'     => 'date',
-        'position'     => 'integer',
-        'completed_at' => 'datetime',
+        'position'         => 'integer',
+        'completed_at'     => 'datetime',
+        'github_synced_at' => 'datetime',
     ];
 
     protected static function booted(): void
