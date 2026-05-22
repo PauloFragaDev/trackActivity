@@ -59,7 +59,8 @@ class TaskControllerTest extends TestCase
 
         $this->delete("/tasks/{$task->id}")->assertRedirect();
 
-        $this->assertDatabaseMissing('tasks', ['id' => $task->id]);
+        // Borrado suave: la fila se conserva hasta que la sync propaga el borrado.
+        $this->assertSoftDeleted('tasks', ['id' => $task->id]);
     }
 
     public function test_move_changes_column_and_reindexes(): void
