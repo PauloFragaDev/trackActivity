@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use App\Services\Aggregator;
 use App\Services\Export\Exporter;
+use App\Services\GitHub\GraphQlProjectClient;
+use App\Services\GitHub\ProjectClient;
 use App\Services\Scoring\MappingResolver;
 use App\Services\Scoring\Scorer;
 use App\Services\SessionBuilder;
@@ -25,6 +27,9 @@ class AppServiceProvider extends ServiceProvider
             $app->make(SessionBuilder::class),
             $app->make(SummaryGenerator::class),
         ));
+
+        // Cliente del GitHub Project (sincronización del Kanban).
+        $this->app->bind(ProjectClient::class, GraphQlProjectClient::class);
     }
 
     public function boot(): void
