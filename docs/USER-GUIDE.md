@@ -25,6 +25,8 @@ configuración y resolución de problemas, en una sola página.
 11. [Privacidad y retención](#11-privacidad-y-retención)
 12. [Notas](#12-notas)
 13. [Tareas](#13-tareas)
+14. [Inicio y atajos](#14-inicio-y-atajos)
+15. [Copias de seguridad y datos](#15-copias-de-seguridad-y-datos)
 
 ---
 
@@ -503,6 +505,34 @@ el menú lateral. Cuatro columnas: Backlog, Por hacer, En curso y Hecho.
   (resaltada si está vencida).
 - El tablero se filtra por proyecto y por prioridad.
 - Las tareas **En curso** aparecen también en la página de Inicio.
+
+---
+
+## 14. Inicio y atajos
+
+La página de **Inicio** resume tu actividad de un vistazo:
+
+- La **semana actual** con las horas trackeadas de cada día.
+- Un **heatmap** de actividad del último año (clic en un día abre su timeline).
+- **Ahora mismo**: lo último que registró el tracker.
+- Las últimas notas editadas y las tareas en curso.
+- Un aviso si el tracker lleva tiempo sin registrar actividad.
+
+**Paleta de comandos**: pulsa `Ctrl/Cmd + K` (o «Buscar» en el menú
+lateral) para saltar a cualquier sección o nota al instante.
+
+---
+
+## 15. Copias de seguridad y datos
+
+En **Datos** (menú Configuración) se gestionan las copias y la exportación:
+
+- **Copias de seguridad**: se crea una automática a diario y se conservan
+  las 14 últimas. Puedes crear, descargar o restaurar copias a mano.
+- **Restaurar** sobrescribe la base de datos actual — se guarda una copia
+  previa por seguridad. Conviene hacerlo con el tracker detenido.
+- **Exportar**: las notas a Markdown (un `.zip` organizado por carpetas)
+  y todos los datos a JSON.
 
 ---
 

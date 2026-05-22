@@ -29,6 +29,8 @@
             <li><a class="underline hover:opacity-80" href="#privacidad">11. Privacidad</a></li>
             <li><a class="underline hover:opacity-80" href="#notas">12. Notas</a></li>
             <li><a class="underline hover:opacity-80" href="#tareas">13. Tareas</a></li>
+            <li><a class="underline hover:opacity-80" href="#inicio">14. Inicio y atajos</a></li>
+            <li><a class="underline hover:opacity-80" href="#datos">15. Copias de seguridad y datos</a></li>
         </ol>
     </nav>
 
@@ -371,6 +373,43 @@ php artisan schedule:work</code></pre>
             <li>Cada tarjeta muestra su proyecto, prioridad y fecha (resaltada si está vencida).</li>
             <li>Filtra el tablero por proyecto y por prioridad.</li>
             <li>Las tareas <strong>En curso</strong> aparecen también en el Inicio.</li>
+        </ul>
+    </section>
+
+    {{-- 14 --}}
+    <section id="inicio" class="card p-6 mb-6">
+        <h2 class="text-lg font-semibold mb-2">14. Inicio y atajos</h2>
+        <p class="text-sm mb-3">
+            La página de <a class="underline" href="{{ route('dashboard') }}">Inicio</a> resume tu
+            actividad de un vistazo.
+        </p>
+        <ul class="text-sm space-y-1 list-disc pl-5">
+            <li>La <strong>semana actual</strong> con las horas trackeadas de cada día.</li>
+            <li>Un <strong>heatmap</strong> de actividad del último año (clic en un día → su timeline).</li>
+            <li><strong>Ahora mismo</strong>: lo último que registró el tracker.</li>
+            <li>Las últimas notas editadas y las tareas en curso.</li>
+            <li>Un aviso si el tracker lleva tiempo sin registrar actividad.</li>
+        </ul>
+        <p class="text-sm mt-3">
+            <strong>Paleta de comandos</strong>: pulsa <code class="chip">Ctrl/Cmd + K</code> (o
+            «Buscar» en el menú lateral) para saltar a cualquier sección o nota al instante.
+        </p>
+    </section>
+
+    {{-- 15 --}}
+    <section id="datos" class="card p-6 mb-6">
+        <h2 class="text-lg font-semibold mb-2">15. Copias de seguridad y datos</h2>
+        <p class="text-sm mb-3">
+            En <a class="underline" href="{{ route('data.index') }}">Datos</a> (menú Configuración)
+            gestionas las copias y la exportación.
+        </p>
+        <ul class="text-sm space-y-1 list-disc pl-5">
+            <li><strong>Copias de seguridad</strong>: se crea una automática a diario y se conservan
+                las 14 últimas. Puedes crear, descargar o restaurar copias a mano.</li>
+            <li><strong>Restaurar</strong> sobrescribe la base de datos actual — guarda una copia
+                previa por seguridad. Conviene hacerlo con el tracker detenido.</li>
+            <li><strong>Exportar</strong>: las notas a Markdown (un `.zip` por carpetas) y todos los
+                datos a JSON.</li>
         </ul>
     </section>
 @endsection
