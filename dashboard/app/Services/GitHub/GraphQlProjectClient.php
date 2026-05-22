@@ -20,7 +20,7 @@ class GraphQlProjectClient implements ProjectClient
     {
         [$owner, $number] = $this->ownerAndNumber();
 
-        $data = $this->query(<<<'GQL'
+        $data = $this->graphql(<<<'GQL'
             query ($owner: String!, $number: Int!) {
                 user(login: $owner) {
                     projectV2(number: $number) {
@@ -59,7 +59,7 @@ class GraphQlProjectClient implements ProjectClient
         $cursor = null;
 
         do {
-            $data = $this->query(<<<'GQL'
+            $data = $this->graphql(<<<'GQL'
                 query ($projectId: ID!, $cursor: String) {
                     node(id: $projectId) {
                         ... on ProjectV2 {
@@ -70,9 +70,9 @@ class GraphQlProjectClient implements ProjectClient
                                     updatedAt
                                     content {
                                         __typename
-                                        ... on DraftIssue { title body }
-                                        ... on Issue { title body }
-                                        ... on PullRequest { title body }
+                                        ... on DraftIssue { id title body }
+                                        ... on Issue { id title body }
+                                        ... on PullRequest { id title body }
                                     }
                                     fieldValueByName(name: "Status") {
                                         ... on ProjectV2ItemFieldSingleSelectValue { name }
@@ -90,6 +90,7 @@ class GraphQlProjectClient implements ProjectClient
                 $content = $node['content'] ?? [];
                 $items[] = [
                     'id'        => $node['id'],
+                    'contentId' => $content['id'] ?? null,
                     'updatedAt' => $node['updatedAt'] ?? '',
                     'title'     => $content['title'] ?? '(sin título)',
                     'body'      => $content['body'] ?? '',
@@ -102,6 +103,60 @@ class GraphQlProjectClient implements ProjectClient
         } while ($cursor !== null);
 
         return $items;
+    }
+
+    public function createDraftItem(string $projectId, string $title, string $body): string
+    {
+        $data = $this->graphql(<<<'GQL'
+            mutation ($projectId: ID!, $title: String!, $body: String!) {
+                addProjectV2DraftIssue(input: {projectId: $projectId, title: $title, body: $body}) {
+                    projectItem { id }
+                }
+            }
+        GQL, ['projectId' => $projectId, 'title' => $title, 'body' => $body]);
+
+        $id = $data['addProjectV2DraftIssue']['projectItem']['id'] ?? null;
+        if ($id === null) {
+            throw new RuntimeException('GitHub no devolvió el id del item creado.');
+        }
+
+        return $id;
+    }
+
+    public function updateDraftItem(string $draftId, string $title, string $body): void
+    {
+        $this->graphql(<<<'GQL'
+            mutation ($draftId: ID!, $title: String!, $body: String!) {
+                updateProjectV2DraftIssue(input: {draftIssueId: $draftId, title: $title, body: $body}) {
+                    draftIssue { id }
+                }
+            }
+        GQL, ['draftId' => $draftId, 'title' => $title, 'body' => $body]);
+    }
+
+    public function setItemStatus(string $projectId, string $itemId, string $fieldId, string $optionId): void
+    {
+        $this->graphql(<<<'GQL'
+            mutation ($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
+                updateProjectV2ItemFieldValue(input: {
+                    projectId: $projectId, itemId: $itemId, fieldId: $fieldId,
+                    value: {singleSelectOptionId: $optionId}
+                }) {
+                    projectV2Item { id }
+                }
+            }
+        GQL, compact('projectId', 'itemId', 'fieldId', 'optionId'));
+    }
+
+    public function deleteItem(string $projectId, string $itemId): void
+    {
+        $this->graphql(<<<'GQL'
+            mutation ($projectId: ID!, $itemId: ID!) {
+                deleteProjectV2Item(input: {projectId: $projectId, itemId: $itemId}) {
+                    deletedItemId
+                }
+            }
+        GQL, compact('projectId', 'itemId'));
     }
 
     /** @return array{0:string,1:int} owner y número del Project. */
@@ -117,17 +172,17 @@ class GraphQlProjectClient implements ProjectClient
     }
 
     /**
-     * Ejecuta una operación GraphQL y devuelve el nodo `data`.
+     * Ejecuta una operación GraphQL (query o mutation) y devuelve el nodo `data`.
      *
      * @return array<string,mixed>
      */
-    private function query(string $query, array $variables = []): array
+    private function graphql(string $operation, array $variables = []): array
     {
         $response = Http::withToken((string) config('github.token'))
             ->acceptJson()
             ->withHeaders(['User-Agent' => 'trackActivity'])
             ->post((string) config('github.api'), [
-                'query'     => $query,
+                'query'     => $operation,
                 'variables' => $variables,
             ]);
 

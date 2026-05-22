@@ -29,8 +29,9 @@ class SyncTasksCommand extends Command
             return self::FAILURE;
         }
 
-        $this->info("Sincronización correcta — creadas: {$result['created']}, "
-            . "actualizadas: {$result['updated']}, eliminadas: {$result['removed']}.");
+        $this->info("Sincronización correcta — subidas: {$result['pushed']}, "
+            . "creadas: {$result['created']}, actualizadas: {$result['updated']}, "
+            . "eliminadas: {$result['removed']}.");
 
         return self::SUCCESS;
     }

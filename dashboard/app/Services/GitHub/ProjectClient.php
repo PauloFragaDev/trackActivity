@@ -22,7 +22,19 @@ interface ProjectClient
     /**
      * Items del Project.
      *
-     * @return list<array{id:string,updatedAt:string,title:string,body:string,status:?string,isDraft:bool}>
+     * @return list<array{id:string,contentId:?string,updatedAt:string,title:string,body:string,status:?string,isDraft:bool}>
      */
     public function listItems(string $projectId): array;
+
+    /** Crea un draft issue en el Project; devuelve el id del item. */
+    public function createDraftItem(string $projectId, string $title, string $body): string;
+
+    /** Actualiza el título y el cuerpo de un draft issue (por su id de contenido). */
+    public function updateDraftItem(string $draftId, string $title, string $body): void;
+
+    /** Fija el valor del campo Status (single-select) de un item. */
+    public function setItemStatus(string $projectId, string $itemId, string $fieldId, string $optionId): void;
+
+    /** Elimina un item del Project. */
+    public function deleteItem(string $projectId, string $itemId): void;
 }

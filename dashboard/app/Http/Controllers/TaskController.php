@@ -51,7 +51,7 @@ class TaskController extends Controller
 
     public function update(Request $request, Task $task): RedirectResponse
     {
-        $task->update($this->validateTask($request));
+        $task->update([...$this->validateTask($request), 'github_dirty' => true]);
 
         return redirect()->route('tasks.index')->with('status', 'Tarea actualizada.');
     }
@@ -74,6 +74,7 @@ class TaskController extends Controller
         $oldStatus = $task->status->value;
 
         $task->status = TaskStatus::from($data['status']);
+        $task->github_dirty = true;
         $task->save();   // el hook saving sincroniza completed_at
 
         $this->reindex($data['status'], $task->id, (int) $data['position']);
