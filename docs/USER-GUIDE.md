@@ -505,6 +505,11 @@ el menú lateral. Cuatro columnas: Backlog, Por hacer, En curso y Hecho.
   (resaltada si está vencida).
 - El tablero se filtra por proyecto y por prioridad.
 - Las tareas **En curso** aparecen también en la página de Inicio.
+- **Sincronización con GitHub**: si configuras un GitHub Project (token y
+  project en el `.env`), el tablero se sincroniza con él en ambos sentidos
+  — con el botón «Sincronizar» o automáticamente cada pocos minutos. Útil
+  para compartir las tareas con un equipo. Ver
+  [`docs/17-github-projects-sync.md`](17-github-projects-sync.md).
 
 ---
 

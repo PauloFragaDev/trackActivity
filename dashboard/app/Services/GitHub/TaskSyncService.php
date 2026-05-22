@@ -4,6 +4,8 @@ namespace App\Services\GitHub;
 
 use App\Enums\TaskStatus;
 use App\Models\Task;
+use Carbon\CarbonImmutable;
+use DateTimeInterface;
 
 /**
  * Sincroniza el tablero Kanban con un GitHub Project, en dos sentidos.
@@ -31,7 +33,7 @@ class TaskSyncService
             $remoteById[$it['id']] = $it;
         }
 
-        $stats   = ['created' => 0, 'updated' => 0, 'removed' => 0, 'pushed' => 0];
+        $stats   = ['created' => 0, 'updated' => 0, 'removed' => 0, 'pushed' => 0, 'conflicts' => 0];
         $pushed  = [];   // items recién subidos → el pull no los machaca
         $deleted = [];   // items borrados en este run → el pull no los recrea
         $synced  = [];   // items "en sync" → para detectar borrados remotos
@@ -66,6 +68,14 @@ class TaskSyncService
             if ($remote === null) {
                 continue;   // el item ya no existe; el pull limpiará la tarea
             }
+
+            // Conflicto: si el item también cambió en GitHub desde la última
+            // sincronización, gana GitHub → no se sube y el pull aplica lo remoto.
+            if ($this->remoteChangedSince($remote, $task->github_synced_at)) {
+                $stats['conflicts']++;
+                continue;
+            }
+
             if ($remote['isDraft'] && $remote['contentId'] !== null) {
                 $this->client->updateDraftItem($remote['contentId'], $task->title, (string) $task->description);
             }
@@ -117,6 +127,16 @@ class TaskSyncService
         }
 
         return $stats;
+    }
+
+    /** ¿El item remoto cambió en GitHub desde la última sincronización? */
+    private function remoteChangedSince(array $remote, ?DateTimeInterface $syncedAt): bool
+    {
+        if ($syncedAt === null || empty($remote['updatedAt'])) {
+            return true;   // sin referencia fiable → conservador: gana GitHub
+        }
+
+        return CarbonImmutable::parse($remote['updatedAt'])->greaterThan($syncedAt);
     }
 
     /** Marca la tarea como sincronizada (sin cambios locales pendientes). */

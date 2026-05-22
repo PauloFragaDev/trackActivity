@@ -19,7 +19,7 @@ class TaskSyncTest extends TestCase
         return [
             'id'        => $id,
             'contentId' => 'content-' . $id,
-            'updatedAt' => '2026-05-22T10:00:00Z',
+            'updatedAt' => '2020-01-01T00:00:00Z',   // claramente anterior a cualquier sync
             'title'     => $title,
             'body'      => $body,
             'status'    => $status,
@@ -130,10 +130,44 @@ class TaskSyncTest extends TestCase
         $this->assertDatabaseMissing('tasks', ['id' => $task->id]);   // purgada de verdad
     }
 
+    public function test_a_conflict_keeps_the_github_version(): void
+    {
+        // Tarea con cambios locales Y el item también cambió en GitHub.
+        Task::create([
+            'title'            => 'Versión local',
+            'status'           => 'todo',
+            'github_item_id'   => 'I1',
+            'github_synced_at' => now()->subDay(),
+            'github_dirty'     => true,
+        ]);
+
+        $fake = new FakeProjectClient();
+        $fake->items = [[
+            'id'        => 'I1',
+            'contentId' => 'content-I1',
+            'updatedAt' => now()->toIso8601String(),   // el remoto cambió después de la última sync
+            'title'     => 'Versión de GitHub',
+            'body'      => '',
+            'status'    => 'Done',
+            'isDraft'   => true,
+        ]];
+
+        $result = (new TaskSyncService($fake))->sync();
+
+        $this->assertSame(1, $result['conflicts']);
+        $this->assertEmpty($fake->updated);   // no se subió: gana GitHub
+        $this->assertSame('Versión de GitHub', Task::firstOrFail()->title);
+    }
+
     public function test_sync_command_is_a_noop_when_not_configured(): void
     {
         $this->artisan('tasks:sync')
             ->expectsOutputToContain('no configurada')
             ->assertSuccessful();
+    }
+
+    public function test_sync_route_redirects_when_not_configured(): void
+    {
+        $this->post('/tasks/sync')->assertRedirect();
     }
 }

@@ -373,6 +373,10 @@ php artisan schedule:work</code></pre>
             <li>Cada tarjeta muestra su proyecto, prioridad y fecha (resaltada si está vencida).</li>
             <li>Filtra el tablero por proyecto y por prioridad.</li>
             <li>Las tareas <strong>En curso</strong> aparecen también en el Inicio.</li>
+            <li><strong>Sincronización con GitHub</strong>: si configuras un GitHub Project
+                (token y project en el <code class="chip">.env</code>), el tablero se sincroniza
+                con él en ambos sentidos — botón «Sincronizar» o automática cada pocos minutos.
+                Útil para compartir las tareas con un equipo.</li>
         </ul>
     </section>
 

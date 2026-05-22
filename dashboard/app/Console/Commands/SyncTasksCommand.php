@@ -31,7 +31,7 @@ class SyncTasksCommand extends Command
 
         $this->info("Sincronización correcta — subidas: {$result['pushed']}, "
             . "creadas: {$result['created']}, actualizadas: {$result['updated']}, "
-            . "eliminadas: {$result['removed']}.");
+            . "eliminadas: {$result['removed']}, conflictos: {$result['conflicts']}.");
 
         return self::SUCCESS;
     }
