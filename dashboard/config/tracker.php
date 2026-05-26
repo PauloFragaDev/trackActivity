@@ -46,7 +46,9 @@ return [
     | El dashboard lanza el daemon Python con nohup. Estas rutas se pueden
     | sobreescribir por entorno si la app vive fuera de la convención.
     */
-    'bin'      => env('TRACKER_BIN',      dirname(base_path()) . '/tracker/.venv/bin/tracker'),
-    'pid_file' => env('TRACKER_PID_FILE', dirname(base_path()) . '/storage/tracker.pid'),
-    'log_file' => env('TRACKER_LOG_FILE', dirname(base_path()) . '/storage/logs/tracker.log'),
+    'bin'         => env('TRACKER_BIN',         dirname(base_path()) . '/tracker/.venv/bin/tracker'),
+    'dir'         => env('TRACKER_DIR',         dirname(base_path()) . '/tracker'),
+    'config_file' => env('TRACKER_CONFIG_FILE', dirname(base_path()) . '/tracker/config.yml'),
+    'pid_file'    => env('TRACKER_PID_FILE',    dirname(base_path()) . '/storage/tracker.pid'),
+    'log_file'    => env('TRACKER_LOG_FILE',    dirname(base_path()) . '/storage/logs/tracker.log'),
 ];

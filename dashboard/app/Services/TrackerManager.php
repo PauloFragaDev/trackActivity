@@ -49,29 +49,64 @@ class TrackerManager
             throw new RuntimeException("No se encuentra el ejecutable del tracker en {$bin}.");
         }
 
+        $dir        = (string) config('tracker.dir');
+        $configFile = (string) config('tracker.config_file');
+        if (! is_file($configFile)) {
+            throw new RuntimeException("No se encuentra el config del tracker en {$configFile}.");
+        }
+
         $log = (string) config('tracker.log_file');
         @mkdir(dirname($log), 0775, true);
+        $this->logMarker('inicio solicitado desde el dashboard');
 
         // Entorno mínimo para que el collector de ventanas funcione bajo X11.
         $display    = getenv('DISPLAY') ?: ':0';
         $xauthority = getenv('XAUTHORITY') ?: ((getenv('HOME') ?: '/root') . '/.Xauthority');
 
-        // nohup + redirecciones explícitas → el proceso sobrevive a la request.
+        // Pasamos --config explícito. El cwd lo cambiamos desde PHP (no con
+        // `cd && …` en el shell) para que `$!` sea el PID del tracker en sí —
+        // si se usa `cd && … &`, bash captura el PID del subshell y no del daemon.
         $cmd = sprintf(
-            'nohup env DISPLAY=%s XAUTHORITY=%s %s run --foreground >> %s 2>&1 < /dev/null & echo $!',
+            'nohup env DISPLAY=%s XAUTHORITY=%s %s run --foreground --config %s >> %s 2>&1 < /dev/null & echo $!',
             escapeshellarg($display),
             escapeshellarg($xauthority),
             escapeshellarg($bin),
+            escapeshellarg($configFile),
             escapeshellarg($log),
         );
 
-        $line = exec($cmd);
-        $pid  = (int) trim((string) $line);
+        $cwd = getcwd();
+        if (! @chdir($dir)) {
+            throw new RuntimeException("No se pudo acceder al directorio del tracker: {$dir}.");
+        }
+        try {
+            $line = exec($cmd);
+        } finally {
+            if ($cwd !== false) {
+                @chdir($cwd);
+            }
+        }
+        $pid = (int) trim((string) $line);
         if ($pid <= 0) {
+            $this->logMarker('arranque falló: el shell no devolvió PID');
             throw new RuntimeException('No se pudo arrancar el tracker (el shell no devolvió PID).');
         }
 
+        // Damos al daemon medio segundo para arrancar y comprobamos que sigue vivo.
+        // Si muere en ese tiempo, leemos el log y devolvemos una pista útil.
+        usleep(600_000);
+        if (! $this->isTrackerProcess($pid)) {
+            $this->logMarker("arranque falló: el proceso murió tras spawn (pid={$pid})");
+            $hint = $this->extractLogHint();
+            @unlink($this->pidFile());
+            throw new RuntimeException(trim(
+                'El tracker arrancó pero se cayó. Revisa storage/logs/tracker.log.'
+                . ($hint !== '' ? ' Último error: ' . $hint : '')
+            ));
+        }
+
         $this->writePid($pid);
+        $this->logMarker("arrancado (pid={$pid})");
     }
 
     /** Detiene el daemon si está en marcha. */
@@ -81,14 +116,35 @@ class TrackerManager
         if (! $status['running']) {
             return;
         }
+        $pid = $status['pid'];
 
-        if (function_exists('posix_kill')) {
-            posix_kill($status['pid'], SIGTERM);
-        } else {
-            exec('kill ' . $status['pid'] . ' 2>/dev/null');
+        $this->logMarker("parada solicitada (pid={$pid})");
+        $this->signal($pid, defined('SIGTERM') ? SIGTERM : 15);
+
+        // Espera hasta ~3s a que termine limpiamente; si no, SIGKILL.
+        for ($i = 0; $i < 30; $i++) {
+            usleep(100_000);
+            if (! $this->isTrackerProcess($pid)) {
+                break;
+            }
+        }
+        if ($this->isTrackerProcess($pid)) {
+            $this->signal($pid, defined('SIGKILL') ? SIGKILL : 9);
+            usleep(200_000);
+            $this->logMarker("forzado con SIGKILL (pid={$pid})");
         }
 
         @unlink($this->pidFile());
+    }
+
+    private function signal(int $pid, int $signal): void
+    {
+        if (function_exists('posix_kill')) {
+            posix_kill($pid, $signal);
+            return;
+        }
+        $flag = $signal === 9 ? '-9 ' : '';
+        exec("kill {$flag}{$pid} 2>/dev/null");
     }
 
     // ── Helpers ──────────────────────────────────────────────
@@ -142,19 +198,44 @@ class TrackerManager
         return null;
     }
 
-    /**
-     * Heurística para reconocer al daemon: bien el binario del venv, bien
-     * `python -m tracker.cli run` (formato del unit de systemd).
-     */
+    /** Heurística para reconocer al daemon en /proc. */
     private function cmdlineLooksLikeTracker(string $cmdline): bool
     {
         // /proc/.../cmdline separa argumentos con NUL.
         $flat = str_replace("\0", ' ', $cmdline);
+        $bin  = (string) config('tracker.bin');
 
-        if (str_contains($flat, (string) config('tracker.bin')) && str_contains($flat, ' run')) {
-            return true;
+        return $bin !== '' && str_contains($flat, $bin) && str_contains($flat, ' run');
+    }
+
+    /** Marca de tiempo en el log para trazar las acciones del dashboard. */
+    private function logMarker(string $line): void
+    {
+        $log = (string) config('tracker.log_file');
+        if ($log === '') {
+            return;
+        }
+        @file_put_contents(
+            $log,
+            '[dashboard ' . date('Y-m-d H:i:s') . '] ' . $line . PHP_EOL,
+            FILE_APPEND
+        );
+    }
+
+    /** Extrae la última línea con pinta de error del log, para el flash. */
+    private function extractLogHint(): string
+    {
+        $log = (string) config('tracker.log_file');
+        if (! is_file($log)) {
+            return '';
+        }
+        $tail = array_slice(explode("\n", rtrim((string) @file_get_contents($log))), -40);
+        foreach (array_reverse($tail) as $line) {
+            if (preg_match('/(Error|Exception|Traceback|not found|no encontrado)/i', $line)) {
+                return mb_substr(trim(preg_replace('/\s+/', ' ', $line)), 0, 220);
+            }
         }
 
-        return str_contains($flat, 'tracker.cli') && str_contains($flat, ' run');
+        return mb_substr(trim((string) end($tail)), 0, 220);
     }
 }
