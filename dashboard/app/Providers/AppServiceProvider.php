@@ -11,6 +11,8 @@ use App\Services\Scoring\Scorer;
 use App\Services\SessionBuilder;
 use App\Services\Summaries\EvidenceExtractor;
 use App\Services\Summaries\SummaryGenerator;
+use App\Services\TrackerManager;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -34,6 +36,9 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        //
+        // El layout muestra un mini-pill con el estado del tracker.
+        View::composer('layouts.app', function ($view) {
+            $view->with('trackerRunning', app(TrackerManager::class)->status()['running']);
+        });
     }
 }

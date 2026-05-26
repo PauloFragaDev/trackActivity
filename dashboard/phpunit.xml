@@ -29,5 +29,12 @@
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
+        <!-- Aislamiento del control del tracker: nunca tocar el proceso/PID real desde tests. -->
+        <env name="TRACKER_BIN" value="/nonexistent/tracker-test-bin"/>
+        <env name="TRACKER_PID_FILE" value="/tmp/trackactivity-test.pid"/>
+        <env name="TRACKER_LOG_FILE" value="/tmp/trackactivity-test.log"/>
+        <!-- Aislamiento de la sync con GitHub: los tests no deben tocar la API real. -->
+        <env name="GITHUB_TOKEN" value=""/>
+        <env name="GITHUB_PROJECT" value=""/>
     </php>
 </phpunit>

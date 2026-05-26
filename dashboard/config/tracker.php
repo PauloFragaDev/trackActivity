@@ -38,4 +38,15 @@ return [
         'engine' => env('TRACKER_SUMMARY_ENGINE', 'template'),  // template | llm
         'locale' => env('TRACKER_SUMMARY_LOCALE', 'es'),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Control del daemon (botón "Iniciar / Detener tracker" del sidebar)
+    |--------------------------------------------------------------------------
+    | El dashboard lanza el daemon Python con nohup. Estas rutas se pueden
+    | sobreescribir por entorno si la app vive fuera de la convención.
+    */
+    'bin'      => env('TRACKER_BIN',      dirname(base_path()) . '/tracker/.venv/bin/tracker'),
+    'pid_file' => env('TRACKER_PID_FILE', dirname(base_path()) . '/storage/tracker.pid'),
+    'log_file' => env('TRACKER_LOG_FILE', dirname(base_path()) . '/storage/logs/tracker.log'),
 ];
