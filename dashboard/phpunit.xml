@@ -29,10 +29,13 @@
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
-        <!-- Aislamiento del control del tracker: nunca tocar el proceso/PID real desde tests. -->
+        <!-- Aislamiento del control del tracking: los tests no tocan procesos reales. -->
         <env name="TRACKER_BIN" value="/nonexistent/tracker-test-bin"/>
-        <env name="TRACKER_PID_FILE" value="/tmp/trackactivity-test.pid"/>
-        <env name="TRACKER_LOG_FILE" value="/tmp/trackactivity-test.log"/>
+        <env name="TRACKER_PID_FILE" value="/tmp/trackactivity-test-tracker.pid"/>
+        <env name="TRACKER_LOG_FILE" value="/tmp/trackactivity-test-tracker.log"/>
+        <env name="SCHEDULER_PID_FILE" value="/tmp/trackactivity-test-scheduler.pid"/>
+        <env name="SCHEDULER_LOG_FILE" value="/tmp/trackactivity-test-scheduler.log"/>
+        <env name="SCHEDULER_IDENTIFIER" value="__test_scheduler_no_match__"/>
         <!-- Aislamiento de la sync con GitHub: los tests no deben tocar la API real. -->
         <env name="GITHUB_TOKEN" value=""/>
         <env name="GITHUB_PROJECT" value=""/>
