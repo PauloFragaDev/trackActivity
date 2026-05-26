@@ -10,6 +10,7 @@ use App\Http\Controllers\NoteController;
 use App\Http\Controllers\NoteFolderController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\TaskCheckboxController;
+use App\Http\Controllers\TaskCommentController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TaskLabelController;
 use App\Http\Controllers\TimeBlockController;
@@ -102,6 +103,10 @@ Route::delete('/task-labels/{taskLabel}',   [TaskLabelController::class, 'destro
 Route::post('/tasks/{task}/checkboxes',                  [TaskCheckboxController::class, 'store'])->name('task-checkboxes.store');
 Route::patch('/tasks/{task}/checkboxes/{taskCheckbox}',  [TaskCheckboxController::class, 'update'])->name('task-checkboxes.update');
 Route::delete('/tasks/{task}/checkboxes/{taskCheckbox}', [TaskCheckboxController::class, 'destroy'])->name('task-checkboxes.destroy');
+
+// Comentarios — endpoints AJAX desde el modal de edición
+Route::post('/tasks/{task}/comments',                  [TaskCommentController::class, 'store'])->name('task-comments.store');
+Route::delete('/tasks/{task}/comments/{taskComment}',  [TaskCommentController::class, 'destroy'])->name('task-comments.destroy');
 
 // ─────────────────── Control del tracker ───────────────────
 Route::post('/tracker/toggle', [TrackerController::class, 'toggle'])->name('tracker.toggle');

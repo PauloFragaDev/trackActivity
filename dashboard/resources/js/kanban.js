@@ -9,8 +9,8 @@ export function initKanban() {
     const editModal = document.getElementById('task-edit');
     const csrf      = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
 
-    /** Estado del modal de edición — ver renderSubtasks / syncCardBadge. */
-    let edit = null;   // { card, taskId, checkboxes: [{id,title,checked}] }
+    /** Estado del modal de edición — ver renderSubtasks / renderComments. */
+    let edit = null;   // { card, taskId, checkboxes: [...], comments: [...] }
 
     // ── helpers ──────────────────────────────────────────────
     const escape = (s) => {
@@ -107,6 +107,66 @@ export function initKanban() {
         await send(`/tasks/${edit.taskId}/checkboxes/${id}`, 'DELETE');
     };
 
+    // ── Comentarios (modal de edición) ───────────────────────
+    const renderComments = () => {
+        if (!edit || !editModal) return;
+        const list = editModal.querySelector('[data-comments-list]');
+        if (!list) return;
+
+        list.innerHTML = edit.comments.map((c) => {
+            const when = c.created_at ? new Date(c.created_at).toLocaleString('es') : '';
+            return `
+                <li class="card p-2 group">
+                    <div class="flex items-start justify-between gap-2">
+                        <p class="whitespace-pre-wrap leading-relaxed flex-1">${escape(c.body)}</p>
+                        <button type="button" class="btn-ghost text-xs text-rose-500 opacity-0 group-hover:opacity-100"
+                                data-comment-delete data-id="${c.id}" aria-label="Borrar comentario">×</button>
+                    </div>
+                    <div class="text-xs text-faint mt-1">${escape(when)}</div>
+                </li>`;
+        }).join('');
+
+        syncCommentsBadge();
+    };
+
+    const syncCommentsBadge = () => {
+        if (!edit?.card) return;
+        edit.card.dataset.comments = JSON.stringify(edit.comments);
+        const badge = edit.card.querySelector('[data-card-comments-badge]');
+        const chipRow = edit.card.querySelector('.flex.flex-wrap.items-center');
+        if (edit.comments.length === 0) {
+            badge?.remove();
+            return;
+        }
+        const text = `💬 ${edit.comments.length}`;
+        if (badge) {
+            badge.textContent = text;
+        } else if (chipRow) {
+            const span = document.createElement('span');
+            span.setAttribute('data-card-comments-badge', '');
+            span.title = 'Comentarios';
+            span.className = 'chip';
+            span.textContent = text;
+            chipRow.appendChild(span);
+        }
+    };
+
+    const addComment = async (body) => {
+        if (!edit) return;
+        const res = await send(`/tasks/${edit.taskId}/comments`, 'POST', { body });
+        if (! res.ok) return;
+        const c = await res.json();
+        edit.comments.push(c);
+        renderComments();
+    };
+
+    const deleteComment = async (id) => {
+        if (!edit) return;
+        edit.comments = edit.comments.filter((c) => c.id != id);
+        renderComments();
+        await send(`/tasks/${edit.taskId}/comments/${id}`, 'DELETE');
+    };
+
     if (editModal) {
         // Delegación: los handlers se mantienen aunque el contenido del <ul>
         // se reescriba en cada render.
@@ -129,6 +189,22 @@ export function initKanban() {
             if (! title) return;
             addSubtask(title);
             input.value = '';
+        });
+
+        // Comentarios: delegación delete + submit del añadir.
+        const commentsList = editModal.querySelector('[data-comments-list]');
+        commentsList?.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-comment-delete]');
+            if (btn) deleteComment(btn.dataset.id);
+        });
+        const addComment_ = editModal.querySelector('[data-comments-add]');
+        addComment_?.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const ta = addComment_.querySelector('textarea[name="body"]');
+            const body = (ta?.value || '').trim();
+            if (! body) return;
+            addComment(body);
+            ta.value = '';
         });
     }
 
@@ -171,9 +247,12 @@ export function initKanban() {
                 });
 
                 let checkboxes = [];
+                let comments   = [];
                 try { checkboxes = JSON.parse(card.dataset.checkboxes || '[]'); } catch {}
-                edit = { card, taskId: card.dataset.taskId, checkboxes };
+                try { comments   = JSON.parse(card.dataset.comments   || '[]'); } catch {}
+                edit = { card, taskId: card.dataset.taskId, checkboxes, comments };
                 renderSubtasks();
+                renderComments();
 
                 if (typeof editModal.showModal === 'function') editModal.showModal();
             });

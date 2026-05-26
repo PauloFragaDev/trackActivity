@@ -26,7 +26,7 @@ class TaskController extends Controller
         $projectId = $request->integer('project') ?: null;
         $priority  = $request->input('priority') ?: null;
 
-        $tasks = Task::with(['project', 'manualEntries', 'labels', 'checkboxes'])
+        $tasks = Task::with(['project', 'manualEntries', 'labels', 'checkboxes', 'comments'])
             ->when($projectId, fn ($q) => $q->where('project_id', $projectId))
             ->when($priority, fn ($q) => $q->where('priority', $priority))
             ->orderBy('position')

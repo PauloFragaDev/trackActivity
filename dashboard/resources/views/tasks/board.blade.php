@@ -116,5 +116,16 @@
                 <button type="submit" class="btn-ghost text-sm" aria-label="Añadir subtarea">+</button>
             </form>
         </section>
+
+        {{-- Comentarios (gestionados por AJAX desde kanban.js) --}}
+        <section data-task-comments class="mt-4 pt-4 border-t divider">
+            <h4 class="text-sm font-semibold mb-2">Comentarios</h4>
+            <ul data-comments-list class="space-y-2 text-sm mb-2"></ul>
+            <form data-comments-add class="flex gap-1.5">
+                <textarea name="body" required maxlength="5000" rows="2"
+                          class="textarea text-sm flex-1" placeholder="Añadir un comentario…"></textarea>
+                <button type="submit" class="btn-ghost text-sm self-end" aria-label="Publicar comentario">Publicar</button>
+            </form>
+        </section>
     </dialog>
 @endsection

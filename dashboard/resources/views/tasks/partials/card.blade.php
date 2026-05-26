@@ -7,7 +7,8 @@
     $checkboxes   = $task->checkboxes;
     $checkboxDone = $checkboxes->where('checked', true)->count();
     $checkboxAll  = $checkboxes->count();
-    $hasChips     = $task->project || $task->priority || $task->due_date || $logged > 0 || $checkboxAll > 0;
+    $comments     = $task->comments;
+    $hasChips     = $task->project || $task->priority || $task->due_date || $logged > 0 || $checkboxAll > 0 || $comments->isNotEmpty();
 @endphp
 <div class="task-card card p-2.5 cursor-grab active:cursor-grabbing"
      data-task-id="{{ $task->id }}"
@@ -18,7 +19,8 @@
      data-project="{{ $task->project_id }}"
      data-due="{{ $task->due_date?->format('Y-m-d') }}"
      data-labels="{{ $taskLabels->pluck('id')->toJson() }}"
-     data-checkboxes="{{ $checkboxes->map(fn ($c) => ['id'=>$c->id,'title'=>$c->title,'checked'=>$c->checked])->toJson() }}">
+     data-checkboxes="{{ $checkboxes->map(fn ($c) => ['id'=>$c->id,'title'=>$c->title,'checked'=>$c->checked])->toJson() }}"
+     data-comments="{{ $comments->map(fn ($c) => ['id'=>$c->id,'body'=>$c->body,'created_at'=>$c->created_at?->toIso8601String()])->toJson() }}">
     <div class="flex items-start justify-between gap-2">
         <p class="text-sm font-medium leading-snug">{{ $task->title }}</p>
         <button type="button" data-task-edit class="btn-ghost text-xs shrink-0 -mr-1 -mt-1"
@@ -55,6 +57,9 @@
             @if ($checkboxAll > 0)
                 <span class="chip {{ $checkboxDone === $checkboxAll ? 'text-emerald-600 dark:text-emerald-400' : '' }}"
                       title="Subtareas" data-card-subtasks-badge>☑ {{ $checkboxDone }}/{{ $checkboxAll }}</span>
+            @endif
+            @if ($comments->isNotEmpty())
+                <span class="chip" title="Comentarios" data-card-comments-badge>💬 {{ $comments->count() }}</span>
             @endif
         </div>
     @endif

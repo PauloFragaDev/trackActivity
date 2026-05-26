@@ -77,6 +77,11 @@ class Task extends Model
             ->orderBy('id');
     }
 
+    public function comments(): HasMany
+    {
+        return $this->hasMany(TaskComment::class)->orderBy('created_at');
+    }
+
     /** Minutos totales registrados contra la tarea vía entradas manuales. */
     public function loggedMinutes(): int
     {
