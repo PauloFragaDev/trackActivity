@@ -28,10 +28,19 @@
                 @if ($latestEvent->source === 'idle')
                     <span class="text-muted">Inactivo</span>
                 @else
+                    @php
+                        $cwdHint = data_get($latestEvent->metadata, 'cwd_hint');
+                        $cmdHint = data_get($latestEvent->metadata, 'cmd_hint');
+                    @endphp
                     {{ $latestEvent->app ?: 'Actividad' }}
                     @if ($latestEvent->title)<span class="text-muted"> · {{ $latestEvent->title }}</span>@endif
                     @if ($latestEvent->repo_name)
                         <span class="chip ml-1">{{ $latestEvent->repo_name }}@if ($latestEvent->branch):{{ $latestEvent->branch }}@endif</span>
+                    @elseif ($cwdHint)
+                        <span class="chip ml-1">📂 {{ basename($cwdHint) }}</span>
+                    @endif
+                    @if ($cmdHint)
+                        <span class="text-muted text-xs ml-1">▶ {{ \Illuminate\Support\Str::limit($cmdHint, 60, '…') }}</span>
                     @endif
                 @endif
             </span>

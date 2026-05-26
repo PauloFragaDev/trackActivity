@@ -26,7 +26,7 @@ from tracker.utils.title_parsers import (
 )
 from tracker.utils.x11 import (
     X11NotAvailable,
-    find_descendant_cwd,
+    find_descendant_info,
     get_active_window,
     read_pid_cwd,
 )
@@ -82,15 +82,20 @@ class WindowCollector(Collector):
             if parsed["file"]:
                 metadata["editor_file"] = parsed["file"]
 
-        # ─── Terminales: leer cwd via /proc ───
+        # ─── Terminales: leer cwd + proceso en foreground via /proc ───
         if app_lower in _TERMINAL_APPS and win.pid:
-            cwd = find_descendant_cwd(win.pid) or read_pid_cwd(win.pid)
+            cwd, foreground_cmd = find_descendant_info(win.pid)
+            cwd = cwd or read_pid_cwd(win.pid)
             if cwd:
                 metadata["cwd_hint"] = cwd
                 inferred = infer_repo_from_path(cwd)
                 if inferred:
                     repo_name = repo_name or inferred
                     metadata["cwd_repo"] = inferred
+            if foreground_cmd:
+                # Lo que el usuario está ejecutando "dentro" del terminal
+                # (claude, vim, pytest…). Útil para saber a qué se dedica el tramo.
+                metadata["cmd_hint"] = foreground_cmd
 
         # ─── Browser: parse del titulo (GitHub/Jira hint) ───
         if app_lower in _BROWSER_APPS:

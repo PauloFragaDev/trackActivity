@@ -128,6 +128,10 @@
                                 </summary>
                                 <ul class="mt-2 space-y-1 text-xs font-mono text-muted border-l divider pl-3">
                                     @foreach ($session['evidence']->take(30) as $event)
+                                        @php
+                                            $cwdHint = data_get($event->metadata, 'cwd_hint');
+                                            $cmdHint = data_get($event->metadata, 'cmd_hint');
+                                        @endphp
                                         <li class="truncate">
                                             <span class="text-faint">{{ \Carbon\Carbon::parse($event->occurred_at)->setTimezone($tz)->format('H:i:s') }}</span>
                                             <span class="text-faint">[{{ $event->source }}]</span>
@@ -137,6 +141,12 @@
                                             @endif
                                             @if ($event->modified_files)
                                                 <span class="text-faint">· +{{ $event->modified_files }}</span>
+                                            @endif
+                                            @if ($cwdHint)
+                                                <span class="text-faint">· 📂 {{ $cwdHint }}</span>
+                                            @endif
+                                            @if ($cmdHint)
+                                                <span class="text-faint">· ▶ {{ \Illuminate\Support\Str::limit($cmdHint, 80, '…') }}</span>
                                             @endif
                                         </li>
                                     @endforeach

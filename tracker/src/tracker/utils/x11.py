@@ -108,15 +108,53 @@ def read_pid_cwd(pid: int) -> str | None:
         return None
 
 
-def find_descendant_cwd(pid: int, max_depth: int = 4) -> str | None:
-    """Para apps tipo terminal cuyo pid es el contenedor, busca el cwd del
-    descendiente mas profundo accesible (suele ser el shell activo).
+def _read_proc_comm(pid: int) -> str | None:
+    """Nombre corto del proceso (`/proc/<pid>/comm`), o None."""
+    try:
+        with open(f"/proc/{int(pid)}/comm", encoding="utf-8") as f:
+            return f.read().strip() or None
+    except (FileNotFoundError, PermissionError, ProcessLookupError, OSError):
+        return None
 
-    Estrategia BFS sobre /proc/<pid>/task/<tid>/children.
+
+def _read_proc_cmdline(pid: int) -> str | None:
+    """Cmdline completa, con NULs reemplazados por espacios."""
+    try:
+        with open(f"/proc/{int(pid)}/cmdline", "rb") as f:
+            raw = f.read()
+    except (FileNotFoundError, PermissionError, ProcessLookupError, OSError):
+        return None
+    cleaned = raw.replace(b"\0", b" ").strip().decode("utf-8", errors="replace")
+    return cleaned or None
+
+
+# Procesos que envuelven (no son lo que el usuario está ejecutando realmente).
+# Los saltamos al buscar el "proceso en foreground" del descendiente.
+_FOREGROUND_SKIP = frozenset({
+    # shells
+    "bash", "zsh", "fish", "sh", "dash", "ksh", "tcsh", "csh",
+    # multiplexers
+    "tmux", "screen",
+    # wrappers
+    "sudo", "nohup", "env", "time", "doas", "pkexec",
+})
+
+
+def find_descendant_info(pid: int, max_depth: int = 4) -> tuple[str | None, str | None]:
+    """Recorre el árbol de procesos descendientes (BFS) del `pid` y devuelve:
+
+      - `cwd`: la cwd no trivial más profunda accesible.
+      - `cmdline`: la cmdline del descendiente más profundo que no sea una
+        shell/multiplexer/wrapper — útil para saber qué se está ejecutando
+        en primer plano dentro de un terminal (claude, vim, pytest…).
+
+    Si el árbol solo contiene shells, `cmdline` queda en None.
     """
     visited: set[int] = set()
-    frontier = [(int(pid), 0)]
+    frontier: list[tuple[int, int]] = [(int(pid), 0)]
     best_cwd: str | None = None
+    best_cmd: str | None = None
+    root_pid = int(pid)
 
     while frontier:
         current, depth = frontier.pop(0)
@@ -125,11 +163,19 @@ def find_descendant_cwd(pid: int, max_depth: int = 4) -> str | None:
         visited.add(current)
 
         cwd = read_pid_cwd(current)
-        # Guardamos la cwd mas profunda no trivial
         if cwd and cwd not in ("/", os.path.expanduser("~")):
             best_cwd = cwd
 
-        # Ampliar con hijos (suma de todos los threads del proceso)
+        # No registramos el cmdline del propio terminal (root_pid); buscamos
+        # qué corre DENTRO. Y saltamos shells y wrappers conocidos.
+        if current != root_pid:
+            comm = _read_proc_comm(current)
+            if comm and comm.lower() not in _FOREGROUND_SKIP:
+                cmd = _read_proc_cmdline(current)
+                if cmd:
+                    best_cmd = cmd
+
+        # BFS sobre hijos (suma de todos los threads del proceso).
         try:
             task_dir = f"/proc/{current}/task"
             for tid in os.listdir(task_dir):
@@ -146,4 +192,9 @@ def find_descendant_cwd(pid: int, max_depth: int = 4) -> str | None:
         except (FileNotFoundError, PermissionError, OSError):
             continue
 
-    return best_cwd
+    return best_cwd, best_cmd
+
+
+def find_descendant_cwd(pid: int, max_depth: int = 4) -> str | None:
+    """Compat: devuelve solo la cwd del descendiente más profundo."""
+    return find_descendant_info(pid, max_depth)[0]
