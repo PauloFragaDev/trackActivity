@@ -241,3 +241,12 @@ html.dark ::-webkit-scrollbar-thumb:hover { background: rgb(71 85 105); }
 html.dark [data-note-editor] .milkdown blockquote {
     background: rgb(16 185 129 / 0.14);
 }
+
+/* Tareas · chip-toggle de etiquetas en el modal: tenue cuando no está
+   seleccionada, con fondo tintado del color de la etiqueta cuando lo está. */
+.task-label-chip { opacity: 0.45; transition: opacity 0.12s, background-color 0.12s; }
+.task-label-chip:hover { opacity: 0.8; }
+.task-label-chip:has(input:checked) {
+    opacity: 1;
+    background-color: color-mix(in srgb, currentColor 15%, transparent);
+}

@@ -1,5 +1,5 @@
 {{-- Campos compartidos por los modales de alta y edición de tarea.
-     Espera del scope: $columns, $priorities, $projects. --}}
+     Espera del scope: $columns, $priorities, $projects, $labels. --}}
 <label class="label">
     <span>Título</span>
     <input type="text" name="title" required maxlength="200" class="input mt-1" placeholder="¿Qué hay que hacer?">
@@ -40,3 +40,18 @@
         <input type="date" name="due_date" class="input mt-1">
     </label>
 </div>
+
+@if (! ($labels ?? collect())->isEmpty())
+    <div class="label">
+        <span>Etiquetas</span>
+        <div class="flex flex-wrap gap-1.5 mt-1" data-task-labels>
+            @foreach ($labels as $label)
+                <label class="task-label-chip cursor-pointer inline-flex items-center gap-1 text-xs border rounded-full px-2 py-0.5 transition"
+                       style="border-color: {{ $label->color }}; color: {{ $label->color }};">
+                    <input type="checkbox" name="label_ids[]" value="{{ $label->id }}" class="sr-only" data-label-id="{{ $label->id }}">
+                    {{ $label->title }}
+                </label>
+            @endforeach
+        </div>
+    </div>
+@endif

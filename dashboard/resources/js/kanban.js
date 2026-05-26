@@ -41,6 +41,14 @@ export function initKanban() {
                 set('project_id', card.dataset.project);
                 set('due_date', card.dataset.due);
 
+                // Labels: el data-labels viene como JSON ([1,3,5]). Marcamos los
+                // checkboxes correspondientes y desmarcamos el resto.
+                let labelIds = [];
+                try { labelIds = JSON.parse(card.dataset.labels || '[]'); } catch {}
+                editForm.querySelectorAll('input[name="label_ids[]"]').forEach((cb) => {
+                    cb.checked = labelIds.includes(parseInt(cb.value, 10));
+                });
+
                 if (typeof editModal.showModal === 'function') editModal.showModal();
             });
         });

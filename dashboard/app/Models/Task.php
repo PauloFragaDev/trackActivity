@@ -6,6 +6,7 @@ use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -60,6 +61,13 @@ class Task extends Model
     public function manualEntries(): HasMany
     {
         return $this->hasMany(ManualEntry::class);
+    }
+
+    public function labels(): BelongsToMany
+    {
+        return $this->belongsToMany(TaskLabel::class, 'task_label_task', 'task_id', 'label_id')
+            ->orderBy('task_labels.position')
+            ->orderBy('task_labels.title');
     }
 
     /** Minutos totales registrados contra la tarea vía entradas manuales. */

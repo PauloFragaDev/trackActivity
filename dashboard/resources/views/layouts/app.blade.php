@@ -145,7 +145,7 @@
                    class="block px-2 py-1.5 rounded {{ $navItem(['tasks.*']) }}">Tareas</a>
 
                 {{-- Configuración --}}
-                <details class="group" @if (request()->routeIs('projects.*', 'export.*', 'data.*')) open @endif>
+                <details class="group" @if (request()->routeIs('projects.*', 'export.*', 'data.*', 'task-labels.*')) open @endif>
                     <summary class="flex items-center gap-1.5 px-2 py-1.5 rounded cursor-pointer select-none list-none
                                     text-[11px] uppercase tracking-wider text-muted hover:bg-ink-100 dark:hover:bg-ink-800">
                         <span class="text-[9px] transition-transform group-open:rotate-90">▸</span>
@@ -154,6 +154,8 @@
                     <div class="mt-0.5 ml-2 space-y-0.5">
                         <a href="{{ route('projects.index') }}"
                            class="block px-2 py-1.5 rounded {{ $navItem(['projects.*']) }}">Proyectos</a>
+                        <a href="{{ route('task-labels.index') }}"
+                           class="block px-2 py-1.5 rounded {{ $navItem(['task-labels.*']) }}">Etiquetas</a>
                         <a href="{{ route('export.form') }}"
                            class="block px-2 py-1.5 rounded {{ $navItem(['export.*']) }}">Export</a>
                         <a href="{{ route('data.index') }}"
