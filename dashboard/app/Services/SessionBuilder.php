@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\BlockStatus;
+use App\Models\ActivityEvent;
 use App\Models\TimeBlock;
 use App\Services\Summaries\SummaryGenerator;
 use Carbon\Carbon;
@@ -114,6 +115,21 @@ class SessionBuilder
 
         $start = Carbon::parse($current['starts_at']);
         $end   = Carbon::parse($current['ends_at']);
+
+        // Sesión sin proyecto y sin evidencia atribuida: ningún mapping casó
+        // con las señales, así que `time_block_evidence` está vacío. Para que
+        // el usuario sepa qué vio el tracker en ese tramo, listamos los
+        // activity_events crudos del rango (sin idle). El modelo no cambia:
+        // estas señales no aportaron peso a ningún proyecto, las mostramos
+        // como "sin atribuir" en la vista.
+        if ($evidence->isEmpty() && $current['project'] === null && ! $current['is_idle']) {
+            $evidence = ActivityEvent::query()
+                ->where('occurred_at', '>=', $start)
+                ->where('occurred_at', '<',  $end)
+                ->where('source', '!=', ActivityEvent::SOURCE_IDLE)
+                ->orderBy('occurred_at')
+                ->get();
+        }
 
         $summary = $this->buildSummary($status, $current['project'], $blocks, $evidence);
 

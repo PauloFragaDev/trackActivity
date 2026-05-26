@@ -122,7 +122,8 @@
                         <div class="mt-2 flex items-center gap-4">
                             <details class="group">
                                 <summary class="cursor-pointer text-xs text-muted hover:opacity-100 opacity-80 select-none">
-                                    {{ $session['evidence']->count() }} señal{{ $session['evidence']->count() === 1 ? '' : 'es' }} en evidencia ·
+                                    {{ $session['evidence']->count() }} señal{{ $session['evidence']->count() === 1 ? '' : 'es' }}
+                                    {{ $session['project'] === null ? 'sin atribuir' : 'en evidencia' }} ·
                                     <span class="underline-offset-2 group-hover:underline">expandir</span>
                                 </summary>
                                 <ul class="mt-2 space-y-1 text-xs font-mono text-muted border-l divider pl-3">
