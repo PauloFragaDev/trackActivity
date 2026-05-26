@@ -1,6 +1,6 @@
 /**
- * Tablero Kanban: alta/edición de tareas en modal y drag & drop entre
- * columnas (SortableJS), que persiste vía PATCH /tasks/{id}/move.
+ * Tablero Kanban: alta/edición de tareas en modal, drag & drop entre
+ * columnas (SortableJS) y subtareas gestionadas por AJAX desde el modal.
  */
 import Sortable from 'sortablejs';
 
@@ -9,7 +9,130 @@ export function initKanban() {
     const editModal = document.getElementById('task-edit');
     const csrf      = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
 
-    // El "+" de cada columna preselecciona esa columna en el modal de alta.
+    /** Estado del modal de edición — ver renderSubtasks / syncCardBadge. */
+    let edit = null;   // { card, taskId, checkboxes: [{id,title,checked}] }
+
+    // ── helpers ──────────────────────────────────────────────
+    const escape = (s) => {
+        const d = document.createElement('div');
+        d.textContent = s ?? '';
+        return d.innerHTML;
+    };
+
+    /** POST con _method spoofing + CSRF — mismo patrón que el move del DnD. */
+    const send = (url, method, params = {}) =>
+        fetch(url, {
+            method: 'POST',
+            headers: { Accept: 'application/json' },
+            body: new URLSearchParams({ _token: csrf, _method: method, ...params }),
+        });
+
+    // ── Subtareas (modal de edición) ─────────────────────────
+    const renderSubtasks = () => {
+        if (!edit || !editModal) return;
+        const list     = editModal.querySelector('[data-subtasks-list]');
+        const progress = editModal.querySelector('[data-subtasks-progress]');
+        if (!list) return;
+
+        const items = edit.checkboxes;
+        const done  = items.filter((c) => c.checked).length;
+        if (progress) progress.textContent = items.length ? `${done} / ${items.length}` : '';
+
+        list.innerHTML = items.map((c) => `
+            <li class="flex items-center gap-2 group">
+                <input type="checkbox" class="cursor-pointer" data-subtask-toggle data-id="${c.id}" ${c.checked ? 'checked' : ''}>
+                <span class="flex-1 ${c.checked ? 'line-through text-muted' : ''}">${escape(c.title)}</span>
+                <button type="button" class="btn-ghost text-xs text-rose-500 opacity-0 group-hover:opacity-100"
+                        data-subtask-delete data-id="${c.id}" aria-label="Borrar subtarea">×</button>
+            </li>
+        `).join('');
+
+        syncCardBadge();
+    };
+
+    /** Mantiene la tarjeta del tablero al día con el estado actual del modal. */
+    const syncCardBadge = () => {
+        if (!edit?.card) return;
+        const items = edit.checkboxes;
+        edit.card.dataset.checkboxes = JSON.stringify(
+            items.map((c) => ({ id: c.id, title: c.title, checked: c.checked }))
+        );
+
+        const badge   = edit.card.querySelector('[data-card-subtasks-badge]');
+        const chipRow = edit.card.querySelector('.flex.flex-wrap.items-center');
+        if (items.length === 0) {
+            badge?.remove();
+            return;
+        }
+        const done = items.filter((c) => c.checked).length;
+        const text = `☑ ${done}/${items.length}`;
+        const cls  = `chip ${done === items.length ? 'text-emerald-600 dark:text-emerald-400' : ''}`;
+        if (badge) {
+            badge.textContent = text;
+            badge.className = cls;
+        } else if (chipRow) {
+            const span = document.createElement('span');
+            span.setAttribute('data-card-subtasks-badge', '');
+            span.title = 'Subtareas';
+            span.className = cls;
+            span.textContent = text;
+            chipRow.appendChild(span);
+        }
+        // Si no había chipRow (tarjeta sin metadatos previos), el badge
+        // aparecerá al refrescar la página — caso minoritario, aceptable.
+    };
+
+    const addSubtask = async (title) => {
+        if (!edit) return;
+        const res = await send(`/tasks/${edit.taskId}/checkboxes`, 'POST', { title });
+        if (! res.ok) return;
+        const item = await res.json();
+        edit.checkboxes.push({ id: item.id, title: item.title, checked: !!item.checked });
+        renderSubtasks();
+    };
+
+    const toggleSubtask = async (id, checked) => {
+        if (!edit) return;
+        const it = edit.checkboxes.find((c) => c.id == id);
+        if (!it) return;
+        it.checked = checked;
+        renderSubtasks();   // optimista
+        await send(`/tasks/${edit.taskId}/checkboxes/${id}`, 'PATCH', { checked: checked ? '1' : '0' });
+    };
+
+    const deleteSubtask = async (id) => {
+        if (!edit) return;
+        edit.checkboxes = edit.checkboxes.filter((c) => c.id != id);
+        renderSubtasks();   // optimista
+        await send(`/tasks/${edit.taskId}/checkboxes/${id}`, 'DELETE');
+    };
+
+    if (editModal) {
+        // Delegación: los handlers se mantienen aunque el contenido del <ul>
+        // se reescriba en cada render.
+        const list = editModal.querySelector('[data-subtasks-list]');
+        list?.addEventListener('change', (e) => {
+            if (e.target.matches('[data-subtask-toggle]')) {
+                toggleSubtask(e.target.dataset.id, e.target.checked);
+            }
+        });
+        list?.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-subtask-delete]');
+            if (btn) deleteSubtask(btn.dataset.id);
+        });
+
+        const addForm = editModal.querySelector('[data-subtasks-add]');
+        addForm?.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const input = addForm.querySelector('input[name="title"]');
+            const title = (input?.value || '').trim();
+            if (! title) return;
+            addSubtask(title);
+            input.value = '';
+        });
+    }
+
+    // ── "+" de cada columna preselecciona esa columna en el modal de alta ──
     document.querySelectorAll('[data-add-status]').forEach((btn) => {
         btn.addEventListener('click', () => {
             const select = newModal?.querySelector('[name="status"]');
@@ -17,7 +140,7 @@ export function initKanban() {
         });
     });
 
-    // El ✎ de cada tarjeta rellena y abre el modal de edición.
+    // ── ✎ de cada tarjeta: rellena y abre el modal de edición ──
     if (editModal) {
         const editForm = editModal.querySelector('[data-task-edit-form]');
         const delForm  = editModal.querySelector('[data-task-delete-form]');
@@ -41,20 +164,23 @@ export function initKanban() {
                 set('project_id', card.dataset.project);
                 set('due_date', card.dataset.due);
 
-                // Labels: el data-labels viene como JSON ([1,3,5]). Marcamos los
-                // checkboxes correspondientes y desmarcamos el resto.
                 let labelIds = [];
                 try { labelIds = JSON.parse(card.dataset.labels || '[]'); } catch {}
                 editForm.querySelectorAll('input[name="label_ids[]"]').forEach((cb) => {
                     cb.checked = labelIds.includes(parseInt(cb.value, 10));
                 });
 
+                let checkboxes = [];
+                try { checkboxes = JSON.parse(card.dataset.checkboxes || '[]'); } catch {}
+                edit = { card, taskId: card.dataset.taskId, checkboxes };
+                renderSubtasks();
+
                 if (typeof editModal.showModal === 'function') editModal.showModal();
             });
         });
     }
 
-    // Drag & drop entre columnas.
+    // ── Drag & drop entre columnas ───────────────────────────
     document.querySelectorAll('[data-task-list]').forEach((list) => {
         new Sortable(list, {
             group: 'kanban',
@@ -77,7 +203,7 @@ export function initKanban() {
                     }),
                 }).catch(() => {});
 
-                card.dataset.status = status;   // mantener el dato sincronizado
+                card.dataset.status = status;
             },
         });
     });

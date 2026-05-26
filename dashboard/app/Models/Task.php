@@ -70,6 +70,13 @@ class Task extends Model
             ->orderBy('task_labels.title');
     }
 
+    public function checkboxes(): HasMany
+    {
+        return $this->hasMany(TaskCheckbox::class)
+            ->orderBy('position')
+            ->orderBy('id');
+    }
+
     /** Minutos totales registrados contra la tarea vía entradas manuales. */
     public function loggedMinutes(): int
     {

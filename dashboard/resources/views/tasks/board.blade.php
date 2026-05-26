@@ -102,5 +102,19 @@
             @csrf
             @method('DELETE')
         </form>
+
+        {{-- Subtareas (gestionadas por AJAX desde kanban.js) --}}
+        <section data-task-subtasks class="mt-4 pt-4 border-t divider">
+            <div class="flex items-center justify-between mb-2">
+                <h4 class="text-sm font-semibold">Subtareas</h4>
+                <span class="text-xs text-faint" data-subtasks-progress></span>
+            </div>
+            <ul data-subtasks-list class="space-y-1 text-sm mb-2"></ul>
+            <form data-subtasks-add class="flex gap-1.5">
+                <input type="text" name="title" required maxlength="200"
+                       class="input text-sm flex-1" placeholder="Nueva subtarea — Enter para añadir">
+                <button type="submit" class="btn-ghost text-sm" aria-label="Añadir subtarea">+</button>
+            </form>
+        </section>
     </dialog>
 @endsection

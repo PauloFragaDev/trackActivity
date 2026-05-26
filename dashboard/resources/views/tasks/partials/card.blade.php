@@ -2,9 +2,12 @@
     $overdue = $task->due_date
         && $task->status !== \App\Enums\TaskStatus::Done
         && $task->due_date->isPast() && ! $task->due_date->isToday();
-    $logged    = $task->loggedMinutes();
-    $taskLabels = $task->labels;
-    $hasChips  = $task->project || $task->priority || $task->due_date || $logged > 0;
+    $logged       = $task->loggedMinutes();
+    $taskLabels   = $task->labels;
+    $checkboxes   = $task->checkboxes;
+    $checkboxDone = $checkboxes->where('checked', true)->count();
+    $checkboxAll  = $checkboxes->count();
+    $hasChips     = $task->project || $task->priority || $task->due_date || $logged > 0 || $checkboxAll > 0;
 @endphp
 <div class="task-card card p-2.5 cursor-grab active:cursor-grabbing"
      data-task-id="{{ $task->id }}"
@@ -14,7 +17,8 @@
      data-priority="{{ $task->priority?->value }}"
      data-project="{{ $task->project_id }}"
      data-due="{{ $task->due_date?->format('Y-m-d') }}"
-     data-labels="{{ $taskLabels->pluck('id')->toJson() }}">
+     data-labels="{{ $taskLabels->pluck('id')->toJson() }}"
+     data-checkboxes="{{ $checkboxes->map(fn ($c) => ['id'=>$c->id,'title'=>$c->title,'checked'=>$c->checked])->toJson() }}">
     <div class="flex items-start justify-between gap-2">
         <p class="text-sm font-medium leading-snug">{{ $task->title }}</p>
         <button type="button" data-task-edit class="btn-ghost text-xs shrink-0 -mr-1 -mt-1"
@@ -47,6 +51,10 @@
             @endif
             @if ($logged > 0)
                 <span class="chip" title="Tiempo registrado">⏱ {{ $logged >= 60 ? intdiv($logged, 60) . 'h ' . ($logged % 60) . 'm' : $logged . 'm' }}</span>
+            @endif
+            @if ($checkboxAll > 0)
+                <span class="chip {{ $checkboxDone === $checkboxAll ? 'text-emerald-600 dark:text-emerald-400' : '' }}"
+                      title="Subtareas" data-card-subtasks-badge>☑ {{ $checkboxDone }}/{{ $checkboxAll }}</span>
             @endif
         </div>
     @endif
