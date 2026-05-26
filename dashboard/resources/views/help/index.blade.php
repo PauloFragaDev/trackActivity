@@ -96,9 +96,11 @@ npm run build</code></pre>
         <h2 class="text-lg font-semibold mb-2">4. Arranque diario</h2>
         <ol class="text-sm space-y-2 list-decimal pl-5">
             <li>
-                <strong>Daemon</strong>. Como servicio (recomendado):
-                <pre class="surface-soft text-xs rounded p-2 mt-1"><code>systemctl --user enable --now trackactivity.service
-systemctl --user status trackactivity.service</code></pre>
+                <strong>Daemon</strong>. Lo más cómodo: el botón
+                <span class="chip">● Tracker</span> del menú lateral lo arranca y lo para
+                con un clic (logs en <code class="chip">storage/logs/tracker.log</code>).
+                Como servicio:
+                <pre class="surface-soft text-xs rounded p-2 mt-1"><code>systemctl --user enable --now trackactivity.service</code></pre>
                 O en primer plano para debugging:
                 <pre class="surface-soft text-xs rounded p-2 mt-1"><code>tracker run --foreground --log-level=DEBUG</code></pre>
             </li>
