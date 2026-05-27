@@ -27,9 +27,11 @@ return [
     | opciones reales de tu Project.
     */
     'status_map' => [
+        'blocked' => 'Blocked',
         'backlog' => 'Backlog',
-        'todo'    => 'Todo',
-        'doing'   => 'In Progress',
+        'todo'    => 'To Do',
+        'doing'   => 'Doing',
+        'standby' => 'Stand By',
         'done'    => 'Done',
     ],
 

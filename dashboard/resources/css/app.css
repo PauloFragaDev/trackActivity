@@ -385,9 +385,21 @@ html.dark .timer-pill--long-break  { background-color: rgb(56 189 248 / 0.15); }
 html.sidebar-collapsed .timer-dock { justify-content: center; gap: 0.25rem; }
 html.sidebar-collapsed [data-timer-dock-title] { display: none; }
 
-/* Kanban v2 · columna colapsada — banda estrecha con título vertical. */
-.task-column { transition: min-width 0.15s; }
-.task-column--collapsed { min-width: 2.75rem; max-width: 2.75rem; min-height: 60vh; }
+/* Kanban v2 · columna colapsada — banda estrecha con título vertical.
+   El board es flex; cada columna expandida ocupa 1fr (flex: 1 1 0) con un
+   ancho mínimo razonable. Al colapsar, la columna se vuelve ancho fijo
+   (flex: 0 0 auto) y las demás se expanden para llenar el hueco. */
+.task-column {
+    flex: 1 1 0;
+    min-width: 13rem;
+    transition: min-width 0.15s, max-width 0.15s, flex-basis 0.15s;
+}
+.task-column--collapsed {
+    flex: 0 0 2.75rem;
+    min-width: 2.75rem;
+    max-width: 2.75rem;
+    min-height: 60vh;
+}
 .task-column--collapsed .task-column__chevron { transform: rotate(-90deg); display: inline-block; }
 .task-column--collapsed .task-column__body { display: none; }
 .task-column--collapsed .task-column__header {
