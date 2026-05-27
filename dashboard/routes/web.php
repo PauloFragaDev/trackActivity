@@ -16,6 +16,7 @@ use App\Http\Controllers\TaskCommentController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TaskLabelController;
 use App\Http\Controllers\TimeBlockController;
+use App\Http\Controllers\TimerController;
 use App\Http\Controllers\TrackerController;
 use App\Http\Controllers\TimelineController;
 use Illuminate\Support\Facades\Route;
@@ -116,6 +117,18 @@ Route::delete('/tasks/{task}/comments/{taskComment}',  [TaskCommentController::c
 
 // ─────────────────── Control del tracker ───────────────────
 Route::post('/tracker/toggle', [TrackerController::class, 'toggle'])->name('tracker.toggle');
+
+// ─────────────────── Cronómetro de tarea (pomodoro) ───────────────────
+Route::post('/timer/start',   [TimerController::class, 'start'])->name('timer.start');
+Route::post('/timer/stop',    [TimerController::class, 'stop'])->name('timer.stop');
+Route::post('/timer/pause',   [TimerController::class, 'pause'])->name('timer.pause');
+Route::post('/timer/resume',  [TimerController::class, 'resume'])->name('timer.resume');
+Route::post('/timer/advance', [TimerController::class, 'advance'])->name('timer.advance');
+Route::get('/timer/next',     [TimerController::class, 'next'])->name('timer.next');
+
+// ─────────────────── Ajustes (Pomodoro) ───────────────────
+Route::get('/settings/pomodoro',  [\App\Http\Controllers\SettingsController::class, 'pomodoro'])->name('settings.pomodoro');
+Route::post('/settings/pomodoro', [\App\Http\Controllers\SettingsController::class, 'savePomodoro'])->name('settings.pomodoro.save');
 
 // ─────────────────── Ayuda ───────────────────
 Route::get('/help', [HelpController::class, 'index'])->name('help');

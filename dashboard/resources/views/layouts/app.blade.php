@@ -157,7 +157,7 @@
                    class="block px-2 py-1.5 rounded {{ $navItem(['tasks.*']) }}">Tareas</a>
 
                 {{-- Configuración --}}
-                <details class="group" @if (request()->routeIs('projects.*', 'export.*', 'data.*', 'task-labels.*')) open @endif>
+                <details class="group" @if (request()->routeIs('projects.*', 'export.*', 'data.*', 'task-labels.*', 'settings.*')) open @endif>
                     <summary class="flex items-center gap-1.5 px-2 py-1.5 rounded cursor-pointer select-none list-none
                                     text-[11px] uppercase tracking-wider text-muted hover:bg-ink-100 dark:hover:bg-ink-800">
                         <span class="text-[9px] transition-transform group-open:rotate-90">▸</span>
@@ -168,6 +168,8 @@
                            class="block px-2 py-1.5 rounded {{ $navItem(['projects.*']) }}">Proyectos</a>
                         <a href="{{ route('task-labels.index') }}"
                            class="block px-2 py-1.5 rounded {{ $navItem(['task-labels.*']) }}">Etiquetas</a>
+                        <a href="{{ route('settings.pomodoro') }}"
+                           class="block px-2 py-1.5 rounded {{ $navItem(['settings.*']) }}">Pomodoro</a>
                         <a href="{{ route('export.form') }}"
                            class="block px-2 py-1.5 rounded {{ $navItem(['export.*']) }}">Export</a>
                         <a href="{{ route('data.index') }}"
@@ -252,5 +254,94 @@
             </div>
         </form>
     </dialog>
+
+    {{-- Pill flotante del cronómetro (visible en cualquier página). El módulo
+         pomodoro.js cablea estados, ticker, transiciones y modal de cierre. --}}
+    @if (! empty($activeTimer))
+        @php
+            $tp = $activeTimer;
+            $cfg = app(\App\Services\PomodoroService::class)->currentConfig();
+            $phaseSec = match ($tp->state) {
+                \App\Models\ActiveTimer::STATE_SHORT_BREAK => $cfg['pomodoro_short_break_min'] * 60,
+                \App\Models\ActiveTimer::STATE_LONG_BREAK  => $cfg['pomodoro_long_break_min'] * 60,
+                default                                     => $cfg['pomodoro_focus_min'] * 60,
+            };
+            $stateLabel = match ($tp->state) {
+                \App\Models\ActiveTimer::STATE_SHORT_BREAK => 'Pausa corta',
+                \App\Models\ActiveTimer::STATE_LONG_BREAK  => 'Pausa larga',
+                default                                     => 'Foco',
+            };
+        @endphp
+        <div id="timer-pill"
+             data-state="{{ $tp->state }}"
+             data-phase-started-at="{{ $tp->phase_started_at?->toIso8601String() ?? $tp->starts_at->toIso8601String() }}"
+             data-paused-at="{{ $tp->paused_at?->toIso8601String() }}"
+             data-paused-offset-seconds="{{ $tp->paused_offset_seconds }}"
+             data-phase-duration-seconds="{{ $phaseSec }}"
+             data-cycle-count="{{ $tp->cycle_count }}"
+             data-task-id="{{ $tp->task_id }}"
+             data-task-title="{{ $tp->task?->title ?? 'Sin tarea' }}"
+             class="fixed bottom-4 left-1/2 -translate-x-1/2 z-40
+                    card shadow-2xl pl-3 pr-2 py-2 flex items-center gap-2 text-sm
+                    timer-pill timer-pill--{{ str_replace('_', '-', $tp->state) }} {{ $tp->paused_at ? 'timer-pill--paused' : '' }}">
+            <span class="timer-pill__dot inline-block w-2 h-2 rounded-full" data-timer-dot></span>
+            <span class="text-[11px] uppercase tracking-wider text-muted hidden sm:inline" data-timer-state-label>{{ $stateLabel }}</span>
+            <span class="font-medium max-w-[16rem] truncate" data-timer-task-title>{{ $tp->task?->title ?? 'Sin tarea' }}</span>
+            <span class="font-mono text-faint tabular-nums" data-timer-elapsed>00:00</span>
+            <span class="text-[10px] text-faint" title="Ciclos de foco completados" data-timer-cycles>#{{ $tp->cycle_count }}</span>
+
+            <div class="flex items-center gap-0.5 ml-1 border-l divider pl-1">
+                <button type="button" class="icon-btn" data-timer-toggle-pause
+                        aria-label="Pausar / reanudar" title="Pausar / reanudar">
+                    <span data-timer-icon-pause class="{{ $tp->paused_at ? 'hidden' : '' }}">⏸</span>
+                    <span data-timer-icon-play class="{{ $tp->paused_at ? '' : 'hidden' }}">▶</span>
+                </button>
+                <button type="button" class="icon-btn text-faint" data-timer-skip
+                        aria-label="Saltar a la siguiente fase" title="Saltar fase">⏭</button>
+                <button type="button" class="icon-btn text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/30"
+                        data-timer-stop aria-label="Parar cronómetro" title="Parar cronómetro">
+                    <x-icon name="close" class="w-3.5 h-3.5" />
+                </button>
+            </div>
+        </div>
+    @endif
+
+    {{-- Modal de cierre del focus (rellena mood/progress/nota). Se abre desde JS. --}}
+    <dialog id="focus-close-modal" class="modal" aria-labelledby="focus-close-title">
+        <form id="focus-close-form" class="space-y-3" novalidate>
+            <h2 id="focus-close-title" class="text-base font-semibold">¿Cómo fue ese foco?</h2>
+            <p class="text-xs text-faint" data-focus-summary></p>
+
+            <div>
+                <span class="text-sm font-medium">Mood</span>
+                <div class="mt-1 flex items-center gap-1" data-focus-mood role="radiogroup" aria-label="Mood">
+                    @foreach (['😣' => 1, '🙁' => 2, '😐' => 3, '🙂' => 4, '😄' => 5] as $emoji => $v)
+                        <button type="button" class="icon-btn text-lg" data-mood-value="{{ $v }}" aria-label="Mood {{ $v }}">{{ $emoji }}</button>
+                    @endforeach
+                </div>
+            </div>
+
+            <div>
+                <span class="text-sm font-medium">¿Avanzaste?</span>
+                <div class="mt-1 flex flex-wrap gap-1" data-focus-progress role="radiogroup" aria-label="Progreso">
+                    <button type="button" class="btn-ghost text-xs" data-progress-value="yes">Sí</button>
+                    <button type="button" class="btn-ghost text-xs" data-progress-value="partial">A medias</button>
+                    <button type="button" class="btn-ghost text-xs" data-progress-value="no">No</button>
+                </div>
+            </div>
+
+            <label class="block">
+                <span class="text-sm font-medium">Nota</span>
+                <textarea name="notes" rows="2" maxlength="2000"
+                          class="input mt-1 w-full resize-y" placeholder="Opcional · qué hiciste, qué bloqueó, etc."></textarea>
+            </label>
+
+            <div class="flex justify-between items-center pt-1">
+                <button type="button" class="btn-ghost text-xs" data-focus-skip>Saltar</button>
+                <button type="submit" class="btn">Guardar y continuar</button>
+            </div>
+        </form>
+    </dialog>
+
 </body>
 </html>
