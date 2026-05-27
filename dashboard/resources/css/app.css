@@ -224,7 +224,7 @@ html.sidebar-collapsed #sidebar .sidebar-full {
 }
 [data-icon-expand] { display: none; }
 html.sidebar-collapsed [data-icon-collapse] { display: none; }
-html.sidebar-collapsed [data-icon-expand]   { display: inline; }
+html.sidebar-collapsed [data-icon-expand]   { display: inline-flex; }
 
 /* Sidebar en móvil: drawer con overlay. */
 #mobile-menu-btn,
@@ -366,3 +366,21 @@ html.dark .timer-pill--long-break  { background-color: rgb(56 189 248 / 0.15); }
 /* Daily focus goal · barra de progreso accesible y simple. */
 .focus-goal-bar      { height: 8px; border-radius: 999px; background: rgb(148 163 184 / 0.18); overflow: hidden; }
 .focus-goal-bar > span { display: block; height: 100%; background: linear-gradient(90deg, #10b981, #059669); transition: width .4s; }
+
+/* Pomodoro · handle de arrastre de la pill flotante. El cursor cambia en
+   desktop; en móvil se neutraliza para que sea solo tap. */
+@media (min-width: 768px) {
+    .timer-pill__handle { cursor: grab; }
+    .timer-pill.is-dragging .timer-pill__handle { cursor: grabbing; }
+    .timer-pill.is-dragging { transition: none; }
+}
+/* El botón de minimizar sólo tiene sentido con sidebar a la vista. */
+@media (max-width: 767px) {
+    .timer-pill__minimize { display: none; }
+}
+
+/* Pomodoro · dock del cronómetro dentro del sidebar (estado minimizado).
+   Visible solo cuando JS lo activa con .timer-dock--visible (default: hidden). */
+.timer-dock--visible { display: flex !important; }
+html.sidebar-collapsed .timer-dock { justify-content: center; gap: 0.25rem; }
+html.sidebar-collapsed [data-timer-dock-title] { display: none; }
