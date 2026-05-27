@@ -39,8 +39,12 @@
 
     {{-- Lista --}}
     @if ($labels->isEmpty())
-        <div class="card p-6 text-center text-muted text-sm">
-            Aún no hay etiquetas. Crea la primera arriba.
+        <div class="card p-8 text-center">
+            <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-ink-100 dark:bg-ink-800 text-ink-500 mb-3">
+                <x-icon name="filter" class="w-6 h-6" />
+            </div>
+            <h3 class="text-base font-semibold mb-1">Sin etiquetas todavía</h3>
+            <p class="text-sm text-muted">Crea la primera con el formulario de arriba.</p>
         </div>
     @else
         <div class="card divide-y divider">

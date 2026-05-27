@@ -68,12 +68,14 @@
 
             <nav class="sidebar-full flex-1 overflow-y-auto p-2 space-y-0.5 text-sm">
                 {{-- Control del tracker (arranca/para el daemon Python) --}}
-                <form method="POST" action="{{ route('tracker.toggle') }}" class="mb-1">
+                <form method="POST" action="{{ route('tracker.toggle') }}" class="mb-1" data-loading-form>
                     @csrf
                     @php $running = $trackerRunning ?? false; @endphp
                     <button type="submit"
+                            data-loading-label="{{ $running ? 'Deteniendo' : 'Iniciando' }}"
                             class="w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm
-                                   border divider hover:bg-ink-100 dark:hover:bg-ink-800"
+                                   border divider hover:bg-ink-100 dark:hover:bg-ink-800
+                                   disabled:opacity-60 disabled:cursor-wait"
                             aria-label="{{ $running ? 'Detener tracker' : 'Iniciar tracker' }}">
                         <span class="inline-block w-2 h-2 rounded-full {{ $running ? 'bg-emerald-500 animate-pulse' : 'bg-ink-300 dark:bg-ink-700' }}"></span>
                         <span class="flex-1 text-left">{{ $running ? 'Tracker activo' : 'Tracker detenido' }}</span>

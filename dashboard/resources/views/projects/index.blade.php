@@ -12,8 +12,15 @@
     </div>
 
     @if ($projects->isEmpty())
-        <div class="card p-8 text-center text-muted">
-            <p>Aún no hay proyectos. Crea el primero para empezar a clasificar tu actividad.</p>
+        <div class="card p-10 text-center">
+            <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-ink-100 dark:bg-ink-800 text-ink-500 mb-3">
+                <x-icon name="folder" class="w-6 h-6" />
+            </div>
+            <h3 class="text-base font-semibold mb-1">Aún no hay proyectos</h3>
+            <p class="text-sm text-muted mb-4">Los proyectos te permiten clasificar la actividad rastreada.</p>
+            <a href="{{ route('projects.create') }}" class="btn inline-flex items-center gap-1">
+                <x-icon name="plus" class="w-4 h-4" /> Crear el primer proyecto
+            </a>
         </div>
     @else
         <div class="card overflow-hidden">

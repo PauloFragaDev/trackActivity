@@ -27,6 +27,34 @@
         </div>
     </div>
 
+    {{-- Mini-gantt: barra horizontal del día (00→24h) con cada sesión como bloque. --}}
+    @if (! empty($sessions))
+        <div class="card p-3 mb-6">
+            <div class="text-[10px] text-muted flex justify-between mb-1.5 px-0.5">
+                <span>0h</span><span>6h</span><span>12h</span><span>18h</span><span>24h</span>
+            </div>
+            <div class="relative h-6 bg-ink-100 dark:bg-ink-800 rounded overflow-hidden">
+                @foreach ($sessions as $s)
+                    @php
+                        $st  = $s['starts_at_local'];
+                        $en  = $s['ends_at_local'];
+                        $beg = $st->hour * 60 + $st->minute;
+                        $end = $en->hour * 60 + $en->minute;
+                        if ($end <= $beg) { $end = $beg + 1; }  // sesión que pasa de medianoche → recortar visualmente
+                        $left  = ($beg / 1440) * 100;
+                        $width = max(0.25, (($end - $beg) / 1440) * 100);
+                        $color = $s['project']?->color ?? '#94a3b8';
+                        $label = sprintf('%s–%s · %s', $st->format('H:i'), $en->format('H:i'), $s['project']?->code ?? 'Sin proyecto');
+                    @endphp
+                    <div class="absolute top-0 h-full rounded-sm transition hover:brightness-110"
+                         style="left: {{ $left }}%; width: {{ $width }}%;
+                                background-color: {{ $color }}; opacity: {{ $s['is_idle'] ? 0.25 : 0.75 }};"
+                         title="{{ $label }}"></div>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
     @if ($errors->any())
         <div id="form-errors" class="card p-4 mb-4 border-rose-400/60 text-rose-700 dark:text-rose-300">
             <ul class="list-disc pl-5 space-y-0.5 text-sm">

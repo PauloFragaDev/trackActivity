@@ -56,9 +56,16 @@
                             data-add-status="{{ $col->value }}" aria-label="Nueva tarea en {{ $col->label() }}">+</button>
                 </header>
                 <div class="task-list flex-1 p-2 space-y-2" data-task-list="{{ $col->value }}">
-                    @foreach ($colTasks as $task)
+                    @forelse ($colTasks as $task)
                         @include('tasks.partials.card', ['task' => $task])
-                    @endforeach
+                    @empty
+                        <button type="button"
+                                class="w-full text-xs text-faint hover:text-ink-600 dark:hover:text-ink-300
+                                       border border-dashed divider rounded-md py-3 transition"
+                                data-modal-open="#task-new" data-add-status="{{ $col->value }}">
+                            + añadir tarea
+                        </button>
+                    @endforelse
                 </div>
             </section>
         @endforeach
