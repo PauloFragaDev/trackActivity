@@ -214,7 +214,7 @@
 
 /* Sidebar plegable */
 #sidebar {
-    transition: width 0.16s ease;
+    transition: width 0.16s ease, transform 0.2s ease-out;
 }
 html.sidebar-collapsed #sidebar {
     width: 3rem;
@@ -225,6 +225,36 @@ html.sidebar-collapsed #sidebar .sidebar-full {
 [data-icon-expand] { display: none; }
 html.sidebar-collapsed [data-icon-collapse] { display: none; }
 html.sidebar-collapsed [data-icon-expand]   { display: inline; }
+
+/* Sidebar en móvil: drawer con overlay. */
+#mobile-menu-btn,
+#mobile-sidebar-overlay { display: none; }
+@media (max-width: 767px) {
+    #sidebar {
+        position: fixed;
+        top: 0; bottom: 0; left: 0;
+        z-index: 50;
+        transform: translateX(-100%);
+    }
+    html.sidebar-mobile-open #sidebar {
+        transform: translateX(0);
+    }
+    #mobile-menu-btn {
+        display: inline-flex;
+        position: fixed;
+        top: 0.5rem; left: 0.5rem;
+        z-index: 30;
+    }
+    html.sidebar-mobile-open #mobile-sidebar-overlay {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.45);
+        z-index: 40;
+    }
+    /* Espacio arriba para que el hamburger no tape el contenido. */
+    main { padding-top: 2.75rem; }
+}
 
 /* Notas · panel de la lista de notas, plegable */
 #notes-list { transition: width 0.15s ease; }

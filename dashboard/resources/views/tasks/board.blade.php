@@ -11,9 +11,11 @@
                 <span class="text-xs text-faint">
                     {{ $lastSync ? 'Sincronizado ' . $lastSync->locale('es')->diffForHumans() : 'Sin sincronizar' }}
                 </span>
-                <form method="POST" action="{{ route('tasks.sync') }}">
+                <form method="POST" action="{{ route('tasks.sync') }}" data-loading-form>
                     @csrf
-                    <button type="submit" class="btn-ghost text-sm">↻ Sincronizar</button>
+                    <button type="submit" class="btn-ghost text-sm" data-loading-label="Sincronizando…">
+                        <x-icon name="refresh" class="w-3.5 h-3.5" /> Sincronizar
+                    </button>
                 </form>
             @endif
             <form method="GET" action="{{ route('tasks.index') }}" class="flex gap-2">
@@ -64,12 +66,9 @@
 
     {{-- ─────────────── Modales ─────────────── --}}
     <dialog id="task-new" class="modal">
+        @include('layouts.partials.modal-header', ['title' => 'Nueva tarea'])
         <form method="POST" action="{{ route('tasks.store') }}" class="space-y-3">
             @csrf
-            <div class="flex items-center justify-between">
-                <h3 class="text-base font-semibold">Nueva tarea</h3>
-                <button type="button" class="btn-ghost" data-modal-close aria-label="Cerrar">✕</button>
-            </div>
             @include('tasks.partials.form-fields')
             <div class="flex justify-end gap-2 pt-1">
                 <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
@@ -79,17 +78,15 @@
     </dialog>
 
     <dialog id="task-edit" class="modal">
-        <div class="flex items-center justify-between">
-            <h3 class="text-base font-semibold">Editar tarea</h3>
-            <button type="button" class="btn-ghost" data-modal-close aria-label="Cerrar">✕</button>
-        </div>
-        <form method="POST" data-task-edit-form class="space-y-3 mt-3">
+        @include('layouts.partials.modal-header', ['title' => 'Editar tarea'])
+        <form method="POST" data-task-edit-form class="space-y-3">
             @csrf
             @method('PATCH')
             @include('tasks.partials.form-fields')
             <div class="flex items-center justify-between gap-2 pt-1">
-                <button type="submit" form="task-delete-form"
-                        class="btn-ghost text-rose-600 dark:text-rose-400 text-sm">Eliminar</button>
+                <button type="submit" form="task-delete-form" class="btn-ghost text-rose-600 dark:text-rose-400 text-sm inline-flex items-center gap-1">
+                    <x-icon name="trash" class="w-3.5 h-3.5" /> Eliminar
+                </button>
                 <div class="flex gap-2">
                     <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
                     <button type="submit" class="btn">Guardar</button>

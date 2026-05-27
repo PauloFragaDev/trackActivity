@@ -239,10 +239,7 @@
         <form method="POST" action="{{ route('notes.store') }}" class="space-y-3">
             @csrf
             <input type="hidden" name="folder_id" value="{{ $folderId }}">
-            <div class="flex items-center justify-between">
-                <h3 class="text-base font-semibold">Nueva nota</h3>
-                <button type="button" class="btn-ghost" data-modal-close aria-label="Cerrar">✕</button>
-            </div>
+            @include('layouts.partials.modal-header', ['title' => 'Nueva nota'])
             <label class="label">
                 <span>Título</span>
                 <input type="text" name="title" required maxlength="200" class="input mt-1" placeholder="Título de la nota">
@@ -272,10 +269,7 @@
             <form method="POST" action="{{ route('note-folders.update', $currentFolder) }}" class="space-y-3">
                 @csrf
                 @method('PATCH')
-                <div class="flex items-center justify-between">
-                    <h3 class="text-base font-semibold">Renombrar carpeta</h3>
-                    <button type="button" class="btn-ghost" data-modal-close aria-label="Cerrar">✕</button>
-                </div>
+                @include('layouts.partials.modal-header', ['title' => 'Renombrar carpeta'])
                 <label class="label">
                     <span>Nombre</span>
                     <input type="text" name="name" required maxlength="120" class="input mt-1"

@@ -281,10 +281,7 @@
                             <form method="POST" action="{{ route('manual-entries.update', $entry) }}" class="space-y-3">
                                 @csrf
                                 @method('PATCH')
-                                <div class="flex items-center justify-between">
-                                    <h3 class="text-base font-semibold">Editar entrada manual</h3>
-                                    <button type="button" class="btn-ghost" data-modal-close aria-label="Cerrar">✕</button>
-                                </div>
+                                @include('layouts.partials.modal-header', ['title' => 'Editar entrada manual'])
                                 <input type="hidden" name="date" value="{{ $day->toDateString() }}">
                                 <input type="hidden" name="return" value="day">
                                 @include('timeline.partials.manual-entry-fields', ['entry' => $entry])
@@ -310,10 +307,7 @@
     <dialog id="manual-add" class="modal">
         <form method="POST" action="{{ route('manual-entries.store') }}" class="space-y-3">
             @csrf
-            <div class="flex items-center justify-between">
-                <h3 class="text-base font-semibold">Nueva entrada manual</h3>
-                <button type="button" class="btn-ghost" data-modal-close aria-label="Cerrar">✕</button>
-            </div>
+            @include('layouts.partials.modal-header', ['title' => 'Nueva entrada manual'])
             <p class="-mt-1 text-xs text-muted">Reunión, corrección de horas… para el {{ $day->format('d/m/Y') }}.</p>
             <input type="hidden" name="date" value="{{ $day->toDateString() }}">
             <input type="hidden" name="return" value="day">
@@ -327,10 +321,7 @@
 
     {{-- ─── Modal: editar un activity_event (asignar proyecto a mano) ─── --}}
     <dialog id="event-edit" class="modal" data-event-edit-modal>
-        <div class="flex items-center justify-between mb-3">
-            <h3 class="text-base font-semibold">Editar evento</h3>
-            <button type="button" class="btn-ghost" data-modal-close aria-label="Cerrar">✕</button>
-        </div>
+        @include('layouts.partials.modal-header', ['title' => 'Editar evento'])
 
         <dl class="text-sm space-y-1 mb-4">
             <div class="flex gap-2"><dt class="w-20 shrink-0 text-muted">Hora</dt><dd data-event-time></dd></div>

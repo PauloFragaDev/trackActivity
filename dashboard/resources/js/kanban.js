@@ -260,13 +260,22 @@ export function initKanban() {
     }
 
     // ── Drag & drop entre columnas ───────────────────────────
+    const clearDropTargets = () => {
+        document.querySelectorAll('.task-list').forEach((l) => l.classList.remove('is-drop-target'));
+    };
     document.querySelectorAll('[data-task-list]').forEach((list) => {
         new Sortable(list, {
             group: 'kanban',
             animation: 150,
             draggable: '.task-card',
-            ghostClass: 'opacity-50',
+            ghostClass: 'is-dragging-ghost',
+            onMove: (evt) => {
+                clearDropTargets();
+                evt.to.classList.add('is-drop-target');
+                return true;
+            },
             onEnd: (evt) => {
+                clearDropTargets();
                 if (evt.from === evt.to && evt.oldIndex === evt.newIndex) return;
 
                 const card   = evt.item;
