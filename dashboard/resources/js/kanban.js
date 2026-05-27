@@ -515,4 +515,80 @@ export function initKanban() {
             setSorted(col, ! col.classList.contains('task-column--sorted'));
         });
     });
+
+    // ─── Live refresh vía SSE ─────────────────────────────────────────
+    //
+    // Mantenemos abierta una conexión a /tasks/stream. Cuando el server
+    // emite `change` (algo cambió en BBDD: la extensión code-kanban hizo
+    // sync, otra pestaña editó, etc.), recargamos el board.
+    //
+    // Para no interrumpir al usuario en mitad de algo, NO recargamos si:
+    //   - hay un <dialog> abierto (editar tarea, nueva tarea, etc.).
+    //   - el foco está dentro del inline-add o de la búsqueda con texto.
+    // En esos casos, marcamos un flag y recargamos cuando el usuario
+    // cierre el dialog / pierda el foco.
+    initLiveRefresh();
+
+    function initLiveRefresh() {
+        if (typeof window.EventSource !== 'function') return;
+        const projectFilter = new URLSearchParams(window.location.search).get('project');
+        const url = projectFilter
+            ? `/tasks/stream?project=${encodeURIComponent(projectFilter)}`
+            : '/tasks/stream';
+
+        let pendingReload = false;
+        let initialLatest = null;
+
+        const isUserBusy = () => {
+            // Dialog abierto: no recargar.
+            if (document.querySelector('dialog[open]')) return true;
+            // Inline-add con texto o focus: no recargar.
+            const active = document.activeElement;
+            if (active?.matches?.('input[type="search"], input[type="text"], textarea')) {
+                return (active.value || '').trim() !== '' || active.matches(':focus');
+            }
+            return false;
+        };
+
+        const doReload = () => {
+            if (isUserBusy()) {
+                pendingReload = true;
+                return;
+            }
+            window.location.reload();
+        };
+
+        // Cuando el usuario "se libera" (cierra modal, sale del input),
+        // aplicamos el reload pendiente.
+        document.addEventListener('focusout', () => {
+            if (pendingReload && ! isUserBusy()) setTimeout(doReload, 200);
+        });
+        document.addEventListener('close', () => {
+            if (pendingReload && ! isUserBusy()) setTimeout(doReload, 200);
+        }, true);
+
+        const openStream = () => {
+            const es = new EventSource(url);
+            es.addEventListener('hello', (e) => {
+                try { initialLatest = JSON.parse(e.data).latest; } catch {}
+            });
+            es.addEventListener('change', (e) => {
+                let latest = null;
+                try { latest = JSON.parse(e.data).latest; } catch {}
+                // Evita recargar si el evento llega con el mismo `latest`
+                // que recibimos en el hello (no debería pasar, defensa).
+                if (latest && latest !== initialLatest) doReload();
+            });
+            es.addEventListener('rotate', () => {
+                es.close();
+                setTimeout(openStream, 200);
+            });
+            es.onerror = () => {
+                es.close();
+                setTimeout(openStream, 3000);
+            };
+        };
+
+        openStream();
+    }
 }

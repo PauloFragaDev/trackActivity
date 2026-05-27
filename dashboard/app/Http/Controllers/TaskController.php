@@ -102,6 +102,77 @@ class TaskController extends Controller
         return redirect()->route('tasks.index')->with('status', 'Tarea archivada.');
     }
 
+    /**
+     * Canal SSE para la página /tasks. Emite "change" cada vez que cambia
+     * el MAX(updated_at) de las tasks (incluye soft-deleted vía
+     * withTrashed). El cliente JS recarga el board al recibir el evento.
+     *
+     * Mismo diseño que `Api\KanbanStreamController` (poll 1 s, heartbeat
+     * 15 s, rotación 60 s), pero servido por la sesión web — single-user,
+     * sin auth porque la app no la tiene (bind a 127.0.0.1).
+     */
+    public function stream(Request $request): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $projectId = $request->integer('project') ?: null;
+
+        return new \Symfony\Component\HttpFoundation\StreamedResponse(function () use ($projectId) {
+            @set_time_limit(0);
+            ignore_user_abort(false);
+            while (ob_get_level() > 0) {
+                @ob_end_flush();
+            }
+
+            $startedAt = time();
+            $nextHeartbeat = $startedAt + 15;
+            $latest = $this->latestUpdatedAt($projectId);
+
+            echo "event: hello\n";
+            echo 'data: ' . json_encode(['latest' => $latest, 'rotate_after_seconds' => 60]) . "\n\n";
+            @flush();
+
+            while (true) {
+                if (connection_aborted()) {
+                    break;
+                }
+                if (time() - $startedAt >= 60) {
+                    echo "event: rotate\ndata: {\"reason\":\"max_duration\"}\n\n";
+                    @flush();
+                    break;
+                }
+
+                $current = $this->latestUpdatedAt($projectId);
+                if ($current !== null && $current !== $latest) {
+                    echo "event: change\n";
+                    echo 'data: ' . json_encode(['latest' => $current]) . "\n\n";
+                    @flush();
+                    $latest = $current;
+                    $nextHeartbeat = time() + 15;
+                } elseif (time() >= $nextHeartbeat) {
+                    echo ": heartbeat\n\n";
+                    @flush();
+                    $nextHeartbeat = time() + 15;
+                }
+                sleep(1);
+            }
+        }, 200, [
+            'Content-Type'      => 'text/event-stream; charset=utf-8',
+            'Cache-Control'     => 'no-cache, no-transform',
+            'Connection'        => 'keep-alive',
+            'X-Accel-Buffering' => 'no',
+        ]);
+    }
+
+    /** MAX(updated_at) global o filtrado por proyecto. */
+    private function latestUpdatedAt(?int $projectId): ?string
+    {
+        $q = Task::withTrashed();
+        if ($projectId) {
+            $q->where('project_id', $projectId);
+        }
+        $value = $q->max('updated_at');
+        return $value ? (string) $value : null;
+    }
+
     /** Lista las tareas archivadas (soft-deleted) con su proyecto y labels. */
     public function archived(): View
     {
