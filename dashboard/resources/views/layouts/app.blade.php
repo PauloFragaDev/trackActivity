@@ -5,6 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'trackActivity')</title>
+
+    {{-- Identidad de la app · favicon SVG, fallback ICO, apple-touch, manifest --}}
+    <link rel="icon" type="image/svg+xml" href="{{ url('/icon.svg') }}">
+    <link rel="alternate icon" href="{{ url('/favicon.ico') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url('/apple-touch-icon.png') }}">
+    <link rel="manifest" href="{{ url('/manifest.json') }}">
+    {{-- Color del chrome del navegador: emerald acento en claro, slate en oscuro. --}}
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#10b981">
+    <meta name="theme-color" media="(prefers-color-scheme: dark)"  content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="trackActivity">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     {{-- Estado de tema y sidebar antes de pintar, para evitar parpadeo --}}
     <script>
         (() => {
@@ -56,12 +68,12 @@
             <div class="flex items-center gap-2 p-2 border-b divider">
                 <button id="sidebar-toggle" type="button" class="btn-ghost shrink-0"
                         aria-label="Plegar o desplegar el menú" title="Plegar / desplegar menú">
-                    <span data-icon-collapse aria-hidden="true">«</span>
-                    <span data-icon-expand   aria-hidden="true">»</span>
+                    <span data-icon-collapse aria-hidden="true" class="inline-flex"><x-icon name="chevron-double-left" class="w-4 h-4" /></span>
+                    <span data-icon-expand   aria-hidden="true" class="inline-flex"><x-icon name="chevron-double-right" class="w-4 h-4" /></span>
                 </button>
                 <a href="{{ route('dashboard') }}"
                    class="sidebar-full flex items-center gap-2 font-semibold tracking-tight whitespace-nowrap">
-                    <span class="inline-block w-2 h-2 rounded-full bg-emerald-400"></span>
+                    <img src="{{ url('/icon.svg') }}" alt="" class="w-5 h-5 rounded-md" aria-hidden="true">
                     trackActivity
                 </a>
             </div>
@@ -100,7 +112,7 @@
                 <details class="group" @if (request()->routeIs('timeline.*', 'calendar.*', 'reports.*')) open @endif>
                     <summary class="flex items-center gap-1.5 px-2 py-1.5 rounded cursor-pointer select-none list-none
                                     text-[11px] uppercase tracking-wider text-muted hover:bg-ink-100 dark:hover:bg-ink-800">
-                        <span class="text-[9px] transition-transform group-open:rotate-90">▸</span>
+                        <span class="transition-transform group-open:rotate-90 inline-flex" aria-hidden="true"><x-icon name="chevron-right" class="w-2.5 h-2.5" /></span>
                         Tracking
                     </summary>
                     <div class="mt-0.5 ml-2 space-y-0.5">
@@ -119,7 +131,7 @@
                 <details class="group" @if (request()->routeIs('notes.*')) open @endif>
                     <summary class="flex items-center gap-1.5 px-2 py-1.5 rounded cursor-pointer select-none list-none
                                     text-[11px] uppercase tracking-wider text-muted hover:bg-ink-100 dark:hover:bg-ink-800">
-                        <span class="text-[9px] transition-transform group-open:rotate-90">▸</span>
+                        <span class="transition-transform group-open:rotate-90 inline-flex" aria-hidden="true"><x-icon name="chevron-right" class="w-2.5 h-2.5" /></span>
                         Notas
                     </summary>
                     <div class="mt-0.5 ml-2 space-y-0.5">
@@ -160,7 +172,7 @@
                 <details class="group" @if (request()->routeIs('projects.*', 'export.*', 'data.*', 'task-labels.*', 'settings.*')) open @endif>
                     <summary class="flex items-center gap-1.5 px-2 py-1.5 rounded cursor-pointer select-none list-none
                                     text-[11px] uppercase tracking-wider text-muted hover:bg-ink-100 dark:hover:bg-ink-800">
-                        <span class="text-[9px] transition-transform group-open:rotate-90">▸</span>
+                        <span class="transition-transform group-open:rotate-90 inline-flex" aria-hidden="true"><x-icon name="chevron-right" class="w-2.5 h-2.5" /></span>
                         Configuración
                     </summary>
                     <div class="mt-0.5 ml-2 space-y-0.5">
@@ -186,8 +198,8 @@
                 <button id="theme-toggle" type="button"
                         class="btn-ghost w-full justify-start"
                         aria-label="Cambiar tema" title="Cambiar tema">
-                    <span data-icon-moon aria-hidden="true">☾</span>
-                    <span data-icon-sun  aria-hidden="true" class="hidden">☀</span>
+                    <span data-icon-moon aria-hidden="true" class="inline-flex"><x-icon name="moon" class="w-4 h-4" /></span>
+                    <span data-icon-sun  aria-hidden="true" class="hidden"><x-icon name="sun"  class="w-4 h-4" /></span>
                     <span>Tema</span>
                 </button>
             </div>
@@ -293,11 +305,13 @@
             <div class="flex items-center gap-0.5 ml-1 border-l divider pl-1">
                 <button type="button" class="icon-btn" data-timer-toggle-pause
                         aria-label="Pausar / reanudar" title="Pausar / reanudar">
-                    <span data-timer-icon-pause class="{{ $tp->paused_at ? 'hidden' : '' }}">⏸</span>
-                    <span data-timer-icon-play class="{{ $tp->paused_at ? '' : 'hidden' }}">▶</span>
+                    <span data-timer-icon-pause class="{{ $tp->paused_at ? 'hidden' : 'inline-flex' }}"><x-icon name="pause" class="w-3.5 h-3.5" /></span>
+                    <span data-timer-icon-play  class="{{ $tp->paused_at ? 'inline-flex' : 'hidden' }}"><x-icon name="play"  class="w-3.5 h-3.5" /></span>
                 </button>
                 <button type="button" class="icon-btn text-faint" data-timer-skip
-                        aria-label="Saltar a la siguiente fase" title="Saltar fase">⏭</button>
+                        aria-label="Saltar a la siguiente fase" title="Saltar fase">
+                    <x-icon name="skip-forward" class="w-3.5 h-3.5" />
+                </button>
                 <button type="button" class="icon-btn text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/30"
                         data-timer-stop aria-label="Parar cronómetro" title="Parar cronómetro">
                     <x-icon name="close" class="w-3.5 h-3.5" />

@@ -224,7 +224,7 @@ html.sidebar-collapsed #sidebar .sidebar-full {
 }
 [data-icon-expand] { display: none; }
 html.sidebar-collapsed [data-icon-collapse] { display: none; }
-html.sidebar-collapsed [data-icon-expand]   { display: inline; }
+html.sidebar-collapsed [data-icon-expand]   { display: inline-flex; }
 
 /* Sidebar en móvil: drawer con overlay. */
 #mobile-menu-btn,
