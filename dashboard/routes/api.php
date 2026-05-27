@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\KanbanSyncController;
 use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\TaskController;
 use App\Http\Controllers\Api\TaskLabelController;
@@ -36,4 +37,7 @@ Route::middleware('api.token')->group(function () {
     // Catálogos (solo lectura)
     Route::get('/projects',    [ProjectController::class, 'index']);
     Route::get('/task-labels', [TaskLabelController::class, 'index']);
+
+    // Sync con la extensión code-kanban (un kanban por workspace).
+    Route::post('/sync/kanban', [KanbanSyncController::class, 'store']);
 });
