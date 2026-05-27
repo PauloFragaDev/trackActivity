@@ -194,6 +194,21 @@
                    class="block px-2 py-1.5 rounded {{ $navItem(['help']) }}">Ayuda</a>
             </nav>
 
+            {{-- Slot del cronómetro minimizado. Renderiza siempre que haya timer activo;
+                 JS controla con .timer-dock--visible si está minimizado o no. Click expande. --}}
+            @if (! empty($activeTimer))
+                <button type="button" id="timer-dock"
+                        class="timer-dock w-full px-2 py-2 border-t divider hidden items-center gap-2 text-sm
+                               hover:bg-ink-100 dark:hover:bg-ink-800 transition"
+                        title="Expandir cronómetro" aria-label="Expandir cronómetro">
+                    <span class="timer-pill__dot inline-block w-2 h-2 rounded-full" data-timer-dock-dot></span>
+                    <span class="sidebar-full flex-1 min-w-0 text-left truncate" data-timer-dock-title>
+                        {{ $activeTimer->task?->title ?? 'Sin tarea' }}
+                    </span>
+                    <span class="font-mono text-faint tabular-nums text-xs" data-timer-dock-elapsed>00:00</span>
+                </button>
+            @endif
+
             <div class="sidebar-full p-2 border-t divider">
                 <button id="theme-toggle" type="button"
                         class="btn-ghost w-full justify-start"
@@ -294,13 +309,16 @@
              data-task-id="{{ $tp->task_id }}"
              data-task-title="{{ $tp->task?->title ?? 'Sin tarea' }}"
              class="fixed bottom-4 left-1/2 -translate-x-1/2 z-40
-                    card shadow-2xl pl-3 pr-2 py-2 flex items-center gap-2 text-sm
+                    card shadow-2xl pl-3 pr-2 py-2 flex items-center gap-2 text-sm select-none
                     timer-pill timer-pill--{{ str_replace('_', '-', $tp->state) }} {{ $tp->paused_at ? 'timer-pill--paused' : '' }}">
-            <span class="timer-pill__dot inline-block w-2 h-2 rounded-full" data-timer-dot></span>
-            <span class="text-[11px] uppercase tracking-wider text-muted hidden sm:inline" data-timer-state-label>{{ $stateLabel }}</span>
-            <span class="font-medium max-w-[16rem] truncate" data-timer-task-title>{{ $tp->task?->title ?? 'Sin tarea' }}</span>
-            <span class="font-mono text-faint tabular-nums" data-timer-elapsed>00:00</span>
-            <span class="text-[10px] text-faint" title="Ciclos de foco completados" data-timer-cycles>#{{ $tp->cycle_count }}</span>
+            {{-- Zona de arrastre: todo lo que no sean botones agarra la pill. JS la activa solo en desktop. --}}
+            <div class="flex items-center gap-2 timer-pill__handle" data-timer-handle>
+                <span class="timer-pill__dot inline-block w-2 h-2 rounded-full" data-timer-dot></span>
+                <span class="text-[11px] uppercase tracking-wider text-muted hidden sm:inline" data-timer-state-label>{{ $stateLabel }}</span>
+                <span class="font-medium max-w-[16rem] truncate" data-timer-task-title>{{ $tp->task?->title ?? 'Sin tarea' }}</span>
+                <span class="font-mono text-faint tabular-nums" data-timer-elapsed>00:00</span>
+                <span class="text-[10px] text-faint" title="Ciclos de foco completados" data-timer-cycles>#{{ $tp->cycle_count }}</span>
+            </div>
 
             <div class="flex items-center gap-0.5 ml-1 border-l divider pl-1">
                 <button type="button" class="icon-btn" data-timer-toggle-pause
@@ -312,9 +330,14 @@
                         aria-label="Saltar a la siguiente fase" title="Saltar fase">
                     <x-icon name="skip-forward" class="w-3.5 h-3.5" />
                 </button>
+                {{-- Minimizar a sidebar (sólo desktop; CSS lo oculta en móvil). --}}
+                <button type="button" class="icon-btn text-faint timer-pill__minimize" data-timer-minimize
+                        aria-label="Minimizar al sidebar" title="Minimizar al sidebar">
+                    <x-icon name="minus" class="w-3.5 h-3.5" />
+                </button>
                 <button type="button" class="icon-btn text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/30"
                         data-timer-stop aria-label="Parar cronómetro" title="Parar cronómetro">
-                    <x-icon name="close" class="w-3.5 h-3.5" />
+                    <x-icon name="stop" class="w-3.5 h-3.5" />
                 </button>
             </div>
         </div>
