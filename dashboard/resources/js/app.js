@@ -217,4 +217,55 @@ window.addEventListener('DOMContentLoaded', () => {
     if (document.querySelector('[data-task-board]')) {
         import('./kanban.js').then((m) => m.initKanban());
     }
+
+    // Edición manual de un activity_event (modal del timeline).
+    if (document.querySelector('[data-event-edit-modal]')) {
+        initEventEdit();
+    }
 });
+
+function initEventEdit() {
+    const modal  = document.getElementById('event-edit');
+    const form   = modal?.querySelector('[data-event-edit-form]');
+    const select = form?.querySelector('[name="project_id"]');
+    const csrf   = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+    let currentId = null;
+
+    const setText = (sel, val) => {
+        const el = modal.querySelector(sel);
+        if (el) el.textContent = val || '—';
+    };
+    const setRowVisible = (sel, visible) => {
+        modal.querySelector(sel)?.classList.toggle('hidden', !visible);
+    };
+
+    document.querySelectorAll('[data-event-edit]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            currentId = btn.dataset.id;
+            setText('[data-event-time]',   btn.dataset.time);
+            setText('[data-event-source]', btn.dataset.source);
+            setText('[data-event-app]',    btn.dataset.app);
+            setText('[data-event-title]',  btn.dataset.title);
+            setText('[data-event-cwd]',    btn.dataset.cwd);
+            setText('[data-event-cmd]',    btn.dataset.cmd);
+            setRowVisible('[data-event-cwd-row]', !!btn.dataset.cwd);
+            setRowVisible('[data-event-cmd-row]', !!btn.dataset.cmd);
+            if (select) select.value = btn.dataset.projectId || '';
+            if (typeof modal.showModal === 'function') modal.showModal();
+        });
+    });
+
+    form?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!currentId) return;
+        const body = new URLSearchParams({
+            _token: csrf,
+            _method: 'PATCH',
+            project_id: select?.value || '',
+        });
+        try {
+            const res = await fetch(`/activity-events/${currentId}`, { method: 'POST', body });
+            if (res.ok) window.location.reload();   // refresh para que el bloque muestre la nueva atribución
+        } catch {}
+    });
+}

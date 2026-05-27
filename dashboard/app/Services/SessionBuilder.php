@@ -47,7 +47,7 @@ class SessionBuilder
         $endUtc   = $endLoc->setTimezone('UTC');
 
         $blocks = TimeBlock::query()
-            ->with(['project', 'summary', 'evidence.activityEvent'])
+            ->with(['project', 'summary', 'evidence.activityEvent.project'])
             ->where('starts_at', '>=', $startUtc->format('Y-m-d H:i:s'))
             ->where('starts_at', '<',  $endUtc->format('Y-m-d H:i:s'))
             ->orderBy('starts_at')
@@ -124,6 +124,7 @@ class SessionBuilder
         // como "sin atribuir" en la vista.
         if ($evidence->isEmpty() && $current['project'] === null && ! $current['is_idle']) {
             $evidence = ActivityEvent::query()
+                ->with('project')
                 ->where('occurred_at', '>=', $start)
                 ->where('occurred_at', '<',  $end)
                 ->where('source', '!=', ActivityEvent::SOURCE_IDLE)

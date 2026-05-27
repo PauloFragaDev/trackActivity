@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ActivityEventController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DataController;
@@ -20,6 +21,9 @@ use Illuminate\Support\Facades\Route;
 
 // ─────────────────── Inicio ───────────────────
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+// Edición manual de un activity_event (desde la lista de evidencia del timeline).
+Route::patch('/activity-events/{activityEvent}', [ActivityEventController::class, 'update'])->name('activity-events.update');
 
 // ─────────────────── Timeline ───────────────────
 Route::get('/',           [TimelineController::class, 'today'])->name('timeline.today');
