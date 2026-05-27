@@ -103,74 +103,30 @@ class TaskController extends Controller
     }
 
     /**
-     * Canal SSE para la página /tasks. Emite "change" cada vez que cambia
-     * el MAX(updated_at) de las tasks (incluye soft-deleted vía
-     * withTrashed). El cliente JS recarga el board al recibir el evento.
+     * Endpoint ligero para que la página /tasks haga polling JS y se
+     * entere de cambios desde otras fuentes (la extensión code-kanban,
+     * otra pestaña, etc.). Devuelve { latest } con el MAX(updated_at)
+     * de las tasks (incluye soft-deleted vía withTrashed).
      *
-     * Mismo diseño que `Api\KanbanStreamController` (poll 1 s, heartbeat
-     * 15 s, rotación 60 s), pero servido por la sesión web — single-user,
-     * sin auth porque la app no la tiene (bind a 127.0.0.1).
+     * Por qué polling y no SSE en la web: `php artisan serve` tiene
+     * workers limitados (PHP_CLI_SERVER_WORKERS=4 en .env). Una conexión
+     * SSE bloquea 1 worker permanentemente. Si además la extensión
+     * code-kanban abre otro SSE, te quedas con 2 workers para todo el
+     * navegador (estáticos, PATCH, etc.). Resultado: la app se atasca.
+     * Polling con un endpoint que termina inmediatamente libera el worker
+     * tras cada llamada — coexiste sin problema con el SSE de la extensión.
      */
-    public function stream(Request $request): \Symfony\Component\HttpFoundation\StreamedResponse
+    public function peek(Request $request): \Illuminate\Http\JsonResponse
     {
         $projectId = $request->integer('project') ?: null;
-
-        return new \Symfony\Component\HttpFoundation\StreamedResponse(function () use ($projectId) {
-            @set_time_limit(0);
-            ignore_user_abort(false);
-            while (ob_get_level() > 0) {
-                @ob_end_flush();
-            }
-
-            $startedAt = time();
-            $nextHeartbeat = $startedAt + 15;
-            $latest = $this->latestUpdatedAt($projectId);
-
-            echo "event: hello\n";
-            echo 'data: ' . json_encode(['latest' => $latest, 'rotate_after_seconds' => 60]) . "\n\n";
-            @flush();
-
-            while (true) {
-                if (connection_aborted()) {
-                    break;
-                }
-                if (time() - $startedAt >= 60) {
-                    echo "event: rotate\ndata: {\"reason\":\"max_duration\"}\n\n";
-                    @flush();
-                    break;
-                }
-
-                $current = $this->latestUpdatedAt($projectId);
-                if ($current !== null && $current !== $latest) {
-                    echo "event: change\n";
-                    echo 'data: ' . json_encode(['latest' => $current]) . "\n\n";
-                    @flush();
-                    $latest = $current;
-                    $nextHeartbeat = time() + 15;
-                } elseif (time() >= $nextHeartbeat) {
-                    echo ": heartbeat\n\n";
-                    @flush();
-                    $nextHeartbeat = time() + 15;
-                }
-                sleep(1);
-            }
-        }, 200, [
-            'Content-Type'      => 'text/event-stream; charset=utf-8',
-            'Cache-Control'     => 'no-cache, no-transform',
-            'Connection'        => 'keep-alive',
-            'X-Accel-Buffering' => 'no',
-        ]);
-    }
-
-    /** MAX(updated_at) global o filtrado por proyecto. */
-    private function latestUpdatedAt(?int $projectId): ?string
-    {
         $q = Task::withTrashed();
         if ($projectId) {
             $q->where('project_id', $projectId);
         }
-        $value = $q->max('updated_at');
-        return $value ? (string) $value : null;
+        $latest = $q->max('updated_at');
+        return response()->json([
+            'latest' => $latest ? (string) $latest : null,
+        ]);
     }
 
     /** Lista las tareas archivadas (soft-deleted) con su proyecto y labels. */
