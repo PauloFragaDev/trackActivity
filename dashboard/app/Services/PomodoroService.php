@@ -189,10 +189,12 @@ class PomodoroService
 
     /**
      * Siguiente tarea sugerida para arrancar pomodoro:
-     *   1. Status Doing > Todo > Backlog
-     *   2. Prioridad High > Normal > Low
-     *   3. due_date más cercana primero (null al final)
-     *   4. Posición ASC
+     *   1. Solo estados "actionable" — descarta Blocked, Stand By y Done
+     *      (no tiene sentido sugerir pomodoro sobre una tarea bloqueada o en pausa).
+     *   2. Status Doing > Todo > Backlog.
+     *   3. Prioridad High > Normal > Low.
+     *   4. due_date más cercana primero (null al final).
+     *   5. Posición ASC.
      */
     public function nextTask(): ?Task
     {
@@ -202,11 +204,16 @@ class PomodoroService
             return $current->task;
         }
 
+        $actionable = collect(TaskStatus::cases())
+            ->filter(fn (TaskStatus $s) => $s->isActionable())
+            ->map(fn (TaskStatus $s) => $s->value)
+            ->all();
+
         $statusOrder = "CASE status WHEN 'doing' THEN 1 WHEN 'todo' THEN 2 WHEN 'backlog' THEN 3 ELSE 4 END";
         $priorityOrder = "CASE priority WHEN 'high' THEN 1 WHEN 'normal' THEN 2 WHEN 'low' THEN 3 ELSE 4 END";
 
         return Task::query()
-            ->where('status', '!=', TaskStatus::Done->value)
+            ->whereIn('status', $actionable)
             ->orderByRaw($statusOrder)
             ->orderByRaw($priorityOrder)
             ->orderByRaw('CASE WHEN due_date IS NULL THEN 1 ELSE 0 END')

@@ -166,5 +166,34 @@ class TaskControllerTest extends TestCase
     {
         $this->get('/tasks/archived')->assertOk()->assertSee('Sin tareas archivadas');
     }
+
+    public function test_board_renders_the_six_fixed_columns(): void
+    {
+        $res = $this->get('/tasks')->assertOk();
+        foreach (['Blocked', 'Backlog', 'To Do', 'Doing', 'Stand By', 'Done'] as $label) {
+            $res->assertSee($label);
+        }
+    }
+
+    public function test_store_accepts_new_blocked_and_standby_states(): void
+    {
+        $this->post('/tasks', ['title' => 'Bloqueada', 'status' => 'blocked'])->assertRedirect();
+        $this->post('/tasks', ['title' => 'Pausada',   'status' => 'standby'])->assertRedirect();
+
+        $this->assertSame(TaskStatus::Blocked, Task::where('title', 'Bloqueada')->firstOrFail()->status);
+        $this->assertSame(TaskStatus::StandBy, Task::where('title', 'Pausada')->firstOrFail()->status);
+    }
+
+    public function test_move_to_blocked_or_standby_works(): void
+    {
+        $task = Task::create(['title' => 'T', 'status' => 'todo']);
+
+        $this->patch("/tasks/{$task->id}/move", ['status' => 'blocked', 'position' => 0])
+            ->assertOk()->assertJson(['ok' => true]);
+        $this->assertSame(TaskStatus::Blocked, $task->fresh()->status);
+
+        $this->patch("/tasks/{$task->id}/move", ['status' => 'standby', 'position' => 0])->assertOk();
+        $this->assertSame(TaskStatus::StandBy, $task->fresh()->status);
+    }
 }
 

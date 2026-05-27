@@ -73,7 +73,7 @@
         </div>
     @endif
 
-    <div data-task-board class="grid grid-cols-4 gap-3 items-start">
+    <div data-task-board class="flex gap-3 items-start overflow-x-auto pb-2">
         @foreach ($columns as $col)
             @php $colTasks = $tasks->get($col->value, collect()); @endphp
             <section class="card flex flex-col task-column" data-task-column="{{ $col->value }}" style="min-height: 60vh">

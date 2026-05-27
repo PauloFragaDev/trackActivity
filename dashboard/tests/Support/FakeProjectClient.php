@@ -15,10 +15,12 @@ class FakeProjectClient implements ProjectClient
 
     /** @var array<string,string> */
     public array $statusOptions = [
-        'Backlog'     => 'o-backlog',
-        'Todo'        => 'o-todo',
-        'In Progress' => 'o-doing',
-        'Done'        => 'o-done',
+        'Blocked'  => 'o-blocked',
+        'Backlog'  => 'o-backlog',
+        'To Do'    => 'o-todo',
+        'Doing'    => 'o-doing',
+        'Stand By' => 'o-standby',
+        'Done'     => 'o-done',
     ];
 
     /** Operaciones de escritura registradas (para asserts en los tests). */

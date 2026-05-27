@@ -38,7 +38,7 @@ class TaskSyncTest extends TestCase
     public function test_pull_creates_a_task_from_a_remote_item(): void
     {
         $fake = new FakeProjectClient();
-        $fake->items = [$this->item('I1', 'Tarea remota', 'In Progress', 'cuerpo')];
+        $fake->items = [$this->item('I1', 'Tarea remota', 'Doing', 'cuerpo')];
 
         $result = (new TaskSyncService($fake))->sync();
 
@@ -70,7 +70,7 @@ class TaskSyncTest extends TestCase
         $this->syncedTask(['title' => 'Fantasma', 'status' => 'todo', 'github_item_id' => 'GONE']);
 
         $fake = new FakeProjectClient();
-        $fake->items = [$this->item('I1', 'Viva', 'Todo')];
+        $fake->items = [$this->item('I1', 'Viva', 'To Do')];
 
         $result = (new TaskSyncService($fake))->sync();
 
@@ -107,7 +107,7 @@ class TaskSyncTest extends TestCase
         ]);
 
         $fake = new FakeProjectClient();
-        $fake->items = [$this->item('I1', 'Original', 'Todo')];
+        $fake->items = [$this->item('I1', 'Original', 'To Do')];
 
         $result = (new TaskSyncService($fake))->sync();
 
@@ -122,7 +122,7 @@ class TaskSyncTest extends TestCase
         $task->delete();   // borrado suave
 
         $fake = new FakeProjectClient();
-        $fake->items = [$this->item('I1', 'Para borrar', 'Todo')];
+        $fake->items = [$this->item('I1', 'Para borrar', 'To Do')];
 
         (new TaskSyncService($fake))->sync();
 
