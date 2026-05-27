@@ -280,4 +280,55 @@ class KanbanSyncTest extends TestCase
         config(['app.api_token' => 'secret']);
         $this->postJson('/api/sync/kanban', $this->payload('/x', []))->assertStatus(401);
     }
+
+    public function test_does_not_archive_when_client_is_behind_server(): void
+    {
+        $project = $this->makeProjectAt('/repo/behind');
+        // Card que el server sincronizó "ahora" — más nueva que cualquier
+        // payload con timestamp del pasado del cliente.
+        $kept = Task::create([
+            'title'            => 'Reciente en server',
+            'status'           => 'todo',
+            'project_id'       => $project->id,
+            'kanban_card_id'   => 'srv-new',
+            'kanban_synced_at' => now(),
+        ]);
+
+        // El cliente envía un payload con timestamp viejo y sin esa card.
+        $payload = $this->payload('/repo/behind', [
+            ['title' => 'Backlog', 'cards' => []],
+        ], '2020-01-01T00:00:00Z');
+
+        $res = $this->withHeaders($this->auth())->postJson('/api/sync/kanban', $payload);
+        $res->assertOk();
+        $res->assertJsonPath('stats.archived', 0);
+
+        // La card del server sigue viva — no se archivó pese a faltar
+        // en el payload.
+        $this->assertNotSoftDeleted('tasks', ['id' => $kept->id]);
+        // Y el error de "cliente atrasado" se reportó.
+        $this->assertNotEmpty($res->json('errors'));
+    }
+
+    public function test_archives_when_client_is_current(): void
+    {
+        // Mismo escenario pero el cliente envía un timestamp posterior:
+        // ahí sí archiva (el cliente "decidió" que la card desapareció).
+        $project = $this->makeProjectAt('/repo/current');
+        $gone = Task::create([
+            'title'            => 'Va a archivado',
+            'status'           => 'todo',
+            'project_id'       => $project->id,
+            'kanban_card_id'   => 'srv-old',
+            'kanban_synced_at' => now()->subDay(),
+        ]);
+
+        $payload = $this->payload('/repo/current', [
+            ['title' => 'Backlog', 'cards' => []],
+        ], now()->toIso8601String());
+
+        $res = $this->withHeaders($this->auth())->postJson('/api/sync/kanban', $payload);
+        $res->assertOk()->assertJsonPath('stats.archived', 1);
+        $this->assertSoftDeleted('tasks', ['id' => $gone->id]);
+    }
 }

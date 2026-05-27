@@ -99,13 +99,37 @@ class KanbanSyncService
             // Tarjetas del proyecto que estaban enlazadas y ya no están →
             // archivar. (No las borramos: si fue un error en el cliente, el
             // usuario puede restaurarlas desde /tasks/archived.)
-            $orphans = Task::where('project_id', $project->id)
-                ->whereNotNull('kanban_card_id')
-                ->whereNotIn('kanban_card_id', $seenCardIds)
-                ->get();
-            foreach ($orphans as $orphan) {
-                $orphan->delete();
-                $stats['archived']++;
+            //
+            // PROTECCIÓN: si el cliente envía un estado MÁS VIEJO que la
+            // última sync server-side (típico cuando el usuario abrió VS
+            // Code después de haber añadido cards en /tasks), no archivamos
+            // nada — son tarjetas del server que el cliente todavía no ha
+            // recibido. El cliente las verá en la respuesta y las adoptará.
+            $latestServerSync = Task::where('project_id', $project->id)
+                ->whereNotNull('kanban_synced_at')
+                ->max('kanban_synced_at');
+
+            $clientIsBehind = $latestServerSync !== null
+                && $clientUpdatedAt->lt(CarbonImmutable::parse($latestServerSync));
+
+            if (! $clientIsBehind) {
+                $orphans = Task::where('project_id', $project->id)
+                    ->whereNotNull('kanban_card_id')
+                    ->whereNotIn('kanban_card_id', $seenCardIds)
+                    ->get();
+                foreach ($orphans as $orphan) {
+                    $orphan->delete();
+                    $stats['archived']++;
+                }
+            } else {
+                $missing = Task::where('project_id', $project->id)
+                    ->whereNotNull('kanban_card_id')
+                    ->whereNotIn('kanban_card_id', $seenCardIds)
+                    ->count();
+                if ($missing > 0) {
+                    $errors[] = "Cliente atrasado respecto al server ({$missing} tarjeta(s) del server "
+                        . "no estaban en el payload). No se archiva nada — el cliente debe adoptar el estado server.";
+                }
             }
         });
 
@@ -127,8 +151,10 @@ class KanbanSyncService
      * Resuelve el proyecto a partir del workspace_path. Primero busca un
      * mapping `folder` cuyo `pattern` sea exacto o sufijo del path; si no,
      * un mapping `repository` cuyo `pattern` sea el basename.
+     *
+     * Público porque el endpoint SSE de stream también necesita resolverlo.
      */
-    private function resolveProject(string $workspacePath): ?Project
+    public function resolveProject(string $workspacePath): ?Project
     {
         $normalized = rtrim($workspacePath, "/\\");
 

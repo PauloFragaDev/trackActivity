@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\KanbanStreamController;
 use App\Http\Controllers\Api\KanbanSyncController;
 use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\TaskController;
@@ -39,5 +40,7 @@ Route::middleware('api.token')->group(function () {
     Route::get('/task-labels', [TaskLabelController::class, 'index']);
 
     // Sync con la extensión code-kanban (un kanban por workspace).
-    Route::post('/sync/kanban', [KanbanSyncController::class, 'store']);
+    Route::post('/sync/kanban',        [KanbanSyncController::class,   'store']);
+    // SSE: notifica al cliente cuando cambia algo del proyecto en BBDD.
+    Route::get ('/sync/kanban/stream', [KanbanStreamController::class, 'stream']);
 });
