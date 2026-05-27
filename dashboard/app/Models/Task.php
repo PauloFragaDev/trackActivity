@@ -21,6 +21,7 @@ class Task extends Model
         'project_id', 'title', 'description', 'status', 'priority',
         'due_date', 'position', 'completed_at',
         'github_item_id', 'github_synced_at', 'github_dirty',
+        'kanban_card_id', 'kanban_synced_at',
     ];
 
     /** Defaults en memoria (coinciden con los de la migración). */
@@ -39,6 +40,7 @@ class Task extends Model
         'completed_at'     => 'datetime',
         'github_synced_at' => 'datetime',
         'github_dirty'     => 'boolean',
+        'kanban_synced_at' => 'datetime',
     ];
 
     protected static function booted(): void
