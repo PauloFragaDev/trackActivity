@@ -9,7 +9,10 @@ use App\Http\Controllers\ManualEntryController;
 use App\Http\Controllers\NoteController;
 use App\Http\Controllers\NoteFolderController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\TaskCheckboxController;
+use App\Http\Controllers\TaskCommentController;
 use App\Http\Controllers\TaskController;
+use App\Http\Controllers\TaskLabelController;
 use App\Http\Controllers\TimeBlockController;
 use App\Http\Controllers\TrackerController;
 use App\Http\Controllers\TimelineController;
@@ -89,6 +92,21 @@ Route::post('/tasks/sync',          [TaskController::class, 'sync'])->name('task
 Route::patch('/tasks/{task}',       [TaskController::class, 'update'])->name('tasks.update');
 Route::patch('/tasks/{task}/move',  [TaskController::class, 'move'])->name('tasks.move');
 Route::delete('/tasks/{task}',      [TaskController::class, 'destroy'])->name('tasks.destroy');
+
+// Paleta de etiquetas del tablero
+Route::get('/task-labels',                  [TaskLabelController::class, 'index'])->name('task-labels.index');
+Route::post('/task-labels',                 [TaskLabelController::class, 'store'])->name('task-labels.store');
+Route::patch('/task-labels/{taskLabel}',    [TaskLabelController::class, 'update'])->name('task-labels.update');
+Route::delete('/task-labels/{taskLabel}',   [TaskLabelController::class, 'destroy'])->name('task-labels.destroy');
+
+// Subtareas (checkboxes) — endpoints AJAX desde el modal de edición
+Route::post('/tasks/{task}/checkboxes',                  [TaskCheckboxController::class, 'store'])->name('task-checkboxes.store');
+Route::patch('/tasks/{task}/checkboxes/{taskCheckbox}',  [TaskCheckboxController::class, 'update'])->name('task-checkboxes.update');
+Route::delete('/tasks/{task}/checkboxes/{taskCheckbox}', [TaskCheckboxController::class, 'destroy'])->name('task-checkboxes.destroy');
+
+// Comentarios — endpoints AJAX desde el modal de edición
+Route::post('/tasks/{task}/comments',                  [TaskCommentController::class, 'store'])->name('task-comments.store');
+Route::delete('/tasks/{task}/comments/{taskComment}',  [TaskCommentController::class, 'destroy'])->name('task-comments.destroy');
 
 // ─────────────────── Control del tracker ───────────────────
 Route::post('/tracker/toggle', [TrackerController::class, 'toggle'])->name('tracker.toggle');

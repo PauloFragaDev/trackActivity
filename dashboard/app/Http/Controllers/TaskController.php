@@ -6,6 +6,7 @@ use App\Enums\TaskPriority;
 use App\Enums\TaskStatus;
 use App\Models\Project;
 use App\Models\Task;
+use App\Models\TaskLabel;
 use App\Services\GitHub\ProjectClient;
 use App\Services\GitHub\TaskSyncService;
 use Carbon\CarbonImmutable;
@@ -25,7 +26,7 @@ class TaskController extends Controller
         $projectId = $request->integer('project') ?: null;
         $priority  = $request->input('priority') ?: null;
 
-        $tasks = Task::with(['project', 'manualEntries'])
+        $tasks = Task::with(['project', 'manualEntries', 'labels', 'checkboxes', 'comments'])
             ->when($projectId, fn ($q) => $q->where('project_id', $projectId))
             ->when($priority, fn ($q) => $q->where('priority', $priority))
             ->orderBy('position')
@@ -39,6 +40,7 @@ class TaskController extends Controller
             'priorities' => TaskPriority::cases(),
             'tasks'      => $tasks,
             'projects'   => Project::orderBy('code')->get(),
+            'labels'     => TaskLabel::orderBy('position')->orderBy('title')->get(),
             'projectId'  => $projectId,
             'priority'   => $priority,
             'githubSync' => $github->isConfigured(),
@@ -67,16 +69,24 @@ class TaskController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $this->validateTask($request);
+        $labelIds = $data['label_ids'] ?? [];
+        unset($data['label_ids']);
         $data['position'] = (Task::where('status', $data['status'])->max('position') ?? -1) + 1;
 
-        Task::create($data);
+        $task = Task::create($data);
+        $task->labels()->sync($labelIds);
 
         return redirect()->route('tasks.index')->with('status', 'Tarea creada.');
     }
 
     public function update(Request $request, Task $task): RedirectResponse
     {
-        $task->update([...$this->validateTask($request), 'github_dirty' => true]);
+        $data = $this->validateTask($request);
+        $labelIds = $data['label_ids'] ?? [];
+        unset($data['label_ids']);
+
+        $task->update([...$data, 'github_dirty' => true]);
+        $task->labels()->sync($labelIds);
 
         return redirect()->route('tasks.index')->with('status', 'Tarea actualizada.');
     }
@@ -143,6 +153,8 @@ class TaskController extends Controller
             'status'      => ['required', Rule::enum(TaskStatus::class)],
             'priority'    => ['nullable', Rule::enum(TaskPriority::class)],
             'due_date'    => ['nullable', 'date'],
+            'label_ids'   => ['nullable', 'array'],
+            'label_ids.*' => ['integer', 'exists:task_labels,id'],
         ]);
     }
 }

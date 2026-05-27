@@ -2,7 +2,13 @@
     $overdue = $task->due_date
         && $task->status !== \App\Enums\TaskStatus::Done
         && $task->due_date->isPast() && ! $task->due_date->isToday();
-    $logged = $task->loggedMinutes();
+    $logged       = $task->loggedMinutes();
+    $taskLabels   = $task->labels;
+    $checkboxes   = $task->checkboxes;
+    $checkboxDone = $checkboxes->where('checked', true)->count();
+    $checkboxAll  = $checkboxes->count();
+    $comments     = $task->comments;
+    $hasChips     = $task->project || $task->priority || $task->due_date || $logged > 0 || $checkboxAll > 0 || $comments->isNotEmpty();
 @endphp
 <div class="task-card card p-2.5 cursor-grab active:cursor-grabbing"
      data-task-id="{{ $task->id }}"
@@ -11,13 +17,27 @@
      data-status="{{ $task->status->value }}"
      data-priority="{{ $task->priority?->value }}"
      data-project="{{ $task->project_id }}"
-     data-due="{{ $task->due_date?->format('Y-m-d') }}">
+     data-due="{{ $task->due_date?->format('Y-m-d') }}"
+     data-labels="{{ $taskLabels->pluck('id')->toJson() }}"
+     data-checkboxes="{{ $checkboxes->map(fn ($c) => ['id'=>$c->id,'title'=>$c->title,'checked'=>$c->checked])->toJson() }}"
+     data-comments="{{ $comments->map(fn ($c) => ['id'=>$c->id,'body'=>$c->body,'created_at'=>$c->created_at?->toIso8601String()])->toJson() }}">
     <div class="flex items-start justify-between gap-2">
         <p class="text-sm font-medium leading-snug">{{ $task->title }}</p>
         <button type="button" data-task-edit class="btn-ghost text-xs shrink-0 -mr-1 -mt-1"
                 title="Editar tarea" aria-label="Editar tarea">✎</button>
     </div>
-    @if ($task->project || $task->priority || $task->due_date || $logged > 0)
+
+    @if ($taskLabels->isNotEmpty())
+        <div class="flex flex-wrap gap-1 mt-2">
+            @foreach ($taskLabels as $label)
+                <span class="text-[11px] rounded-full px-2 py-0.5"
+                      style="background-color: color-mix(in srgb, {{ $label->color }} 15%, transparent);
+                             color: {{ $label->color }};">{{ $label->title }}</span>
+            @endforeach
+        </div>
+    @endif
+
+    @if ($hasChips)
         <div class="flex flex-wrap items-center gap-1 mt-2">
             @if ($task->project)
                 <span class="chip">
@@ -33,6 +53,13 @@
             @endif
             @if ($logged > 0)
                 <span class="chip" title="Tiempo registrado">⏱ {{ $logged >= 60 ? intdiv($logged, 60) . 'h ' . ($logged % 60) . 'm' : $logged . 'm' }}</span>
+            @endif
+            @if ($checkboxAll > 0)
+                <span class="chip {{ $checkboxDone === $checkboxAll ? 'text-emerald-600 dark:text-emerald-400' : '' }}"
+                      title="Subtareas" data-card-subtasks-badge>☑ {{ $checkboxDone }}/{{ $checkboxAll }}</span>
+            @endif
+            @if ($comments->isNotEmpty())
+                <span class="chip" title="Comentarios" data-card-comments-badge>💬 {{ $comments->count() }}</span>
             @endif
         </div>
     @endif
