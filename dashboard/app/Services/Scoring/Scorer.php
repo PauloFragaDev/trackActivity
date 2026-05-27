@@ -45,6 +45,21 @@ class Scorer
                 continue;
             }
 
+            // Override manual desde la UI (timeline → evidencia → editar evento):
+            // peso enorme al proyecto elegido por el usuario, sin reglas automáticas.
+            if ($event->project_id) {
+                $pid = (int) $event->project_id;
+                $scores[$pid] = ($scores[$pid] ?? 0) + 10000;
+                $contribsByProject[$pid] ??= [];
+                $contribsByProject[$pid][] = [
+                    'event_id'    => (int) $event->id,
+                    'weight'      => 10000,
+                    'signal_kind' => 'manual_override',
+                    'note'        => 'asignación manual desde el timeline',
+                ];
+                continue;
+            }
+
             $contributions = $this->resolver->contributionsFor($event);
             foreach ($contributions as $c) {
                 if ($c['weight'] <= 0) {

@@ -61,6 +61,17 @@
         @apply inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition;
         @apply bg-rose-600 text-white hover:bg-rose-500;
     }
+    /* Botón solo-icono: cuadrado, discreto, ideal para filas y barras. */
+    .icon-btn {
+        @apply inline-flex items-center justify-center rounded-md w-7 h-7 text-sm transition;
+        @apply text-ink-500 hover:bg-ink-100 hover:text-ink-900;
+        @apply dark:text-ink-400 dark:hover:bg-ink-800 dark:hover:text-ink-50;
+    }
+    /* Sutil "lift" al pasar el ratón sobre los botones primarios. */
+    .btn:not(:disabled):hover,
+    .btn-danger:not(:disabled):hover {
+        @apply shadow-md;
+    }
     .chip {
         @apply inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-mono;
         @apply bg-ink-100 text-ink-600;
@@ -92,13 +103,25 @@
 
     /* Modal nativo <dialog> */
     .modal {
-        @apply rounded-lg border p-5;
+        @apply rounded-lg border p-5 shadow-2xl;
         @apply bg-white border-ink-200 text-ink-900;
         @apply dark:bg-ink-900 dark:border-ink-800 dark:text-ink-100;
         width: min(34rem, calc(100vw - 2rem));
+        max-height: calc(100vh - 4rem);
+        overflow-y: auto;
     }
     .modal::backdrop {
         background-color: rgb(15 23 42 / 0.55);
+        backdrop-filter: blur(2px);
+    }
+    /* Chevron del select reemplazado por un SVG discreto. */
+    .select {
+        appearance: none;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23789'><path d='M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 111.08 1.04l-4.25 4.39a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z'/></svg>");
+        background-repeat: no-repeat;
+        background-position: right 0.6rem center;
+        background-size: 1rem;
+        padding-right: 2rem;
     }
     .modal[open] {
         animation: modal-pop 0.18s ease-out;

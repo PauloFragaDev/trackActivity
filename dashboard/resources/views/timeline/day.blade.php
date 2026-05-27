@@ -132,22 +132,38 @@
                                             $cwdHint = data_get($event->metadata, 'cwd_hint');
                                             $cmdHint = data_get($event->metadata, 'cmd_hint');
                                         @endphp
-                                        <li class="truncate">
-                                            <span class="text-faint">{{ \Carbon\Carbon::parse($event->occurred_at)->setTimezone($tz)->format('H:i:s') }}</span>
-                                            <span class="text-faint">[{{ $event->source }}]</span>
-                                            {{ $event->title ?? $event->repo_name ?? $event->url ?? $event->subject ?? '—' }}
-                                            @if ($event->branch)
-                                                <span class="text-faint">· {{ $event->branch }}</span>
-                                            @endif
-                                            @if ($event->modified_files)
-                                                <span class="text-faint">· +{{ $event->modified_files }}</span>
-                                            @endif
-                                            @if ($cwdHint)
-                                                <span class="text-faint">· 📂 {{ $cwdHint }}</span>
-                                            @endif
-                                            @if ($cmdHint)
-                                                <span class="text-faint">· ▶ {{ \Illuminate\Support\Str::limit($cmdHint, 80, '…') }}</span>
-                                            @endif
+                                        <li class="flex items-center gap-1 group">
+                                            <span class="truncate flex-1 min-w-0">
+                                                <span class="text-faint">{{ \Carbon\Carbon::parse($event->occurred_at)->setTimezone($tz)->format('H:i:s') }}</span>
+                                                <span class="text-faint">[{{ $event->source }}]</span>
+                                                {{ $event->title ?? $event->repo_name ?? $event->url ?? $event->subject ?? '—' }}
+                                                @if ($event->branch)
+                                                    <span class="text-faint">· {{ $event->branch }}</span>
+                                                @endif
+                                                @if ($event->modified_files)
+                                                    <span class="text-faint">· +{{ $event->modified_files }}</span>
+                                                @endif
+                                                @if ($cwdHint)
+                                                    <span class="text-faint">· 📂 {{ $cwdHint }}</span>
+                                                @endif
+                                                @if ($cmdHint)
+                                                    <span class="text-faint">· ▶ {{ \Illuminate\Support\Str::limit($cmdHint, 80, '…') }}</span>
+                                                @endif
+                                                @if ($event->project)
+                                                    <span class="chip ml-1" title="Atribuido manualmente">▶ {{ $event->project->code }}</span>
+                                                @endif
+                                            </span>
+                                            <button type="button" class="icon-btn opacity-0 group-hover:opacity-100 focus:opacity-100"
+                                                    data-event-edit
+                                                    data-id="{{ $event->id }}"
+                                                    data-time="{{ \Carbon\Carbon::parse($event->occurred_at)->setTimezone($tz)->format('H:i:s') }}"
+                                                    data-source="{{ $event->source }}"
+                                                    data-app="{{ $event->app }}"
+                                                    data-title="{{ $event->title ?? $event->repo_name ?? $event->url ?? $event->subject ?? '' }}"
+                                                    data-cwd="{{ $cwdHint }}"
+                                                    data-cmd="{{ $cmdHint }}"
+                                                    data-project-id="{{ $event->project_id }}"
+                                                    title="Editar evento" aria-label="Editar evento">✎</button>
                                         </li>
                                     @endforeach
                                     @if ($session['evidence']->count() > 30)
@@ -305,6 +321,44 @@
             <div class="flex items-center justify-end gap-2 pt-1">
                 <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
                 <button type="submit" class="btn">Añadir</button>
+            </div>
+        </form>
+    </dialog>
+
+    {{-- ─── Modal: editar un activity_event (asignar proyecto a mano) ─── --}}
+    <dialog id="event-edit" class="modal" data-event-edit-modal>
+        <div class="flex items-center justify-between mb-3">
+            <h3 class="text-base font-semibold">Editar evento</h3>
+            <button type="button" class="btn-ghost" data-modal-close aria-label="Cerrar">✕</button>
+        </div>
+
+        <dl class="text-sm space-y-1 mb-4">
+            <div class="flex gap-2"><dt class="w-20 shrink-0 text-muted">Hora</dt><dd data-event-time></dd></div>
+            <div class="flex gap-2"><dt class="w-20 shrink-0 text-muted">Fuente</dt><dd data-event-source></dd></div>
+            <div class="flex gap-2"><dt class="w-20 shrink-0 text-muted">App</dt><dd data-event-app class="flex-1 min-w-0 truncate"></dd></div>
+            <div class="flex gap-2"><dt class="w-20 shrink-0 text-muted">Título</dt><dd data-event-title class="flex-1 min-w-0 truncate"></dd></div>
+            <div class="flex gap-2 hidden" data-event-cwd-row><dt class="w-20 shrink-0 text-muted">Dir</dt><dd data-event-cwd class="flex-1 min-w-0 truncate font-mono text-xs"></dd></div>
+            <div class="flex gap-2 hidden" data-event-cmd-row><dt class="w-20 shrink-0 text-muted">Cmd</dt><dd data-event-cmd class="flex-1 min-w-0 truncate font-mono text-xs"></dd></div>
+        </dl>
+
+        <form method="POST" data-event-edit-form class="space-y-3">
+            @csrf
+            @method('PATCH')
+            <label class="label">
+                <span>Proyecto</span>
+                <select name="project_id" class="select mt-1">
+                    <option value="">— Sin proyecto (atribución automática) —</option>
+                    @foreach ($projects as $p)
+                        <option value="{{ $p->id }}">{{ $p->code }} · {{ $p->name }}</option>
+                    @endforeach
+                </select>
+            </label>
+            <p class="text-xs text-muted">
+                Al guardar, el bloque que contiene este evento se reatribuirá al proyecto elegido.
+            </p>
+            <div class="flex items-center justify-end gap-2 pt-1">
+                <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
+                <button type="submit" class="btn">Guardar</button>
             </div>
         </form>
     </dialog>
