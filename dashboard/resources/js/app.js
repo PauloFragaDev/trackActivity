@@ -253,7 +253,62 @@ window.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('reports-data')) {
         import('./reports.js').then((m) => m.initReports());
     }
+
+    initTaskTimer();
 });
+
+/**
+ * Cronómetro de tarea: tick del pill + handlers de los botones ▶/■.
+ * El estado vive en la BBDD; aquí solo refrescamos el contador y disparamos
+ * los endpoints REST. Tras start/stop recargamos la página para que el
+ * layout pinte el pill (o lo retire) y el timeline incorpore la entry nueva.
+ */
+function initTaskTimer() {
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+    const send = (url) =>
+        fetch(url, {
+            method: 'POST',
+            headers: { Accept: 'application/json' },
+            body: new URLSearchParams({ _token: csrf }),
+        });
+
+    // Tick del pill: actualiza HH:MM:SS basado en starts_at del data attr.
+    const pill = document.getElementById('timer-pill');
+    if (pill) {
+        const startedAt = new Date(pill.dataset.startsAt).getTime();
+        const elapsed   = pill.querySelector('[data-timer-elapsed]');
+        const pad       = (n) => String(n).padStart(2, '0');
+        const update = () => {
+            const sec = Math.max(0, Math.floor((Date.now() - startedAt) / 1000));
+            const h = Math.floor(sec / 3600);
+            const m = Math.floor((sec % 3600) / 60);
+            const s = sec % 60;
+            elapsed.textContent = `${pad(h)}:${pad(m)}:${pad(s)}`;
+        };
+        update();
+        setInterval(update, 1000);
+    }
+
+    // ▶ en las cards del Kanban: arranca el cronómetro y recarga la página
+    // para que el pill aparezca (y el anterior, si existía, lo sustituya).
+    document.querySelectorAll('[data-timer-start]').forEach((btn) => {
+        btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            await fetch('/timer/start', {
+                method: 'POST',
+                headers: { Accept: 'application/json' },
+                body: new URLSearchParams({ _token: csrf, task_id: btn.dataset.taskId }),
+            });
+            window.location.reload();
+        });
+    });
+
+    // ■ del pill: parar el cronómetro y recargar.
+    document.querySelector('[data-timer-stop]')?.addEventListener('click', async () => {
+        await send('/timer/stop');
+        window.location.reload();
+    });
+}
 
 function initEventEdit() {
     const modal  = document.getElementById('event-edit');

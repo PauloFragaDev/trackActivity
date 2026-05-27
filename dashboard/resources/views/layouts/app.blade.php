@@ -252,5 +252,23 @@
             </div>
         </form>
     </dialog>
+
+    {{-- Pill flotante del cronómetro de tarea (visible en cualquier página). --}}
+    @if (! empty($activeTimer))
+        <div id="timer-pill"
+             data-starts-at="{{ $activeTimer->starts_at->toIso8601String() }}"
+             class="fixed bottom-4 left-1/2 -translate-x-1/2 z-40
+                    card shadow-2xl px-3 py-2 flex items-center gap-2 text-sm">
+            <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span class="font-medium max-w-[18rem] truncate">
+                {{ $activeTimer->task?->title ?? 'Sin tarea' }}
+            </span>
+            <span class="font-mono text-faint" data-timer-elapsed>00:00:00</span>
+            <button type="button" class="icon-btn text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/30"
+                    data-timer-stop aria-label="Parar cronómetro" title="Parar cronómetro">
+                <x-icon name="close" class="w-3.5 h-3.5" />
+            </button>
+        </div>
+    @endif
 </body>
 </html>
