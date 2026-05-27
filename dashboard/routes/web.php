@@ -10,6 +10,7 @@ use App\Http\Controllers\ManualEntryController;
 use App\Http\Controllers\NoteController;
 use App\Http\Controllers\NoteFolderController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\TaskCheckboxController;
 use App\Http\Controllers\TaskCommentController;
 use App\Http\Controllers\TaskController;
@@ -37,6 +38,7 @@ Route::get('/week/{week}',  [TimelineController::class, 'week'])
     ->name('timeline.week');
 
 Route::get('/calendar',       [CalendarController::class, 'current'])->name('calendar.current');
+Route::get('/reports',        [ReportsController::class, 'index'])->name('reports.index');
 Route::get('/calendar/{ym}',  [CalendarController::class, 'month'])
     ->where('ym', '\d{4}-\d{2}')
     ->name('calendar.month');

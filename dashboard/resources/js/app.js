@@ -248,6 +248,11 @@ window.addEventListener('DOMContentLoaded', () => {
     if (document.querySelector('[data-event-edit-modal]')) {
         initEventEdit();
     }
+
+    // Vista de informes: Chart.js se carga de forma diferida solo en /reports.
+    if (document.getElementById('reports-data')) {
+        import('./reports.js').then((m) => m.initReports());
+    }
 });
 
 function initEventEdit() {
