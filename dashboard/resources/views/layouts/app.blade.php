@@ -39,6 +39,14 @@
         Saltar al contenido
     </a>
 
+    {{-- Botón hamburguesa (solo móvil) + overlay del drawer. --}}
+    <button id="mobile-menu-btn" type="button"
+            class="icon-btn bg-white dark:bg-ink-900 border divider shadow"
+            aria-label="Abrir menú">
+        <x-icon name="bars" class="w-5 h-5" />
+    </button>
+    <div id="mobile-sidebar-overlay" aria-hidden="true"></div>
+
     <div class="flex min-h-screen">
         {{-- ─────────────── Sidebar ─────────────── --}}
         <aside id="sidebar"
@@ -60,14 +68,16 @@
 
             <nav class="sidebar-full flex-1 overflow-y-auto p-2 space-y-0.5 text-sm">
                 {{-- Control del tracker (arranca/para el daemon Python) --}}
-                <form method="POST" action="{{ route('tracker.toggle') }}" class="mb-1">
+                <form method="POST" action="{{ route('tracker.toggle') }}" class="mb-1" data-loading-form>
                     @csrf
                     @php $running = $trackerRunning ?? false; @endphp
                     <button type="submit"
+                            data-loading-label="{{ $running ? 'Deteniendo' : 'Iniciando' }}"
                             class="w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm
-                                   border divider hover:bg-ink-100 dark:hover:bg-ink-800"
+                                   border divider hover:bg-ink-100 dark:hover:bg-ink-800
+                                   disabled:opacity-60 disabled:cursor-wait"
                             aria-label="{{ $running ? 'Detener tracker' : 'Iniciar tracker' }}">
-                        <span class="inline-block w-2 h-2 rounded-full {{ $running ? 'bg-emerald-500' : 'bg-ink-300 dark:bg-ink-700' }}"></span>
+                        <span class="inline-block w-2 h-2 rounded-full {{ $running ? 'bg-emerald-500 animate-pulse' : 'bg-ink-300 dark:bg-ink-700' }}"></span>
                         <span class="flex-1 text-left">{{ $running ? 'Tracker activo' : 'Tracker detenido' }}</span>
                         <span class="text-xs text-muted">{{ $running ? 'parar' : 'iniciar' }}</span>
                     </button>
@@ -216,10 +226,7 @@
     <dialog id="folder-new" class="modal">
         <form method="POST" action="{{ route('note-folders.store') }}" class="space-y-3">
             @csrf
-            <div class="flex items-center justify-between">
-                <h3 class="text-base font-semibold">Nueva carpeta</h3>
-                <button type="button" class="btn-ghost" data-modal-close aria-label="Cerrar">✕</button>
-            </div>
+            @include('layouts.partials.modal-header', ['title' => 'Nueva carpeta'])
             <label class="label">
                 <span>Nombre</span>
                 <input type="text" name="name" required maxlength="120" class="input mt-1" placeholder="Ideas, Trabajo…">

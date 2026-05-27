@@ -102,10 +102,7 @@
     <dialog id="manual-add" class="modal">
         <form method="POST" action="{{ route('manual-entries.store') }}" class="space-y-3">
             @csrf
-            <div class="flex items-center justify-between">
-                <h3 class="text-base font-semibold">Nueva entrada manual</h3>
-                <button type="button" class="btn-ghost" data-modal-close aria-label="Cerrar">✕</button>
-            </div>
+            @include('layouts.partials.modal-header', ['title' => 'Nueva entrada manual'])
             <input type="hidden" name="return" value="calendar">
             <label class="label">
                 <span>Día</span>

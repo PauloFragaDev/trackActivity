@@ -52,15 +52,19 @@ const SWAL_BASE = {
     },
 };
 
-/** Toast de feedback: entra y sale deslizándose desde abajo. */
-window.toast = (message) => {
+/**
+ * Toast de feedback. `variant` puede ser 'success' (por defecto), 'warn',
+ * 'error' o 'info' — cambia el color de la barra izquierda.
+ */
+window.toast = (message, variant = 'success') => {
+    const variantClass = variant === 'success' ? '' : ` app-toast--${variant}`;
     Toastify({
         text: message,
         ariaLive: 'polite',
         duration: 3200,
         gravity: 'bottom',
         position: 'center',
-        className: 'app-toast',
+        className: 'app-toast' + variantClass,
         close: false,
         stopOnFocus: true,
         offset: { x: 0, y: 24 },
@@ -78,6 +82,28 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('sidebar-toggle')?.addEventListener('click', () => {
         const collapsed = document.documentElement.classList.toggle('sidebar-collapsed');
         localStorage.setItem('sidebar', collapsed ? 'collapsed' : 'expanded');
+    });
+
+    // Sidebar móvil: hamburger + cierre al pulsar el overlay o un enlace.
+    const mobileOpen = () => document.documentElement.classList.add('sidebar-mobile-open');
+    const mobileClose = () => document.documentElement.classList.remove('sidebar-mobile-open');
+    document.getElementById('mobile-menu-btn')?.addEventListener('click', mobileOpen);
+    document.getElementById('mobile-sidebar-overlay')?.addEventListener('click', mobileClose);
+    document.querySelectorAll('#sidebar a, #sidebar [data-modal-open]').forEach((el) => {
+        el.addEventListener('click', mobileClose);
+    });
+
+    // Estado de carga en formularios marcados con data-loading-form: al
+    // enviarse, deshabilita y reescribe el texto de los submit buttons que
+    // lleven data-loading-label.
+    document.querySelectorAll('form[data-loading-form]').forEach((form) => {
+        form.addEventListener('submit', () => {
+            form.querySelectorAll('button[type="submit"][data-loading-label]').forEach((btn) => {
+                btn.disabled = true;
+                btn.dataset.originalText = btn.innerHTML;
+                btn.innerHTML = btn.dataset.loadingLabel + ' …';
+            });
+        });
     });
 
     // Paneles plegables de Notas (carpetas y lista).

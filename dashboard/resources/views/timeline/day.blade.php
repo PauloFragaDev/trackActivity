@@ -27,6 +27,34 @@
         </div>
     </div>
 
+    {{-- Mini-gantt: barra horizontal del día (00→24h) con cada sesión como bloque. --}}
+    @if (! empty($sessions))
+        <div class="card p-3 mb-6">
+            <div class="text-[10px] text-muted flex justify-between mb-1.5 px-0.5">
+                <span>0h</span><span>6h</span><span>12h</span><span>18h</span><span>24h</span>
+            </div>
+            <div class="relative h-6 bg-ink-100 dark:bg-ink-800 rounded overflow-hidden">
+                @foreach ($sessions as $s)
+                    @php
+                        $st  = $s['starts_at_local'];
+                        $en  = $s['ends_at_local'];
+                        $beg = $st->hour * 60 + $st->minute;
+                        $end = $en->hour * 60 + $en->minute;
+                        if ($end <= $beg) { $end = $beg + 1; }  // sesión que pasa de medianoche → recortar visualmente
+                        $left  = ($beg / 1440) * 100;
+                        $width = max(0.25, (($end - $beg) / 1440) * 100);
+                        $color = $s['project']?->color ?? '#94a3b8';
+                        $label = sprintf('%s–%s · %s', $st->format('H:i'), $en->format('H:i'), $s['project']?->code ?? 'Sin proyecto');
+                    @endphp
+                    <div class="absolute top-0 h-full rounded-sm transition hover:brightness-110"
+                         style="left: {{ $left }}%; width: {{ $width }}%;
+                                background-color: {{ $color }}; opacity: {{ $s['is_idle'] ? 0.25 : 0.75 }};"
+                         title="{{ $label }}"></div>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
     @if ($errors->any())
         <div id="form-errors" class="card p-4 mb-4 border-rose-400/60 text-rose-700 dark:text-rose-300">
             <ul class="list-disc pl-5 space-y-0.5 text-sm">
@@ -281,10 +309,7 @@
                             <form method="POST" action="{{ route('manual-entries.update', $entry) }}" class="space-y-3">
                                 @csrf
                                 @method('PATCH')
-                                <div class="flex items-center justify-between">
-                                    <h3 class="text-base font-semibold">Editar entrada manual</h3>
-                                    <button type="button" class="btn-ghost" data-modal-close aria-label="Cerrar">✕</button>
-                                </div>
+                                @include('layouts.partials.modal-header', ['title' => 'Editar entrada manual'])
                                 <input type="hidden" name="date" value="{{ $day->toDateString() }}">
                                 <input type="hidden" name="return" value="day">
                                 @include('timeline.partials.manual-entry-fields', ['entry' => $entry])
@@ -310,10 +335,7 @@
     <dialog id="manual-add" class="modal">
         <form method="POST" action="{{ route('manual-entries.store') }}" class="space-y-3">
             @csrf
-            <div class="flex items-center justify-between">
-                <h3 class="text-base font-semibold">Nueva entrada manual</h3>
-                <button type="button" class="btn-ghost" data-modal-close aria-label="Cerrar">✕</button>
-            </div>
+            @include('layouts.partials.modal-header', ['title' => 'Nueva entrada manual'])
             <p class="-mt-1 text-xs text-muted">Reunión, corrección de horas… para el {{ $day->format('d/m/Y') }}.</p>
             <input type="hidden" name="date" value="{{ $day->toDateString() }}">
             <input type="hidden" name="return" value="day">
@@ -327,10 +349,7 @@
 
     {{-- ─── Modal: editar un activity_event (asignar proyecto a mano) ─── --}}
     <dialog id="event-edit" class="modal" data-event-edit-modal>
-        <div class="flex items-center justify-between mb-3">
-            <h3 class="text-base font-semibold">Editar evento</h3>
-            <button type="button" class="btn-ghost" data-modal-close aria-label="Cerrar">✕</button>
-        </div>
+        @include('layouts.partials.modal-header', ['title' => 'Editar evento'])
 
         <dl class="text-sm space-y-1 mb-4">
             <div class="flex gap-2"><dt class="w-20 shrink-0 text-muted">Hora</dt><dd data-event-time></dd></div>

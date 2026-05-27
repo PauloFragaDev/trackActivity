@@ -139,6 +139,44 @@
         padding: 0.62rem 1rem;
         box-shadow: 0 14px 34px -12px rgb(0 0 0 / 0.45);
     }
+    .toastify.app-toast--warn   { border-left-color: #f59e0b; }
+    .toastify.app-toast--error  { border-left-color: #e11d48; }
+    .toastify.app-toast--info   { border-left-color: #3b82f6; }
+
+    /* Mini barra de progreso (subtareas en la card del Kanban). */
+    .subtask-bar {
+        @apply h-1 rounded-full bg-ink-100 dark:bg-ink-800 overflow-hidden mt-2;
+    }
+    .subtask-bar > span {
+        @apply block h-full bg-emerald-500 transition-all duration-200;
+    }
+
+    /* Drop zone visible en columnas Kanban cuando se arrastra encima. */
+    .task-list.is-drop-target {
+        background-color: rgb(16 185 129 / 0.08);
+        outline: 2px dashed rgb(16 185 129 / 0.4);
+        outline-offset: -4px;
+        border-radius: 0.5rem;
+    }
+    /* Card "ghost" durante el drag (clase asignada por SortableJS). */
+    .task-card.is-dragging-ghost {
+        opacity: 0.4;
+        background: rgb(16 185 129 / 0.06);
+    }
+
+    /* Banda izquierda con el color del proyecto en la tarjeta Kanban. */
+    .task-card[style*="--project-color"] {
+        position: relative;
+        padding-left: 0.8rem;
+    }
+    .task-card[style*="--project-color"]::before {
+        content: '';
+        position: absolute;
+        left: 0; top: 0; bottom: 0;
+        width: 3px;
+        border-radius: 0.5rem 0 0 0.5rem;
+        background-color: var(--project-color);
+    }
 
     /* Diálogos SweetAlert — alineados con el sistema de diseño */
     .swal2-popup.app-swal {
@@ -176,7 +214,7 @@
 
 /* Sidebar plegable */
 #sidebar {
-    transition: width 0.16s ease;
+    transition: width 0.16s ease, transform 0.2s ease-out;
 }
 html.sidebar-collapsed #sidebar {
     width: 3rem;
@@ -187,6 +225,36 @@ html.sidebar-collapsed #sidebar .sidebar-full {
 [data-icon-expand] { display: none; }
 html.sidebar-collapsed [data-icon-collapse] { display: none; }
 html.sidebar-collapsed [data-icon-expand]   { display: inline; }
+
+/* Sidebar en móvil: drawer con overlay. */
+#mobile-menu-btn,
+#mobile-sidebar-overlay { display: none; }
+@media (max-width: 767px) {
+    #sidebar {
+        position: fixed;
+        top: 0; bottom: 0; left: 0;
+        z-index: 50;
+        transform: translateX(-100%);
+    }
+    html.sidebar-mobile-open #sidebar {
+        transform: translateX(0);
+    }
+    #mobile-menu-btn {
+        display: inline-flex;
+        position: fixed;
+        top: 0.5rem; left: 0.5rem;
+        z-index: 30;
+    }
+    html.sidebar-mobile-open #mobile-sidebar-overlay {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.45);
+        z-index: 40;
+    }
+    /* Espacio arriba para que el hamburger no tape el contenido. */
+    main { padding-top: 2.75rem; }
+}
 
 /* Notas · panel de la lista de notas, plegable */
 #notes-list { transition: width 0.15s ease; }

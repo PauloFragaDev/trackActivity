@@ -10,7 +10,9 @@
     $comments     = $task->comments;
     $hasChips     = $task->project || $task->priority || $task->due_date || $logged > 0 || $checkboxAll > 0 || $comments->isNotEmpty();
 @endphp
-<div class="task-card card p-2.5 cursor-grab active:cursor-grabbing"
+<div class="task-card card p-2.5 cursor-grab active:cursor-grabbing transition hover:shadow-md
+            {{ $task->status === \App\Enums\TaskStatus::Done ? 'opacity-70' : '' }}"
+     @if ($task->project) style="--project-color: {{ $task->project->color }}" @endif
      data-task-id="{{ $task->id }}"
      data-title="{{ $task->title }}"
      data-description="{{ $task->description }}"
@@ -22,10 +24,18 @@
      data-checkboxes="{{ $checkboxes->map(fn ($c) => ['id'=>$c->id,'title'=>$c->title,'checked'=>$c->checked])->toJson() }}"
      data-comments="{{ $comments->map(fn ($c) => ['id'=>$c->id,'body'=>$c->body,'created_at'=>$c->created_at?->toIso8601String()])->toJson() }}">
     <div class="flex items-start justify-between gap-2">
-        <p class="text-sm font-medium leading-snug">{{ $task->title }}</p>
-        <button type="button" data-task-edit class="btn-ghost text-xs shrink-0 -mr-1 -mt-1"
-                title="Editar tarea" aria-label="Editar tarea">✎</button>
+        <p class="text-sm font-medium leading-snug {{ $task->status === \App\Enums\TaskStatus::Done ? 'line-through text-muted' : '' }}">{{ $task->title }}</p>
+        <button type="button" data-task-edit class="icon-btn shrink-0 -mr-1 -mt-1"
+                title="Editar tarea" aria-label="Editar tarea">
+            <x-icon name="edit" class="w-3.5 h-3.5" />
+        </button>
     </div>
+
+    @if ($checkboxAll > 0)
+        <div class="subtask-bar" title="{{ $checkboxDone }} de {{ $checkboxAll }} completadas">
+            <span style="width: {{ (int) round(100 * $checkboxDone / $checkboxAll) }}%"></span>
+        </div>
+    @endif
 
     @if ($taskLabels->isNotEmpty())
         <div class="flex flex-wrap gap-1 mt-2">
