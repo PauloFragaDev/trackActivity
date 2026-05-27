@@ -384,3 +384,50 @@ html.dark .timer-pill--long-break  { background-color: rgb(56 189 248 / 0.15); }
 .timer-dock--visible { display: flex !important; }
 html.sidebar-collapsed .timer-dock { justify-content: center; gap: 0.25rem; }
 html.sidebar-collapsed [data-timer-dock-title] { display: none; }
+
+/* Kanban v2 · columna colapsada — banda estrecha con título vertical. */
+.task-column { transition: min-width 0.15s; }
+.task-column--collapsed { min-width: 2.75rem; max-width: 2.75rem; min-height: 60vh; }
+.task-column--collapsed .task-column__chevron { transform: rotate(-90deg); display: inline-block; }
+.task-column--collapsed .task-column__body { display: none; }
+.task-column--collapsed .task-column__header {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    padding: 0.75rem 0.4rem;
+    justify-content: flex-start;
+    gap: 0.5rem;
+    border-bottom: none;
+}
+.task-column--collapsed .task-column__title { flex-direction: column; gap: 0.3rem; }
+.task-column--collapsed .task-column__sort { display: none; }
+.task-column--collapsed .task-column__header [data-modal-open] { display: none; }
+
+/* Sort activo: mostramos el botón en emerald. */
+.task-column--sorted .task-column__sort { color: #10b981; }
+
+/* Cards filtradas (búsqueda o filtro labels) — se ocultan sin colapsar columna. */
+.task-card.is-filtered-out { display: none; }
+
+/* Chip de filtro de label activo: fondo tintado. */
+.task-label-chip.is-active {
+    background-color: color-mix(in srgb, currentColor 18%, transparent);
+    font-weight: 600;
+}
+
+/* Editor de descripción (Crepe) en modal de tarea: altura razonable. */
+.task-desc-editor {
+    border: 1px solid;
+    border-radius: 0.375rem;
+    min-height: 8rem;
+    max-height: 24rem;
+    overflow-y: auto;
+}
+.task-desc-editor:not([hidden]) { display: block; }
+
+/* Inline-add: input discreto que se "ilumina" al enfocarse. */
+[data-task-inline-add] input {
+    transition: background-color 0.15s, border-color 0.15s;
+    background-color: transparent;
+}
+[data-task-inline-add] input:focus { background-color: var(--ink-50, rgb(248 250 252)); }
+html.dark [data-task-inline-add] input:focus { background-color: rgb(30 41 59 / 0.4); }

@@ -91,11 +91,50 @@ class TaskController extends Controller
         return redirect()->route('tasks.index')->with('status', 'Tarea actualizada.');
     }
 
+    /**
+     * "Archivar" — soft delete. La tarea sale del board pero puede recuperarse
+     * desde /tasks/archived. Para borrado definitivo, ver forceDestroy().
+     */
     public function destroy(Task $task): RedirectResponse
     {
         $task->delete();
 
-        return redirect()->route('tasks.index')->with('status', 'Tarea eliminada.');
+        return redirect()->route('tasks.index')->with('status', 'Tarea archivada.');
+    }
+
+    /** Lista las tareas archivadas (soft-deleted) con su proyecto y labels. */
+    public function archived(): View
+    {
+        $tasks = Task::onlyTrashed()
+            ->with(['project', 'labels'])
+            ->orderByDesc('deleted_at')
+            ->get();
+
+        return view('tasks.archived', [
+            'tasks' => $tasks,
+        ]);
+    }
+
+    /** Restaura una tarea archivada. */
+    public function restore(int $task): RedirectResponse
+    {
+        $t = Task::onlyTrashed()->findOrFail($task);
+        $t->restore();
+        // Al volver, dejamos status backlog para no resucitar en mitad de "Doing".
+        if ($t->status === TaskStatus::Done) {
+            // Si era Done, mantenemos completed_at; nada que tocar.
+        }
+
+        return redirect()->route('tasks.archived')->with('status', 'Tarea restaurada.');
+    }
+
+    /** Borra definitivamente una tarea ya archivada. */
+    public function forceDestroy(int $task): RedirectResponse
+    {
+        $t = Task::onlyTrashed()->findOrFail($task);
+        $t->forceDelete();
+
+        return redirect()->route('tasks.archived')->with('status', 'Tarea borrada para siempre.');
     }
 
     /** Mueve una tarea de columna / posición (endpoint AJAX del drag & drop). */

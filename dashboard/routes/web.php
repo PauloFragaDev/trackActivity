@@ -94,11 +94,14 @@ Route::delete('/note-folders/{noteFolder}', [NoteFolderController::class, 'destr
 
 // ─────────────────── Tareas (Kanban) ───────────────────
 Route::get('/tasks',                [TaskController::class, 'index'])->name('tasks.index');
+Route::get('/tasks/archived',       [TaskController::class, 'archived'])->name('tasks.archived');
 Route::post('/tasks',               [TaskController::class, 'store'])->name('tasks.store');
 Route::post('/tasks/sync',          [TaskController::class, 'sync'])->name('tasks.sync');
 Route::patch('/tasks/{task}',       [TaskController::class, 'update'])->name('tasks.update');
 Route::patch('/tasks/{task}/move',  [TaskController::class, 'move'])->name('tasks.move');
 Route::delete('/tasks/{task}',      [TaskController::class, 'destroy'])->name('tasks.destroy');
+Route::post('/tasks/{task}/restore',[TaskController::class, 'restore'])->name('tasks.restore');
+Route::delete('/tasks/{task}/force',[TaskController::class, 'forceDestroy'])->name('tasks.force-destroy');
 
 // Paleta de etiquetas del tablero
 Route::get('/task-labels',                  [TaskLabelController::class, 'index'])->name('task-labels.index');

@@ -5,7 +5,12 @@
 
 @section('content')
     <div class="mb-4 flex items-center justify-between gap-3 flex-wrap">
-        <h1 class="text-xl font-semibold tracking-tight">Tareas</h1>
+        <div class="flex items-center gap-3">
+            <h1 class="text-xl font-semibold tracking-tight">Tareas</h1>
+            <a href="{{ route('tasks.archived') }}" class="text-xs text-faint hover:underline">
+                Archivadas
+            </a>
+        </div>
         <div class="flex items-center gap-3 flex-wrap">
             @if ($githubSync)
                 <span class="text-xs text-faint">
@@ -35,6 +40,31 @@
         </div>
     </div>
 
+    {{-- Barra de búsqueda + chips de labels (filtrado client-side). JS persiste en localStorage. --}}
+    <div class="mb-4 flex items-center gap-3 flex-wrap" data-board-filters>
+        <div class="relative flex-1 min-w-[14rem] max-w-md">
+            <input type="search" data-task-search class="input text-sm pr-8"
+                   placeholder="Buscar por título…" autocomplete="off" aria-label="Buscar tareas">
+            <button type="button" class="absolute right-1.5 top-1/2 -translate-y-1/2 icon-btn w-7 h-7 hidden"
+                    data-task-search-clear aria-label="Limpiar búsqueda" title="Limpiar">
+                <x-icon name="close" class="w-3.5 h-3.5" />
+            </button>
+        </div>
+        @if ($labels->isNotEmpty())
+            <div class="flex items-center gap-1.5 flex-wrap" data-label-filters>
+                @foreach ($labels as $label)
+                    <button type="button" class="task-label-chip chip" data-label-filter="{{ $label->id }}"
+                            style="color: {{ $label->color }}; border: 1px solid color-mix(in srgb, {{ $label->color }} 35%, transparent);"
+                            title="Filtrar por «{{ $label->title }}»">
+                        {{ $label->title }}
+                    </button>
+                @endforeach
+                <button type="button" class="btn-ghost text-xs hidden" data-label-filters-clear>Limpiar</button>
+            </div>
+        @endif
+        <span class="text-xs text-faint" data-filter-summary></span>
+    </div>
+
     @if ($errors->any())
         <div id="form-errors" class="card p-4 mb-4 border-rose-400/60 text-rose-700 dark:text-rose-300">
             <ul class="list-disc pl-5 space-y-0.5 text-sm">
@@ -46,26 +76,46 @@
     <div data-task-board class="grid grid-cols-4 gap-3 items-start">
         @foreach ($columns as $col)
             @php $colTasks = $tasks->get($col->value, collect()); @endphp
-            <section class="card flex flex-col" style="min-height: 60vh">
-                <header class="flex items-center justify-between gap-2 p-3 border-b divider">
-                    <span class="text-sm font-medium">
+            <section class="card flex flex-col task-column" data-task-column="{{ $col->value }}" style="min-height: 60vh">
+                <header class="task-column__header flex items-center justify-between gap-1 p-3 border-b divider cursor-pointer select-none"
+                        data-task-column-toggle title="Plegar columna">
+                    <span class="task-column__title text-sm font-medium flex items-center gap-1.5">
+                        <span class="text-faint text-xs task-column__chevron" aria-hidden="true">▾</span>
                         {{ $col->label() }}
-                        <span class="text-faint">{{ $colTasks->count() }}</span>
+                        <span class="text-faint" data-column-count>{{ $colTasks->count() }}</span>
                     </span>
-                    <button type="button" class="btn-ghost text-sm" data-modal-open="#task-new"
-                            data-add-status="{{ $col->value }}" aria-label="Nueva tarea en {{ $col->label() }}">+</button>
-                </header>
-                <div class="task-list flex-1 p-2 space-y-2" data-task-list="{{ $col->value }}">
-                    @forelse ($colTasks as $task)
-                        @include('tasks.partials.card', ['task' => $task])
-                    @empty
-                        <button type="button"
-                                class="w-full text-xs text-faint hover:text-ink-600 dark:hover:text-ink-300
-                                       border border-dashed divider rounded-md py-3 transition"
-                                data-modal-open="#task-new" data-add-status="{{ $col->value }}">
-                            + añadir tarea
+                    <span class="flex items-center gap-0.5 shrink-0">
+                        <button type="button" class="icon-btn text-faint task-column__sort"
+                                data-task-column-sort title="Ordenar A-Z (toggle)"
+                                aria-label="Ordenar columna alfabéticamente"
+                                onclick="event.stopPropagation()">
+                            <span aria-hidden="true" class="text-[10px] font-mono">A↓</span>
                         </button>
-                    @endforelse
+                        <button type="button" class="icon-btn" data-modal-open="#task-new"
+                                data-add-status="{{ $col->value }}"
+                                onclick="event.stopPropagation()"
+                                aria-label="Nueva tarea en {{ $col->label() }}" title="Nueva tarea">
+                            <x-icon name="plus" class="w-3.5 h-3.5" />
+                        </button>
+                    </span>
+                </header>
+                <div class="task-column__body flex-1 flex flex-col">
+                    <div class="task-list flex-1 p-2 space-y-2" data-task-list="{{ $col->value }}">
+                        @foreach ($colTasks as $task)
+                            @include('tasks.partials.card', ['task' => $task])
+                        @endforeach
+                    </div>
+
+                    {{-- Inline-add al pie de la columna. Enter crea con el status de esta columna. --}}
+                    <form data-task-inline-add data-status="{{ $col->value }}"
+                          method="POST" action="{{ route('tasks.store') }}"
+                          class="p-2 pt-0">
+                        @csrf
+                        <input type="hidden" name="status" value="{{ $col->value }}">
+                        <input type="text" name="title" maxlength="200" required
+                               class="input text-sm bg-transparent border-dashed"
+                               placeholder="+ Añadir tarea — Enter">
+                    </form>
                 </div>
             </section>
         @endforeach
@@ -92,7 +142,7 @@
             @include('tasks.partials.form-fields')
             <div class="flex items-center justify-between gap-2 pt-1">
                 <button type="submit" form="task-delete-form" class="btn-ghost text-rose-600 dark:text-rose-400 text-sm inline-flex items-center gap-1">
-                    <x-icon name="trash" class="w-3.5 h-3.5" /> Eliminar
+                    <x-icon name="trash" class="w-3.5 h-3.5" /> Archivar
                 </button>
                 <div class="flex gap-2">
                     <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
@@ -102,7 +152,8 @@
         </form>
         {{-- Form de borrado aparte: el botón "Eliminar" lo envía vía form="…" --}}
         <form method="POST" id="task-delete-form" data-task-delete-form
-              data-confirm="¿Eliminar esta tarea?" data-confirm-button="Sí, eliminar">
+              data-confirm="¿Archivar esta tarea? La podrás restaurar desde /tasks/archived."
+              data-confirm-button="Sí, archivar">
             @csrf
             @method('DELETE')
         </form>
