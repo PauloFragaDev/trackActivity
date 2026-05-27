@@ -48,6 +48,51 @@
         </div>
     @endif
 
+    {{-- Pomodoro · meta diaria de foco + racha + CTA a la siguiente tarea --}}
+    <section class="mb-6">
+        @php
+            $pct       = $focusGoal > 0 ? min(100, (int) round(100 * $focusToday / $focusGoal)) : 0;
+            $goalMet   = $focusGoal > 0 && $focusToday >= $focusGoal;
+            $hasTimer  = ! empty($activeTimer);
+        @endphp
+        <div class="card p-4">
+            <div class="flex items-start justify-between gap-3 mb-2">
+                <div>
+                    <h2 class="text-sm font-semibold">Foco de hoy</h2>
+                    <p class="text-xs text-muted mt-0.5">
+                        {{ $fmt($focusToday) }} de {{ $focusGoal }}m
+                        @if ($goalMet)
+                            <span class="text-emerald-600 dark:text-emerald-400 ml-1">· meta alcanzada</span>
+                        @endif
+                    </p>
+                </div>
+                @if ($focusStreak > 0)
+                    <span class="chip shrink-0" title="Días seguidos cumpliendo la meta">🔥 {{ $focusStreak }} {{ $focusStreak === 1 ? 'día' : 'días' }}</span>
+                @endif
+            </div>
+
+            <div class="focus-goal-bar" role="progressbar" aria-valuenow="{{ $pct }}" aria-valuemin="0" aria-valuemax="100">
+                <span style="width: {{ $pct }}%"></span>
+            </div>
+
+            <div class="flex items-center justify-between gap-2 mt-3">
+                @if ($nextTask && ! $hasTimer)
+                    <button type="button"
+                            class="btn-ghost text-xs"
+                            data-timer-next-cta
+                            data-task-id="{{ $nextTask->id }}">
+                        ▶ Empezar siguiente: <span class="font-medium">{{ \Illuminate\Support\Str::limit($nextTask->title, 40, '…') }}</span>
+                    </button>
+                @elseif ($hasTimer)
+                    <span class="text-xs text-faint">Cronómetro activo — usa la pill inferior.</span>
+                @else
+                    <span class="text-xs text-faint">No tienes tareas pendientes.</span>
+                @endif
+                <a href="{{ route('settings.pomodoro') }}" class="text-xs text-faint hover:underline">Ajustes</a>
+            </div>
+        </div>
+    </section>
+
     {{-- Semana actual --}}
     <section class="mb-6">
         <h2 class="text-xs font-medium uppercase tracking-wider text-muted mb-2">Esta semana</h2>
