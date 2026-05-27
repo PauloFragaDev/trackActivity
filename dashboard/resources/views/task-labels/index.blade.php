@@ -8,14 +8,6 @@
         <p class="text-sm text-muted mt-1">Paleta global de etiquetas para las tareas del tablero.</p>
     </div>
 
-    @if ($errors->any())
-        <div id="form-errors" class="card p-4 mb-4 border-rose-400/60 text-rose-700 dark:text-rose-300">
-            <ul class="list-disc pl-5 space-y-0.5 text-sm">
-                @foreach ($errors->all() as $e)<li>{{ $e }}</li>@endforeach
-            </ul>
-        </div>
-    @endif
-
     {{-- Crear --}}
     <form method="POST" action="{{ route('task-labels.store') }}" class="card p-4 mb-5">
         @csrf
@@ -23,15 +15,20 @@
         <div class="flex items-end gap-3 flex-wrap">
             <label class="label flex-1 min-w-[12rem]">
                 <span>Título</span>
-                <input type="text" name="title" required maxlength="60" class="input mt-1" placeholder="ej. urgente, frontend, revisión">
+                <input type="text" name="title" required maxlength="60"
+                       value="{{ old('title') }}"
+                       class="input mt-1 @error('title') is-invalid @enderror"
+                       placeholder="ej. urgente, frontend, revisión">
+                <x-field-error name="title" />
             </label>
             <label class="label">
                 <span>Color</span>
-                <select name="color" class="select mt-1">
+                <select name="color" class="select mt-1 @error('color') is-invalid @enderror">
                     @foreach ($colors as $c)
-                        <option value="{{ $c['hex'] }}" style="background-color: {{ $c['hex'] }}1a; color: {{ $c['hex'] }}">{{ $c['name'] }}</option>
+                        <option value="{{ $c['hex'] }}" @selected(old('color') === $c['hex']) style="background-color: {{ $c['hex'] }}1a; color: {{ $c['hex'] }}">{{ $c['name'] }}</option>
                     @endforeach
                 </select>
+                <x-field-error name="color" />
             </label>
             <button type="submit" class="btn">Crear</button>
         </div>

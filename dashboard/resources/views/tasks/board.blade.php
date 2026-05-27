@@ -65,13 +65,8 @@
         <span class="text-xs text-faint" data-filter-summary></span>
     </div>
 
-    @if ($errors->any())
-        <div id="form-errors" class="card p-4 mb-4 border-rose-400/60 text-rose-700 dark:text-rose-300">
-            <ul class="list-disc pl-5 space-y-0.5 text-sm">
-                @foreach ($errors->all() as $e)<li>{{ $e }}</li>@endforeach
-            </ul>
-        </div>
-    @endif
+    {{-- Los errores de validación se muestran inline en cada campo
+         (ver tasks/partials/form-fields.blade.php + x-field-error). --}}
 
     <div data-task-board class="flex gap-3 items-start overflow-x-auto pb-2">
         @foreach ($columns as $col)
