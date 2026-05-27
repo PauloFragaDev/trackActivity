@@ -6,7 +6,10 @@
 </label>
 <label class="label">
     <span>Descripción</span>
-    <textarea name="description" rows="3" class="textarea mt-1" placeholder="Opcional"></textarea>
+    {{-- Crepe (Markdown WYSIWYG) se monta sobre [data-task-desc-editor] al abrir
+         el modal; el textarea queda oculto como campo del form y sincronizado. --}}
+    <div data-task-desc-editor class="task-desc-editor mt-1" hidden></div>
+    <textarea name="description" rows="3" class="textarea mt-1" placeholder="Opcional · usa Markdown"></textarea>
 </label>
 <div class="grid grid-cols-2 gap-3">
     <label class="label">

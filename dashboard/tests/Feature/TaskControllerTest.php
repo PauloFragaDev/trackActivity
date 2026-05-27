@@ -99,5 +99,72 @@ class TaskControllerTest extends TestCase
 
         $this->assertSame(90, $task->fresh()->loggedMinutes());
     }
+
+    public function test_inline_add_only_requires_title_and_status(): void
+    {
+        $this->post('/tasks', ['title' => 'Inline tarea', 'status' => 'todo'])
+            ->assertRedirect();
+
+        $task = Task::firstOrFail();
+        $this->assertSame('Inline tarea', $task->title);
+        $this->assertSame(TaskStatus::Todo, $task->status);
+        $this->assertNull($task->priority);
+        $this->assertNull($task->project_id);
+    }
+
+    public function test_archived_view_lists_only_trashed_tasks(): void
+    {
+        $kept   = Task::create(['title' => 'Activa',   'status' => 'todo']);
+        $gone   = Task::create(['title' => 'Vieja',    'status' => 'todo']);
+        $gone->delete();
+
+        $res = $this->get('/tasks/archived')->assertOk();
+        $res->assertSee('Vieja');
+        $res->assertDontSee('Activa');
+    }
+
+    public function test_archived_tasks_do_not_appear_in_board(): void
+    {
+        $gone = Task::create(['title' => 'No verás esto', 'status' => 'todo']);
+        $gone->delete();
+
+        $this->get('/tasks')->assertOk()->assertDontSee('No verás esto');
+    }
+
+    public function test_restore_brings_back_a_task(): void
+    {
+        $task = Task::create(['title' => 'Vuelve', 'status' => 'todo']);
+        $task->delete();
+        $this->assertSoftDeleted('tasks', ['id' => $task->id]);
+
+        $this->post("/tasks/{$task->id}/restore")
+            ->assertRedirect('/tasks/archived');
+
+        $this->assertNotSoftDeleted('tasks', ['id' => $task->id]);
+    }
+
+    public function test_force_destroy_removes_row_definitively(): void
+    {
+        $task = Task::create(['title' => 'Adiós', 'status' => 'todo']);
+        $task->delete();
+
+        $this->delete("/tasks/{$task->id}/force")
+            ->assertRedirect('/tasks/archived');
+
+        $this->assertDatabaseMissing('tasks', ['id' => $task->id]);
+    }
+
+    public function test_force_destroy_rejects_not_archived_task(): void
+    {
+        $task = Task::create(['title' => 'Aún viva', 'status' => 'todo']);
+
+        $this->delete("/tasks/{$task->id}/force")->assertNotFound();
+        $this->assertDatabaseHas('tasks', ['id' => $task->id, 'deleted_at' => null]);
+    }
+
+    public function test_archived_page_renders_when_empty(): void
+    {
+        $this->get('/tasks/archived')->assertOk()->assertSee('Sin tareas archivadas');
+    }
 }
 

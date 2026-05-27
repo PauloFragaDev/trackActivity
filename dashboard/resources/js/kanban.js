@@ -1,25 +1,44 @@
 /**
- * Tablero Kanban: alta/edición de tareas en modal, drag & drop entre
- * columnas (SortableJS) y subtareas gestionadas por AJAX desde el modal.
+ * Tablero Kanban v2: alta/edición en modal con Markdown (Crepe), drag & drop
+ * entre columnas (SortableJS), subtareas + comentarios AJAX, búsqueda libre,
+ * filtro por labels, inline-add por columna, colapsar columnas, auto-sort A-Z,
+ * y un sub-link "Archivadas".
+ *
+ * Toda la UX nueva (búsqueda, filtros, colapso, sort) es client-side con
+ * persistencia en localStorage — no toca BBDD.
  */
 import Sortable from 'sortablejs';
 
+// ─── localStorage helpers ──────────────────────────────
+const LS_SEARCH    = 'kanban-search';
+const LS_LABELS    = 'kanban-label-filters';
+const LS_COLLAPSED = 'kanban-collapsed-cols';
+const LS_SORTED    = 'kanban-sorted-cols';
+
+const readJson = (key, fallback) => {
+    try { return JSON.parse(localStorage.getItem(key) || '') ?? fallback; }
+    catch { return fallback; }
+};
+const writeJson = (key, value) => {
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* ignore */ }
+};
+
 export function initKanban() {
+    const board     = document.querySelector('[data-task-board]');
+    if (! board) return;
     const newModal  = document.getElementById('task-new');
     const editModal = document.getElementById('task-edit');
     const csrf      = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
 
-    /** Estado del modal de edición — ver renderSubtasks / renderComments. */
-    let edit = null;   // { card, taskId, checkboxes: [...], comments: [...] }
+    let edit = null;
+    let currentDescEditor = null; // instancia activa de Crepe (modal abierto)
 
-    // ── helpers ──────────────────────────────────────────────
     const escape = (s) => {
         const d = document.createElement('div');
         d.textContent = s ?? '';
         return d.innerHTML;
     };
 
-    /** POST con _method spoofing + CSRF — mismo patrón que el move del DnD. */
     const send = (url, method, params = {}) =>
         fetch(url, {
             method: 'POST',
@@ -27,12 +46,12 @@ export function initKanban() {
             body: new URLSearchParams({ _token: csrf, _method: method, ...params }),
         });
 
-    // ── Subtareas (modal de edición) ─────────────────────────
+    // ─── Subtareas ────────────────────────────────────────────
     const renderSubtasks = () => {
-        if (!edit || !editModal) return;
+        if (! edit || ! editModal) return;
         const list     = editModal.querySelector('[data-subtasks-list]');
         const progress = editModal.querySelector('[data-subtasks-progress]');
-        if (!list) return;
+        if (! list) return;
 
         const items = edit.checkboxes;
         const done  = items.filter((c) => c.checked).length;
@@ -46,31 +65,23 @@ export function initKanban() {
                         data-subtask-delete data-id="${c.id}" aria-label="Borrar subtarea">×</button>
             </li>
         `).join('');
-
         syncCardBadge();
     };
 
-    /** Mantiene la tarjeta del tablero al día con el estado actual del modal. */
     const syncCardBadge = () => {
-        if (!edit?.card) return;
+        if (! edit?.card) return;
         const items = edit.checkboxes;
         edit.card.dataset.checkboxes = JSON.stringify(
             items.map((c) => ({ id: c.id, title: c.title, checked: c.checked }))
         );
-
         const badge   = edit.card.querySelector('[data-card-subtasks-badge]');
         const chipRow = edit.card.querySelector('.flex.flex-wrap.items-center');
-        if (items.length === 0) {
-            badge?.remove();
-            return;
-        }
+        if (items.length === 0) { badge?.remove(); return; }
         const done = items.filter((c) => c.checked).length;
         const text = `☑ ${done}/${items.length}`;
         const cls  = `chip ${done === items.length ? 'text-emerald-600 dark:text-emerald-400' : ''}`;
-        if (badge) {
-            badge.textContent = text;
-            badge.className = cls;
-        } else if (chipRow) {
+        if (badge) { badge.textContent = text; badge.className = cls; }
+        else if (chipRow) {
             const span = document.createElement('span');
             span.setAttribute('data-card-subtasks-badge', '');
             span.title = 'Subtareas';
@@ -78,41 +89,36 @@ export function initKanban() {
             span.textContent = text;
             chipRow.appendChild(span);
         }
-        // Si no había chipRow (tarjeta sin metadatos previos), el badge
-        // aparecerá al refrescar la página — caso minoritario, aceptable.
     };
 
     const addSubtask = async (title) => {
-        if (!edit) return;
+        if (! edit) return;
         const res = await send(`/tasks/${edit.taskId}/checkboxes`, 'POST', { title });
         if (! res.ok) return;
         const item = await res.json();
-        edit.checkboxes.push({ id: item.id, title: item.title, checked: !!item.checked });
+        edit.checkboxes.push({ id: item.id, title: item.title, checked: !! item.checked });
         renderSubtasks();
     };
-
     const toggleSubtask = async (id, checked) => {
-        if (!edit) return;
+        if (! edit) return;
         const it = edit.checkboxes.find((c) => c.id == id);
-        if (!it) return;
+        if (! it) return;
         it.checked = checked;
-        renderSubtasks();   // optimista
+        renderSubtasks();
         await send(`/tasks/${edit.taskId}/checkboxes/${id}`, 'PATCH', { checked: checked ? '1' : '0' });
     };
-
     const deleteSubtask = async (id) => {
-        if (!edit) return;
+        if (! edit) return;
         edit.checkboxes = edit.checkboxes.filter((c) => c.id != id);
-        renderSubtasks();   // optimista
+        renderSubtasks();
         await send(`/tasks/${edit.taskId}/checkboxes/${id}`, 'DELETE');
     };
 
-    // ── Comentarios (modal de edición) ───────────────────────
+    // ─── Comentarios ──────────────────────────────────────────
     const renderComments = () => {
-        if (!edit || !editModal) return;
+        if (! edit || ! editModal) return;
         const list = editModal.querySelector('[data-comments-list]');
-        if (!list) return;
-
+        if (! list) return;
         list.innerHTML = edit.comments.map((c) => {
             const when = c.created_at ? new Date(c.created_at).toLocaleString('es') : '';
             return `
@@ -125,23 +131,17 @@ export function initKanban() {
                     <div class="text-xs text-faint mt-1">${escape(when)}</div>
                 </li>`;
         }).join('');
-
         syncCommentsBadge();
     };
-
     const syncCommentsBadge = () => {
-        if (!edit?.card) return;
+        if (! edit?.card) return;
         edit.card.dataset.comments = JSON.stringify(edit.comments);
         const badge = edit.card.querySelector('[data-card-comments-badge]');
         const chipRow = edit.card.querySelector('.flex.flex-wrap.items-center');
-        if (edit.comments.length === 0) {
-            badge?.remove();
-            return;
-        }
+        if (edit.comments.length === 0) { badge?.remove(); return; }
         const text = `💬 ${edit.comments.length}`;
-        if (badge) {
-            badge.textContent = text;
-        } else if (chipRow) {
+        if (badge) badge.textContent = text;
+        else if (chipRow) {
             const span = document.createElement('span');
             span.setAttribute('data-card-comments-badge', '');
             span.title = 'Comentarios';
@@ -150,37 +150,31 @@ export function initKanban() {
             chipRow.appendChild(span);
         }
     };
-
     const addComment = async (body) => {
-        if (!edit) return;
+        if (! edit) return;
         const res = await send(`/tasks/${edit.taskId}/comments`, 'POST', { body });
         if (! res.ok) return;
         const c = await res.json();
         edit.comments.push(c);
         renderComments();
     };
-
     const deleteComment = async (id) => {
-        if (!edit) return;
+        if (! edit) return;
         edit.comments = edit.comments.filter((c) => c.id != id);
         renderComments();
         await send(`/tasks/${edit.taskId}/comments/${id}`, 'DELETE');
     };
 
+    // ─── Modal de edición: handlers de subtareas y comentarios ────
     if (editModal) {
-        // Delegación: los handlers se mantienen aunque el contenido del <ul>
-        // se reescriba en cada render.
         const list = editModal.querySelector('[data-subtasks-list]');
         list?.addEventListener('change', (e) => {
-            if (e.target.matches('[data-subtask-toggle]')) {
-                toggleSubtask(e.target.dataset.id, e.target.checked);
-            }
+            if (e.target.matches('[data-subtask-toggle]')) toggleSubtask(e.target.dataset.id, e.target.checked);
         });
         list?.addEventListener('click', (e) => {
             const btn = e.target.closest('[data-subtask-delete]');
             if (btn) deleteSubtask(btn.dataset.id);
         });
-
         const addForm = editModal.querySelector('[data-subtasks-add]');
         addForm?.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -191,7 +185,6 @@ export function initKanban() {
             input.value = '';
         });
 
-        // Comentarios: delegación delete + submit del añadir.
         const commentsList = editModal.querySelector('[data-comments-list]');
         commentsList?.addEventListener('click', (e) => {
             const btn = e.target.closest('[data-comment-delete]');
@@ -208,20 +201,91 @@ export function initKanban() {
         });
     }
 
-    // ── "+" de cada columna preselecciona esa columna en el modal de alta ──
+    // ─── Crepe en descripción (montar al abrir / destruir al cerrar) ───
+    /**
+     * Monta Crepe sobre el div del modal usando el valor actual del textarea
+     * de descripción. Lazy-import del módulo (compartido con notes-editor.js).
+     */
+    async function mountDescEditor(modal) {
+        const mount    = modal?.querySelector('[data-task-desc-editor]');
+        const textarea = modal?.querySelector('textarea[name="description"]');
+        if (! mount || ! textarea) return;
+        // Si ya hay una instancia (modal reabierto sin cerrar bien), la destruimos.
+        await destroyDescEditor();
+        // Limpiar el div por si quedó algo de un montaje previo.
+        mount.innerHTML = '';
+        mount.removeAttribute('hidden');
+
+        try {
+            const [{ Crepe }] = await Promise.all([
+                import('@milkdown/crepe'),
+                import('@milkdown/crepe/theme/common/style.css'),
+                document.documentElement.classList.contains('dark')
+                    ? import('@milkdown/crepe/theme/frame-dark.css')
+                    : import('@milkdown/crepe/theme/frame.css'),
+            ]);
+            currentDescEditor = new Crepe({ root: mount, defaultValue: textarea.value || '' });
+            await currentDescEditor.create();
+            textarea.classList.add('hidden');
+            // Sincronización en cambio: mantenemos el textarea al día para el submit.
+            mount.addEventListener('input', syncDescTextarea);
+        } catch (err) {
+            console.error('Kanban: editor de descripción no disponible, se usa textarea.', err);
+            currentDescEditor = null;
+            mount.setAttribute('hidden', 'hidden');
+            textarea.classList.remove('hidden');
+        }
+    }
+
+    function syncDescTextarea() {
+        if (! currentDescEditor) return;
+        const textarea = (newModal?.contains(document.activeElement) ? newModal : editModal)
+            ?.querySelector('textarea[name="description"]')
+            // fallback: cualquier textarea con name=description visible en pantalla
+            ?? document.querySelector('dialog[open] textarea[name="description"]');
+        if (! textarea) return;
+        try { textarea.value = currentDescEditor.getMarkdown(); } catch { /* noop */ }
+    }
+
+    async function destroyDescEditor() {
+        if (! currentDescEditor) return;
+        try { await currentDescEditor.destroy(); } catch { /* ignore */ }
+        currentDescEditor = null;
+    }
+
+    // Cablear apertura/cierre para los dos modales.
+    [newModal, editModal].filter(Boolean).forEach((modal) => {
+        modal.addEventListener('close', () => {
+            destroyDescEditor();
+            // Limpiar el mount para volver al estado de partida.
+            const mount = modal.querySelector('[data-task-desc-editor]');
+            const textarea = modal.querySelector('textarea[name="description"]');
+            mount?.setAttribute('hidden', 'hidden');
+            mount && (mount.innerHTML = '');
+            textarea?.classList.remove('hidden');
+        });
+        // Antes de submit, sincronizar para que el form lleve el markdown.
+        modal.querySelector('form')?.addEventListener('submit', syncDescTextarea);
+    });
+
+    // ─── "+" de columna: preselecciona status y monta Crepe ────────
     document.querySelectorAll('[data-add-status]').forEach((btn) => {
         btn.addEventListener('click', () => {
             const select = newModal?.querySelector('[name="status"]');
             if (select) select.value = btn.dataset.addStatus;
+            const textarea = newModal?.querySelector('textarea[name="description"]');
+            if (textarea) textarea.value = '';
+            // Montar editor tras un tick para que el dialog ya esté en DOM.
+            requestAnimationFrame(() => mountDescEditor(newModal));
         });
     });
 
-    // ── ✎ de cada tarjeta: rellena y abre el modal de edición ──
+    // ─── ✎ de cada tarjeta: rellena y abre modal de edición ────────
     if (editModal) {
         const editForm = editModal.querySelector('[data-task-edit-form]');
         const delForm  = editModal.querySelector('[data-task-delete-form]');
 
-        document.querySelectorAll('[data-task-edit]').forEach((btn) => {
+        const wireEditButton = (btn) => {
             btn.addEventListener('click', () => {
                 const card = btn.closest('[data-task-id]');
                 if (! card || ! editForm) return;
@@ -255,11 +319,14 @@ export function initKanban() {
                 renderComments();
 
                 if (typeof editModal.showModal === 'function') editModal.showModal();
+                requestAnimationFrame(() => mountDescEditor(editModal));
             });
-        });
+        };
+
+        document.querySelectorAll('[data-task-edit]').forEach(wireEditButton);
     }
 
-    // ── Drag & drop entre columnas ───────────────────────────
+    // ─── Drag & drop entre columnas ────────────────────────────
     const clearDropTargets = () => {
         document.querySelectorAll('.task-list').forEach((l) => l.classList.remove('is-drop-target'));
     };
@@ -271,28 +338,181 @@ export function initKanban() {
             ghostClass: 'is-dragging-ghost',
             onMove: (evt) => {
                 clearDropTargets();
+                // Si la columna destino está colapsada, la auto-expandimos.
+                const col = evt.to.closest('[data-task-column]');
+                if (col?.classList.contains('task-column--collapsed')) {
+                    setCollapsed(col, false);
+                }
                 evt.to.classList.add('is-drop-target');
                 return true;
             },
             onEnd: (evt) => {
                 clearDropTargets();
                 if (evt.from === evt.to && evt.oldIndex === evt.newIndex) return;
-
                 const card   = evt.item;
                 const status = evt.to.dataset.taskList;
 
                 fetch(`/tasks/${card.dataset.taskId}/move`, {
                     method: 'POST',
                     body: new URLSearchParams({
-                        _token: csrf,
-                        _method: 'PATCH',
-                        status,
-                        position: String(evt.newIndex),
+                        _token: csrf, _method: 'PATCH', status, position: String(evt.newIndex),
                     }),
                 }).catch(() => {});
-
                 card.dataset.status = status;
+
+                // Mover desactiva el auto-sort de la columna destino (acción manual).
+                const targetCol = evt.to.closest('[data-task-column]');
+                if (targetCol?.classList.contains('task-column--sorted')) {
+                    setSorted(targetCol, false);
+                }
+                updateColumnCounts();
             },
+        });
+    });
+
+    // ─── Búsqueda libre + filtro por labels ────────────────────
+    const searchInput  = document.querySelector('[data-task-search]');
+    const searchClear  = document.querySelector('[data-task-search-clear]');
+    const labelChips   = document.querySelectorAll('[data-label-filter]');
+    const labelsClear  = document.querySelector('[data-label-filters-clear]');
+    const summary      = document.querySelector('[data-filter-summary]');
+
+    let activeLabels = new Set(readJson(LS_LABELS, []));
+    const restoredSearch = localStorage.getItem(LS_SEARCH) || '';
+
+    if (searchInput) searchInput.value = restoredSearch;
+    if (searchClear) searchClear.classList.toggle('hidden', ! restoredSearch);
+    labelChips.forEach((c) => {
+        if (activeLabels.has(parseInt(c.dataset.labelFilter, 10))) c.classList.add('is-active');
+    });
+    if (labelsClear) labelsClear.classList.toggle('hidden', activeLabels.size === 0);
+
+    function applyFilters() {
+        const q = (searchInput?.value || '').trim().toLowerCase();
+        const hasQ = q.length > 0;
+        const hasLabels = activeLabels.size > 0;
+        let visible = 0, hidden = 0;
+
+        document.querySelectorAll('.task-card').forEach((card) => {
+            let show = true;
+            if (hasQ) {
+                const title = (card.dataset.title || '').toLowerCase();
+                show = title.includes(q);
+            }
+            if (show && hasLabels) {
+                let ids = [];
+                try { ids = JSON.parse(card.dataset.labels || '[]'); } catch {}
+                // OR entre labels: con que tenga una de las activas, basta.
+                show = ids.some((id) => activeLabels.has(id));
+            }
+            card.classList.toggle('is-filtered-out', ! show);
+            if (show) visible++; else hidden++;
+        });
+
+        if (summary) {
+            summary.textContent = (hasQ || hasLabels)
+                ? `${visible} visible${visible === 1 ? '' : 's'} · ${hidden} oculta${hidden === 1 ? '' : 's'}`
+                : '';
+        }
+        updateColumnCounts();
+    }
+
+    function updateColumnCounts() {
+        document.querySelectorAll('[data-task-column]').forEach((col) => {
+            const total   = col.querySelectorAll('.task-card').length;
+            const hidden  = col.querySelectorAll('.task-card.is-filtered-out').length;
+            const counter = col.querySelector('[data-column-count]');
+            if (counter) counter.textContent = total - hidden;
+        });
+    }
+
+    searchInput?.addEventListener('input', () => {
+        try { localStorage.setItem(LS_SEARCH, searchInput.value); } catch {}
+        searchClear?.classList.toggle('hidden', searchInput.value.length === 0);
+        applyFilters();
+    });
+    searchClear?.addEventListener('click', () => {
+        if (! searchInput) return;
+        searchInput.value = '';
+        try { localStorage.removeItem(LS_SEARCH); } catch {}
+        searchClear.classList.add('hidden');
+        applyFilters();
+        searchInput.focus();
+    });
+    labelChips.forEach((chip) => {
+        chip.addEventListener('click', () => {
+            const id = parseInt(chip.dataset.labelFilter, 10);
+            if (activeLabels.has(id)) activeLabels.delete(id);
+            else activeLabels.add(id);
+            chip.classList.toggle('is-active', activeLabels.has(id));
+            writeJson(LS_LABELS, [...activeLabels]);
+            labelsClear?.classList.toggle('hidden', activeLabels.size === 0);
+            applyFilters();
+        });
+    });
+    labelsClear?.addEventListener('click', () => {
+        activeLabels.clear();
+        labelChips.forEach((c) => c.classList.remove('is-active'));
+        writeJson(LS_LABELS, []);
+        labelsClear.classList.add('hidden');
+        applyFilters();
+    });
+    applyFilters();
+
+    // ─── Inline-add por columna ────────────────────────────────
+    document.querySelectorAll('[data-task-inline-add]').forEach((form) => {
+        form.addEventListener('submit', (e) => {
+            const title = form.querySelector('input[name="title"]')?.value.trim();
+            if (! title) { e.preventDefault(); return; }
+            // Submit normal — el redirect del controller recarga el board.
+            // Para evitar perder filtros, ya está persistido en localStorage.
+        });
+    });
+
+    // ─── Colapsar columnas ──────────────────────────────────────
+    function setCollapsed(col, isCollapsed) {
+        col.classList.toggle('task-column--collapsed', isCollapsed);
+        const status = col.dataset.taskColumn;
+        const set = new Set(readJson(LS_COLLAPSED, []));
+        if (isCollapsed) set.add(status); else set.delete(status);
+        writeJson(LS_COLLAPSED, [...set]);
+    }
+    const initialCollapsed = new Set(readJson(LS_COLLAPSED, []));
+    document.querySelectorAll('[data-task-column]').forEach((col) => {
+        if (initialCollapsed.has(col.dataset.taskColumn)) {
+            col.classList.add('task-column--collapsed');
+        }
+        col.querySelector('[data-task-column-toggle]')?.addEventListener('click', (e) => {
+            // No colapsar si el click vino de un botón del header (sort, +).
+            if (e.target.closest('button[onclick]')) return;
+            setCollapsed(col, ! col.classList.contains('task-column--collapsed'));
+        });
+    });
+
+    // ─── Auto-sort A↓Z por columna ──────────────────────────────
+    function setSorted(col, isSorted) {
+        col.classList.toggle('task-column--sorted', isSorted);
+        const status = col.dataset.taskColumn;
+        const set = new Set(readJson(LS_SORTED, []));
+        if (isSorted) set.add(status); else set.delete(status);
+        writeJson(LS_SORTED, [...set]);
+        if (isSorted) reorderColumnAlpha(col);
+    }
+    function reorderColumnAlpha(col) {
+        const list = col.querySelector('[data-task-list]');
+        if (! list) return;
+        const cards = [...list.querySelectorAll('.task-card')];
+        cards.sort((a, b) => (a.dataset.title || '').localeCompare(b.dataset.title || '', 'es', { sensitivity: 'base' }));
+        cards.forEach((c) => list.appendChild(c));
+    }
+    const initialSorted = new Set(readJson(LS_SORTED, []));
+    document.querySelectorAll('[data-task-column]').forEach((col) => {
+        if (initialSorted.has(col.dataset.taskColumn)) {
+            col.classList.add('task-column--sorted');
+            reorderColumnAlpha(col);
+        }
+        col.querySelector('[data-task-column-sort]')?.addEventListener('click', () => {
+            setSorted(col, ! col.classList.contains('task-column--sorted'));
         });
     });
 }
