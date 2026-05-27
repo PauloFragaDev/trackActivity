@@ -16,6 +16,7 @@
     },
     "dependencies": {
         "@milkdown/crepe": "^7.21.1",
+        "chart.js": "^4.5.1",
         "sortablejs": "^1.15.7",
         "sweetalert2": "^11.26.24",
         "toastify-js": "^1.12.0"

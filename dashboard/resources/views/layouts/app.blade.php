@@ -97,7 +97,7 @@
                    class="block px-2 py-1.5 rounded {{ $navItem(['dashboard']) }}">Inicio</a>
 
                 {{-- Tracking --}}
-                <details class="group" @if (request()->routeIs('timeline.*', 'calendar.*')) open @endif>
+                <details class="group" @if (request()->routeIs('timeline.*', 'calendar.*', 'reports.*')) open @endif>
                     <summary class="flex items-center gap-1.5 px-2 py-1.5 rounded cursor-pointer select-none list-none
                                     text-[11px] uppercase tracking-wider text-muted hover:bg-ink-100 dark:hover:bg-ink-800">
                         <span class="text-[9px] transition-transform group-open:rotate-90">▸</span>
@@ -110,6 +110,8 @@
                            class="block px-2 py-1.5 rounded {{ $navItem(['timeline.this_week', 'timeline.week']) }}">Semana</a>
                         <a href="{{ route('calendar.current') }}"
                            class="block px-2 py-1.5 rounded {{ $navItem(['calendar.current', 'calendar.month']) }}">Mes</a>
+                        <a href="{{ route('reports.index') }}"
+                           class="block px-2 py-1.5 rounded {{ $navItem(['reports.*']) }}">Informes</a>
                     </div>
                 </details>
 
