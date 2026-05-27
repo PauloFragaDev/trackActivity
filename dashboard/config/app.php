@@ -56,6 +56,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | API REST · token Bearer
+    |--------------------------------------------------------------------------
+    |
+    | Token estático para autenticar clientes de la API REST single-user
+    | (extensión code-kanban, CLI propio, etc.). Si está vacío la API
+    | responde 503: explícito mejor que permitir bypass accidental.
+    |
+    */
+
+    'api_token' => env('API_TOKEN'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |
