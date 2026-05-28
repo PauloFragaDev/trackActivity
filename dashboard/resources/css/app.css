@@ -114,6 +114,28 @@
     .input.is-invalid, .select.is-invalid, .textarea.is-invalid {
         @apply border-rose-400 focus:ring-rose-400/40 focus:border-rose-400;
     }
+
+    /* Input group: wrapper para inputs con icono prefijo y/o sufijo.
+       Uso:
+         <div class="input-group">
+           <span class="input-group__prefix"><x-icon name="search"/></span>
+           <input class="input" />
+         </div>
+       El input compensa el padding-left automáticamente. */
+    .input-group { @apply relative; }
+    .input-group__prefix,
+    .input-group__suffix {
+        @apply absolute top-1/2 -translate-y-1/2 inline-flex items-center justify-center;
+        @apply text-ink-400 dark:text-ink-500 pointer-events-none;
+        width: 2rem;
+        height: 2.375rem;
+    }
+    .input-group__prefix { left: 0; }
+    .input-group__suffix { right: 0; pointer-events: auto; }
+    .input-group:has(.input-group__prefix) .input { padding-left: 2.25rem; }
+    .input-group:has(.input-group__suffix) .input { padding-right: 2.25rem; }
+    /* Sufijo clickable (botones tipo "limpiar"): cursor + hover. */
+    .input-group__suffix > button { pointer-events: auto; }
     /* Label = wrapper de un input. La etiqueta superior ya no es uppercase:
        más legible, sin esa estética "telegrama". */
     .label {
@@ -139,6 +161,11 @@
         width: min(40rem, calc(100vw - 2rem));
         max-height: calc(100vh - 4rem);
         overflow-y: auto;
+    }
+    /* Variante ancha para forms densos (task-edit con subtareas/comentarios,
+       proyectos con mucha config, etc.). */
+    .modal-lg {
+        width: min(52rem, calc(100vw - 2rem));
     }
     .modal::backdrop {
         background-color: rgb(15 23 42 / 0.55);
@@ -531,3 +558,85 @@ html.sidebar-collapsed [data-timer-dock-title] { display: none; }
 }
 [data-task-inline-add] input:focus { background-color: var(--ink-50, rgb(248 250 252)); }
 html.dark [data-task-inline-add] input:focus { background-color: rgb(30 41 59 / 0.4); }
+
+/* ─── Tom Select (selects buscables) ─────────────────────────────
+   Estilo manual para que coincidan exactamente con .input/.select de
+   la app, sin tener que importar el CSS por defecto de Tom Select. */
+.ts-wrapper { @apply text-sm; }
+.ts-wrapper.single .ts-control {
+    @apply w-full rounded-md px-3 py-2 text-sm transition cursor-pointer;
+    @apply bg-white border border-ink-200 text-ink-900;
+    @apply hover:border-ink-300;
+    @apply dark:bg-ink-800 dark:border-ink-700 dark:text-ink-100 dark:hover:border-ink-600;
+    min-height: 2.375rem;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    padding-right: 2rem;
+}
+.ts-wrapper.focus .ts-control {
+    @apply ring-2 ring-emerald-500/50 border-emerald-500;
+    @apply dark:border-emerald-400 dark:ring-emerald-400/40;
+    outline: none;
+}
+.ts-control > input {
+    @apply text-sm text-ink-900 dark:text-ink-100;
+    background: transparent !important;
+    border: none !important;
+    outline: none !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+}
+.ts-control > input::placeholder {
+    @apply text-ink-400 dark:text-ink-500;
+}
+.ts-wrapper.single .ts-control::after {
+    content: '';
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1rem;
+    height: 1rem;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%2394a3b8'><path d='M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 111.08 1.04l-4.25 4.39a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z'/></svg>");
+    background-repeat: no-repeat;
+    background-position: center;
+    pointer-events: none;
+}
+.ts-wrapper.single .ts-control { position: relative; }
+
+/* Dropdown de opciones */
+.ts-dropdown {
+    @apply rounded-md border shadow-lg overflow-hidden;
+    @apply bg-white border-ink-200 text-ink-900;
+    @apply dark:bg-ink-800 dark:border-ink-700 dark:text-ink-100;
+    margin-top: 4px;
+    font-size: 0.875rem;
+}
+.ts-dropdown .option {
+    @apply px-3 py-2 cursor-pointer transition-colors;
+}
+.ts-dropdown .option.active,
+.ts-dropdown .option:hover {
+    @apply bg-ink-100 dark:bg-ink-700;
+}
+.ts-dropdown .option.selected {
+    @apply bg-emerald-50 text-emerald-900;
+    @apply dark:bg-emerald-900/40 dark:text-emerald-100;
+}
+.ts-dropdown .option.selected.active {
+    @apply bg-emerald-100 dark:bg-emerald-800/60;
+}
+.ts-dropdown .no-results {
+    @apply px-3 py-2 text-muted text-xs italic;
+}
+/* Selección actual visible en el control */
+.ts-wrapper.single .ts-control .item {
+    @apply text-ink-900 dark:text-ink-100;
+}
+
+/* Inválido: borde rosa, igual que .input.is-invalid */
+.ts-wrapper.invalid .ts-control,
+select.is-invalid + .ts-wrapper .ts-control {
+    @apply border-rose-400;
+}

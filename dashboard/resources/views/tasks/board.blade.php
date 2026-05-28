@@ -24,7 +24,8 @@
                 </form>
             @endif
             <form method="GET" action="{{ route('tasks.index') }}" class="flex gap-2">
-                <select name="project" class="select text-sm" style="width:auto" onchange="this.form.submit()">
+                <select name="project" data-searchable
+                        class="select text-sm" style="min-width: 12rem" onchange="this.form.submit()">
                     <option value="">Todos los proyectos</option>
                     @foreach ($projects as $pr)
                         <option value="{{ $pr->id }}" @selected($projectId === $pr->id)>{{ $pr->code }} · {{ $pr->name }}</option>
@@ -42,13 +43,16 @@
 
     {{-- Barra de búsqueda + chips de labels (filtrado client-side). JS persiste en localStorage. --}}
     <div class="mb-4 flex items-center gap-3 flex-wrap" data-board-filters>
-        <div class="relative flex-1 min-w-[14rem] max-w-md">
-            <input type="search" data-task-search class="input text-sm pr-8"
+        <div class="input-group flex-1 min-w-[14rem] max-w-md">
+            <span class="input-group__prefix"><x-icon name="search" class="w-4 h-4" /></span>
+            <input type="search" data-task-search class="input text-sm"
                    placeholder="Buscar por título…" autocomplete="off" aria-label="Buscar tareas">
-            <button type="button" class="absolute right-1.5 top-1/2 -translate-y-1/2 icon-btn w-7 h-7 hidden"
-                    data-task-search-clear aria-label="Limpiar búsqueda" title="Limpiar">
-                <x-icon name="close" class="w-3.5 h-3.5" />
-            </button>
+            <span class="input-group__suffix hidden" data-task-search-clear-wrap>
+                <button type="button" class="icon-btn w-7 h-7"
+                        data-task-search-clear aria-label="Limpiar búsqueda" title="Limpiar">
+                    <x-icon name="close" class="w-3.5 h-3.5" />
+                </button>
+            </span>
         </div>
         @if ($labels->isNotEmpty())
             <div class="flex items-center gap-1.5 flex-wrap" data-label-filters>
@@ -129,12 +133,52 @@
         </form>
     </dialog>
 
-    <dialog id="task-edit" class="modal">
+    <dialog id="task-edit" class="modal modal-lg">
         @include('layouts.partials.modal-header', ['title' => 'Editar tarea'])
-        <form method="POST" data-task-edit-form class="space-y-3">
+        {{-- Form de borrado: oculto, recibe el submit del botón "Archivar". --}}
+        <form method="POST" id="task-delete-form" data-task-delete-form
+              data-confirm="¿Archivar esta tarea? La podrás restaurar desde /tasks/archived."
+              data-confirm-button="Sí, archivar">
+            @csrf
+            @method('DELETE')
+        </form>
+
+        <form method="POST" data-task-edit-form class="space-y-4">
             @csrf
             @method('PATCH')
             @include('tasks.partials.form-fields')
+
+            {{-- Subtareas — AJAX (kanban.js gestiona el listado y add/toggle/delete) --}}
+            <section data-task-subtasks class="pt-4 mt-2 border-t divider">
+                <div class="flex items-center justify-between mb-2">
+                    <h4 class="text-sm font-semibold flex items-center gap-1.5">
+                        <x-icon name="check" class="w-3.5 h-3.5 text-emerald-500" /> Subtareas
+                    </h4>
+                    <span class="text-xs text-faint font-mono" data-subtasks-progress></span>
+                </div>
+                <ul data-subtasks-list class="space-y-1 text-sm mb-2"></ul>
+                <form data-subtasks-add class="flex gap-1.5">
+                    <input type="text" name="title" required maxlength="200"
+                           class="input text-sm flex-1" placeholder="Nueva subtarea — Enter para añadir">
+                    <button type="submit" class="btn-ghost text-sm" aria-label="Añadir subtarea">
+                        <x-icon name="plus" class="w-3.5 h-3.5" />
+                    </button>
+                </form>
+            </section>
+
+            {{-- Comentarios — AJAX --}}
+            <section data-task-comments class="pt-4 mt-2 border-t divider">
+                <h4 class="text-sm font-semibold mb-2 flex items-center gap-1.5">
+                    <x-icon name="chat" class="w-3.5 h-3.5 text-sky-500" /> Comentarios
+                </h4>
+                <ul data-comments-list class="space-y-2 text-sm mb-2"></ul>
+                <form data-comments-add class="flex gap-1.5">
+                    <textarea name="body" required maxlength="5000" rows="2"
+                              class="textarea text-sm flex-1" placeholder="Añadir un comentario…"></textarea>
+                    <button type="submit" class="btn-ghost text-sm self-end" aria-label="Publicar comentario">Publicar</button>
+                </form>
+            </section>
+
             <div class="modal-footer flex items-center justify-between gap-2">
                 <button type="submit" form="task-delete-form" class="btn-ghost text-rose-600 dark:text-rose-400 text-sm inline-flex items-center gap-1">
                     <x-icon name="trash" class="w-3.5 h-3.5" /> Archivar
@@ -145,37 +189,5 @@
                 </div>
             </div>
         </form>
-        {{-- Form de borrado aparte: el botón "Eliminar" lo envía vía form="…" --}}
-        <form method="POST" id="task-delete-form" data-task-delete-form
-              data-confirm="¿Archivar esta tarea? La podrás restaurar desde /tasks/archived."
-              data-confirm-button="Sí, archivar">
-            @csrf
-            @method('DELETE')
-        </form>
-
-        {{-- Subtareas (gestionadas por AJAX desde kanban.js) --}}
-        <section data-task-subtasks class="mt-4 pt-4 border-t divider">
-            <div class="flex items-center justify-between mb-2">
-                <h4 class="text-sm font-semibold">Subtareas</h4>
-                <span class="text-xs text-faint" data-subtasks-progress></span>
-            </div>
-            <ul data-subtasks-list class="space-y-1 text-sm mb-2"></ul>
-            <form data-subtasks-add class="flex gap-1.5">
-                <input type="text" name="title" required maxlength="200"
-                       class="input text-sm flex-1" placeholder="Nueva subtarea — Enter para añadir">
-                <button type="submit" class="btn-ghost text-sm" aria-label="Añadir subtarea">+</button>
-            </form>
-        </section>
-
-        {{-- Comentarios (gestionados por AJAX desde kanban.js) --}}
-        <section data-task-comments class="mt-4 pt-4 border-t divider">
-            <h4 class="text-sm font-semibold mb-2">Comentarios</h4>
-            <ul data-comments-list class="space-y-2 text-sm mb-2"></ul>
-            <form data-comments-add class="flex gap-1.5">
-                <textarea name="body" required maxlength="5000" rows="2"
-                          class="textarea text-sm flex-1" placeholder="Añadir un comentario…"></textarea>
-                <button type="submit" class="btn-ghost text-sm self-end" aria-label="Publicar comentario">Publicar</button>
-            </form>
-        </section>
     </dialog>
 @endsection

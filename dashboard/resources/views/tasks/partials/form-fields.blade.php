@@ -9,12 +9,12 @@
 </label>
 <label class="label">
     <span>Descripción</span>
-    {{-- Crepe (Markdown WYSIWYG) se monta sobre [data-task-desc-editor] al abrir
-         el modal; el textarea queda oculto como campo del form y sincronizado. --}}
-    <div data-task-desc-editor class="task-desc-editor mt-1" hidden></div>
-    <textarea name="description" rows="3"
-              class="textarea mt-1 @error('description') is-invalid @enderror"
-              placeholder="Opcional · usa Markdown"></textarea>
+    {{-- Textarea plain de Markdown crudo, coherente con cómo guarda el .todo.kanban
+         la extensión code-kanban (texto sin renderizar). Fuente monospace para
+         que cualquier sintaxis (`código`, **negrita**) se lea bien al escribir. --}}
+    <textarea name="description" rows="5"
+              class="textarea mt-1 font-mono text-[13px] leading-relaxed @error('description') is-invalid @enderror"
+              placeholder="Markdown opcional · `código`, **negrita**, [enlaces](url)..."></textarea>
     <x-field-error name="description" />
 </label>
 <div class="grid grid-cols-2 gap-3">
@@ -39,7 +39,8 @@
     </label>
     <label class="label">
         <span>Proyecto</span>
-        <select name="project_id" class="select mt-1 @error('project_id') is-invalid @enderror">
+        <select name="project_id" data-searchable
+                class="select mt-1 @error('project_id') is-invalid @enderror">
             <option value="">— Sin proyecto —</option>
             @foreach ($projects as $pr)
                 <option value="{{ $pr->id }}">{{ $pr->code }} · {{ $pr->name }}</option>

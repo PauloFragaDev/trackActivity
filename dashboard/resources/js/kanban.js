@@ -1,8 +1,9 @@
 /**
- * Tablero Kanban v2: alta/edición en modal con Markdown (Crepe), drag & drop
- * entre columnas (SortableJS), subtareas + comentarios AJAX, búsqueda libre,
- * filtro por labels, inline-add por columna, colapsar columnas, auto-sort A-Z,
- * y un sub-link "Archivadas".
+ * Tablero Kanban v2: alta/edición en modal, drag & drop entre columnas
+ * (SortableJS), subtareas + comentarios AJAX, búsqueda libre, filtro por
+ * labels, inline-add por columna, colapsar columnas, auto-sort A-Z, y
+ * un sub-link "Archivadas". La descripción es un textarea Markdown plano
+ * (coherente con la extensión code-kanban).
  *
  * Toda la UX nueva (búsqueda, filtros, colapso, sort) es client-side con
  * persistencia en localStorage — no toca BBDD.
@@ -31,7 +32,6 @@ export function initKanban() {
     const csrf      = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
 
     let edit = null;
-    let currentDescEditor = null; // instancia activa de Crepe (modal abierto)
 
     const escape = (s) => {
         const d = document.createElement('div');
@@ -206,82 +206,13 @@ export function initKanban() {
         });
     }
 
-    // ─── Crepe en descripción (montar al abrir / destruir al cerrar) ───
-    /**
-     * Monta Crepe sobre el div del modal usando el valor actual del textarea
-     * de descripción. Lazy-import del módulo (compartido con notes-editor.js).
-     */
-    async function mountDescEditor(modal) {
-        const mount    = modal?.querySelector('[data-task-desc-editor]');
-        const textarea = modal?.querySelector('textarea[name="description"]');
-        if (! mount || ! textarea) return;
-        // Si ya hay una instancia (modal reabierto sin cerrar bien), la destruimos.
-        await destroyDescEditor();
-        // Limpiar el div por si quedó algo de un montaje previo.
-        mount.innerHTML = '';
-        mount.removeAttribute('hidden');
-
-        try {
-            const [{ Crepe }] = await Promise.all([
-                import('@milkdown/crepe'),
-                import('@milkdown/crepe/theme/common/style.css'),
-                document.documentElement.classList.contains('dark')
-                    ? import('@milkdown/crepe/theme/frame-dark.css')
-                    : import('@milkdown/crepe/theme/frame.css'),
-            ]);
-            currentDescEditor = new Crepe({ root: mount, defaultValue: textarea.value || '' });
-            await currentDescEditor.create();
-            textarea.classList.add('hidden');
-            // Sincronización en cambio: mantenemos el textarea al día para el submit.
-            mount.addEventListener('input', syncDescTextarea);
-        } catch (err) {
-            console.error('Kanban: editor de descripción no disponible, se usa textarea.', err);
-            currentDescEditor = null;
-            mount.setAttribute('hidden', 'hidden');
-            textarea.classList.remove('hidden');
-        }
-    }
-
-    function syncDescTextarea() {
-        if (! currentDescEditor) return;
-        const textarea = (newModal?.contains(document.activeElement) ? newModal : editModal)
-            ?.querySelector('textarea[name="description"]')
-            // fallback: cualquier textarea con name=description visible en pantalla
-            ?? document.querySelector('dialog[open] textarea[name="description"]');
-        if (! textarea) return;
-        try { textarea.value = currentDescEditor.getMarkdown(); } catch { /* noop */ }
-    }
-
-    async function destroyDescEditor() {
-        if (! currentDescEditor) return;
-        try { await currentDescEditor.destroy(); } catch { /* ignore */ }
-        currentDescEditor = null;
-    }
-
-    // Cablear apertura/cierre para los dos modales.
-    [newModal, editModal].filter(Boolean).forEach((modal) => {
-        modal.addEventListener('close', () => {
-            destroyDescEditor();
-            // Limpiar el mount para volver al estado de partida.
-            const mount = modal.querySelector('[data-task-desc-editor]');
-            const textarea = modal.querySelector('textarea[name="description"]');
-            mount?.setAttribute('hidden', 'hidden');
-            mount && (mount.innerHTML = '');
-            textarea?.classList.remove('hidden');
-        });
-        // Antes de submit, sincronizar para que el form lleve el markdown.
-        modal.querySelector('form')?.addEventListener('submit', syncDescTextarea);
-    });
-
-    // ─── "+" de columna: preselecciona status y monta Crepe ────────
+    // ─── "+" de columna: preselecciona el status ────────────────────
     document.querySelectorAll('[data-add-status]').forEach((btn) => {
         btn.addEventListener('click', () => {
             const select = newModal?.querySelector('[name="status"]');
             if (select) select.value = btn.dataset.addStatus;
             const textarea = newModal?.querySelector('textarea[name="description"]');
             if (textarea) textarea.value = '';
-            // Montar editor tras un tick para que el dialog ya esté en DOM.
-            requestAnimationFrame(() => mountDescEditor(newModal));
         });
     });
 
@@ -324,7 +255,6 @@ export function initKanban() {
                 renderComments();
 
                 if (typeof editModal.showModal === 'function') editModal.showModal();
-                requestAnimationFrame(() => mountDescEditor(editModal));
             });
         };
 
@@ -377,17 +307,21 @@ export function initKanban() {
     });
 
     // ─── Búsqueda libre + filtro por labels ────────────────────
-    const searchInput  = document.querySelector('[data-task-search]');
-    const searchClear  = document.querySelector('[data-task-search-clear]');
-    const labelChips   = document.querySelectorAll('[data-label-filter]');
-    const labelsClear  = document.querySelector('[data-label-filters-clear]');
-    const summary      = document.querySelector('[data-filter-summary]');
+    const searchInput     = document.querySelector('[data-task-search]');
+    const searchClear     = document.querySelector('[data-task-search-clear]');
+    // Wrapper del botón de limpiar (lo escondemos a él, no al botón):
+    // es el <span class="input-group__suffix"> que envuelve el botón.
+    const searchClearWrap = document.querySelector('[data-task-search-clear-wrap]')
+                         ?? searchClear;
+    const labelChips      = document.querySelectorAll('[data-label-filter]');
+    const labelsClear     = document.querySelector('[data-label-filters-clear]');
+    const summary         = document.querySelector('[data-filter-summary]');
 
     let activeLabels = new Set(readJson(LS_LABELS, []));
     const restoredSearch = localStorage.getItem(LS_SEARCH) || '';
 
     if (searchInput) searchInput.value = restoredSearch;
-    if (searchClear) searchClear.classList.toggle('hidden', ! restoredSearch);
+    if (searchClearWrap) searchClearWrap.classList.toggle('hidden', ! restoredSearch);
     labelChips.forEach((c) => {
         if (activeLabels.has(parseInt(c.dataset.labelFilter, 10))) c.classList.add('is-active');
     });
@@ -434,14 +368,14 @@ export function initKanban() {
 
     searchInput?.addEventListener('input', () => {
         try { localStorage.setItem(LS_SEARCH, searchInput.value); } catch {}
-        searchClear?.classList.toggle('hidden', searchInput.value.length === 0);
+        searchClearWrap?.classList.toggle('hidden', searchInput.value.length === 0);
         applyFilters();
     });
     searchClear?.addEventListener('click', () => {
         if (! searchInput) return;
         searchInput.value = '';
         try { localStorage.removeItem(LS_SEARCH); } catch {}
-        searchClear.classList.add('hidden');
+        searchClearWrap?.classList.add('hidden');
         applyFilters();
         searchInput.focus();
     });
