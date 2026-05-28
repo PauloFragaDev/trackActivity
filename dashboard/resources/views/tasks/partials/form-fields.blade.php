@@ -7,16 +7,32 @@
            placeholder="¿Qué hay que hacer?">
     <x-field-error name="title" />
 </label>
-<label class="label">
+<div class="label">
     <span>Descripción</span>
-    {{-- Textarea plain de Markdown crudo, coherente con cómo guarda el .todo.kanban
-         la extensión code-kanban (texto sin renderizar). Fuente monospace para
-         que cualquier sintaxis (`código`, **negrita**) se lea bien al escribir. --}}
-    <textarea name="description" rows="5"
-              class="textarea mt-1 font-mono text-[13px] leading-relaxed @error('description') is-invalid @enderror"
-              placeholder="Markdown opcional · `código`, **negrita**, [enlaces](url)..."></textarea>
+    {{-- Editor Markdown con tabs Editar / Vista previa (patrón GitHub Issues).
+         El textarea es la fuente de la verdad; el preview se renderiza
+         on-demand al cambiar de tab. Render en JS con `marked`.
+         Más detalle en resources/js/markdown-editor/README.md. --}}
+    <div class="markdown-editor" data-markdown-editor>
+        <div class="markdown-editor__tabs" role="tablist" aria-label="Modo de la descripción">
+            <button type="button" data-tab="edit" role="tab"
+                    aria-selected="true" tabindex="0"
+                    class="markdown-editor__tab is-active">Editar</button>
+            <button type="button" data-tab="preview" role="tab"
+                    aria-selected="false" tabindex="-1"
+                    class="markdown-editor__tab">Vista previa</button>
+        </div>
+        <div class="markdown-editor__panel" data-panel="edit">
+            <textarea name="description" rows="6"
+                      class="textarea font-mono text-[13px] leading-relaxed @error('description') is-invalid @enderror"
+                      placeholder="Markdown opcional · `código`, **negrita**, [enlace](url), - lista..."></textarea>
+        </div>
+        <div class="markdown-editor__panel" data-panel="preview" hidden>
+            <div data-markdown-preview class="markdown-editor__preview"></div>
+        </div>
+    </div>
     <x-field-error name="description" />
-</label>
+</div>
 <div class="grid grid-cols-2 gap-3">
     <label class="label">
         <span>Columna</span>

@@ -738,3 +738,183 @@ html.dark .combobox__option.is-selected.is-active {
     background-color: rgb(6 78 59 / 0.6);
 }
 html.dark .combobox__empty { color: rgb(148 163 184); }
+
+/* ─── Markdown editor (resources/js/markdown-editor) ──────────────────
+   Tabs Editar / Vista previa estilo GitHub Issues sobre un textarea. */
+
+.markdown-editor {
+    border: 1px solid rgb(229 231 235);             /* ink-200 */
+    border-radius: 0.375rem;
+    overflow: hidden;
+    background-color: white;
+}
+html.dark .markdown-editor {
+    border-color: rgb(51 65 85);                    /* ink-700 */
+    background-color: rgb(30 41 59);                /* ink-800 */
+}
+
+.markdown-editor__tabs {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    border-bottom: 1px solid rgb(229 231 235);
+    background-color: rgb(249 250 251);             /* ink-50 */
+}
+html.dark .markdown-editor__tabs {
+    border-bottom-color: rgb(51 65 85);
+    background-color: rgb(15 23 42 / 0.4);          /* ink-900 alpha */
+}
+
+.markdown-editor__tab {
+    padding: 0.55rem 0.9rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: rgb(75 85 99);                           /* ink-600 */
+    background: transparent;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: color 0.12s, border-color 0.12s;
+}
+.markdown-editor__tab:hover {
+    color: rgb(17 24 39);                           /* ink-900 */
+}
+.markdown-editor__tab.is-active {
+    color: rgb(6 95 70);                            /* emerald-800 */
+    border-bottom-color: rgb(16 185 129);           /* emerald-500 */
+    background-color: white;
+}
+html.dark .markdown-editor__tab           { color: rgb(148 163 184); }
+html.dark .markdown-editor__tab:hover     { color: rgb(241 245 249); }
+html.dark .markdown-editor__tab.is-active {
+    color: rgb(110 231 183);                        /* emerald-300 */
+    background-color: rgb(30 41 59);
+    border-bottom-color: rgb(52 211 153);           /* emerald-400 */
+}
+.markdown-editor__tab:focus-visible {
+    outline: 2px solid rgb(16 185 129 / 0.5);
+    outline-offset: -2px;
+}
+
+/* El textarea pierde su borde propio — lo da el wrapper. */
+.markdown-editor__panel textarea {
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent;
+    margin: 0;
+    resize: vertical;
+}
+.markdown-editor__panel textarea:focus {
+    box-shadow: none !important;
+    outline: none !important;
+}
+/* Foco visible en el wrapper cuando el textarea está enfocado. */
+.markdown-editor:focus-within {
+    border-color: rgb(16 185 129);
+    box-shadow: 0 0 0 2px rgb(16 185 129 / 0.4);
+}
+html.dark .markdown-editor:focus-within {
+    border-color: rgb(52 211 153);
+    box-shadow: 0 0 0 2px rgb(52 211 153 / 0.35);
+}
+
+/* Panel de preview: padding interior, altura mínima, tipografía
+   básica de Markdown renderizado. */
+.markdown-editor__preview {
+    padding: 0.75rem 0.875rem;
+    min-height: 9rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: rgb(17 24 39);
+    overflow-x: auto;
+}
+html.dark .markdown-editor__preview { color: rgb(226 232 240); }
+.markdown-editor__empty {
+    color: rgb(156 163 175);
+    font-style: italic;
+}
+html.dark .markdown-editor__empty { color: rgb(100 116 139); }
+
+/* Estilos de Markdown renderizado dentro del preview. Tampoco usamos
+   @tailwindcss/typography porque sería overkill — definimos solo lo
+   común (h*, p, code, listas, blockquote, tablas, enlaces). */
+.markdown-editor__preview h1,
+.markdown-editor__preview h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-top: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+.markdown-editor__preview h3,
+.markdown-editor__preview h4,
+.markdown-editor__preview h5,
+.markdown-editor__preview h6 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-top: 0.6rem;
+    margin-bottom: 0.4rem;
+}
+.markdown-editor__preview p { margin-bottom: 0.6rem; }
+.markdown-editor__preview p:last-child { margin-bottom: 0; }
+.markdown-editor__preview a {
+    color: rgb(5 150 105);                          /* emerald-600 */
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+html.dark .markdown-editor__preview a { color: rgb(52 211 153); }
+.markdown-editor__preview code {
+    padding: 0.05rem 0.35rem;
+    background-color: rgb(243 244 246);
+    border-radius: 0.25rem;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.8125rem;
+}
+html.dark .markdown-editor__preview code { background-color: rgb(51 65 85); }
+.markdown-editor__preview pre {
+    background-color: rgb(243 244 246);
+    padding: 0.75rem;
+    border-radius: 0.375rem;
+    overflow-x: auto;
+    margin-bottom: 0.6rem;
+    font-size: 0.8125rem;
+}
+.markdown-editor__preview pre code {
+    background: transparent;
+    padding: 0;
+    font-size: inherit;
+}
+html.dark .markdown-editor__preview pre { background-color: rgb(15 23 42); }
+.markdown-editor__preview ul,
+.markdown-editor__preview ol {
+    margin: 0 0 0.6rem 1.25rem;
+}
+.markdown-editor__preview ul { list-style: disc; }
+.markdown-editor__preview ol { list-style: decimal; }
+.markdown-editor__preview li { margin-bottom: 0.2rem; }
+.markdown-editor__preview blockquote {
+    border-left: 3px solid rgb(16 185 129);
+    padding: 0.15rem 0 0.15rem 0.75rem;
+    color: rgb(75 85 99);
+    margin-bottom: 0.6rem;
+}
+html.dark .markdown-editor__preview blockquote { color: rgb(148 163 184); }
+.markdown-editor__preview table {
+    border-collapse: collapse;
+    margin-bottom: 0.6rem;
+    font-size: 0.8125rem;
+}
+.markdown-editor__preview th,
+.markdown-editor__preview td {
+    border: 1px solid rgb(229 231 235);
+    padding: 0.35rem 0.55rem;
+}
+.markdown-editor__preview th { background-color: rgb(249 250 251); font-weight: 600; }
+html.dark .markdown-editor__preview th,
+html.dark .markdown-editor__preview td { border-color: rgb(51 65 85); }
+html.dark .markdown-editor__preview th { background-color: rgb(15 23 42); }
+.markdown-editor__preview hr {
+    border: 0;
+    border-top: 1px solid rgb(229 231 235);
+    margin: 0.75rem 0;
+}
+html.dark .markdown-editor__preview hr { border-top-color: rgb(51 65 85); }

@@ -283,6 +283,13 @@ window.addEventListener('DOMContentLoaded', () => {
     if (document.querySelector('select:not([data-no-combobox])')) {
         import('./combobox/index.js').then((m) => m.initComboboxes());
     }
+
+    // Markdown editor (tabs Editar / Vista previa). Sólo se carga si la
+    // página contiene algún [data-markdown-editor]. Detalle en
+    // resources/js/markdown-editor/README.md.
+    if (document.querySelector('[data-markdown-editor]')) {
+        import('./markdown-editor/index.js').then((m) => m.initMarkdownEditors());
+    }
 });
 
 function initEventEdit() {
