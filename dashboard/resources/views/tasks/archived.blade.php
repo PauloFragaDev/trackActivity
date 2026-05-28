@@ -12,13 +12,11 @@
     </div>
 
     @if ($tasks->isEmpty())
-        <div class="card p-10 text-center">
-            <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-ink-100 dark:bg-ink-800 text-ink-500 mb-3">
-                <x-icon name="trash" class="w-6 h-6" />
-            </div>
-            <h3 class="text-base font-semibold mb-1">Sin tareas archivadas</h3>
-            <p class="text-sm text-muted">Cuando archives una tarea aparecerá aquí.</p>
-        </div>
+        <x-empty-state
+            icon="trash"
+            title="Sin tareas archivadas"
+            text="Cuando archives una tarea aparecerá aquí." />
+
     @else
         <div class="card divide-y divider overflow-hidden">
             @foreach ($tasks as $task)
@@ -37,14 +35,16 @@
                             @endif
                             <span class="text-sm font-medium truncate">{{ $task->title }}</span>
                         </div>
-                        <div class="flex items-center gap-2 text-xs text-faint mt-1">
-                            <span>Archivada {{ $deleted?->locale('es')->diffForHumans() }}</span>
+                        <div class="flex items-center gap-2 text-xs mt-1">
+                            <span class="text-faint">Archivada</span>
+                            @if ($task->deleted_at)
+                                <x-timestamp :at="$task->deleted_at" />
+                            @endif
                             @if ($task->labels->isNotEmpty())
                                 <span>·</span>
                                 @foreach ($task->labels as $label)
-                                    <span class="text-[11px] rounded-full px-1.5 py-0.5"
-                                          style="background-color: color-mix(in srgb, {{ $label->color }} 12%, transparent);
-                                                 color: {{ $label->color }};">{{ $label->title }}</span>
+                                    <span class="text-[11px] rounded-full px-1.5 py-0.5 label-chip-tint"
+                                          style="--label-color: {{ $label->color }};">{{ $label->title }}</span>
                                 @endforeach
                             @endif
                         </div>

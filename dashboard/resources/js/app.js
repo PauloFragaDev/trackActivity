@@ -41,16 +41,29 @@ window.addEventListener('DOMContentLoaded', () => {
  * Configuración común de SweetAlert, alineada con el diseño de la app.
  * El aspecto del popup y de los botones se define en app.css
  * (.app-swal + las clases .btn-* de la app, gracias a buttonsStyling:false).
+ *
+ * `target` dinámico: si hay un <dialog> abierto, SweetAlert se renderiza
+ * dentro de él. Razón: los <dialog> nativos viven en el "top-layer" del
+ * navegador, encima de cualquier z-index del body. Si SweetAlert se
+ * monta en el body, queda DEBAJO del dialog (era el bug reportado).
+ * Montándolo dentro del dialog hereda su stacking context y se pinta
+ * por encima como toca.
  */
-const SWAL_BASE = {
-    buttonsStyling: false,
-    reverseButtons: true,
-    customClass: {
-        popup: 'app-swal',
-        confirmButton: 'btn-danger',
-        cancelButton: 'btn-ghost',
-    },
+const swalConfig = () => {
+    const openDialog = document.querySelector('dialog[open]');
+    return {
+        buttonsStyling: false,
+        reverseButtons: true,
+        customClass: {
+            popup: 'app-swal',
+            confirmButton: 'btn-danger',
+            cancelButton: 'btn-ghost',
+        },
+        ...(openDialog ? { target: openDialog } : {}),
+    };
 };
+// (Eliminado SWAL_BASE estático: todos los call sites usan swalConfig()
+//  para que el `target` se calcule en el momento de mostrar el swal.)
 
 /**
  * Toast de feedback. `variant` puede ser 'success' (por defecto), 'warn',
@@ -150,7 +163,7 @@ window.addEventListener('DOMContentLoaded', () => {
             if (form.dataset.confirmed === '1') return;   // ya confirmado: deja pasar
             e.preventDefault();
             Swal.fire({
-                ...SWAL_BASE,
+                ...swalConfig(),
                 title: form.dataset.confirmTitle || '¿Eliminar?',
                 text: form.dataset.confirm,
                 icon: 'warning',
@@ -175,8 +188,21 @@ window.addEventListener('DOMContentLoaded', () => {
             btn.addEventListener('click', () => dlg.close());
         });
         // Click en el backdrop (fuera del contenido) cierra el modal.
+        // Usamos detección por bounding rect en vez de `e.target === dlg`:
+        // el segundo método dispara también cuando el usuario clica en el
+        // padding interior del <dialog>, lo que provoca cierres accidentales
+        // al hacer click "dentro" del modal pero entre elementos.
         dlg.addEventListener('click', (e) => {
-            if (e.target === dlg) dlg.close();
+            // Los dropdowns de Choices.js viven en el DOM dentro del dialog,
+            // pero visualmente pueden sobresalir del bounding rect (selects
+            // cerca del borde inferior). Si el click cae sobre la UI de
+            // Choices, NO es un click en el backdrop — bail out.
+            if (e.target.closest('.choices')) return;
+
+            const rect = dlg.getBoundingClientRect();
+            const outsideHorizontal = e.clientX < rect.left || e.clientX > rect.right;
+            const outsideVertical   = e.clientY < rect.top  || e.clientY > rect.bottom;
+            if (outsideHorizontal || outsideVertical) dlg.close();
         });
     });
 
@@ -192,7 +218,7 @@ window.addEventListener('DOMContentLoaded', () => {
     if (overlapEl) {
         const overlap = JSON.parse(overlapEl.textContent);
         Swal.fire({
-            ...SWAL_BASE,
+            ...swalConfig(),
             title: 'Solapamiento de horario',
             text: overlap.message,
             icon: 'warning',
@@ -262,6 +288,12 @@ window.addEventListener('DOMContentLoaded', () => {
         document.querySelector('[data-timer-next-cta]')
     ) {
         import('./pomodoro.js').then((m) => m.initPomodoro());
+    }
+
+    // Choices.js sobre todos los <select> para uniformidad visual + búsqueda.
+    // Lazy-import: el chunk de la librería sólo se carga si hay selects.
+    if (document.querySelector('select:not([data-no-search])')) {
+        import('./select.js').then((m) => m.initSelects());
     }
 });
 

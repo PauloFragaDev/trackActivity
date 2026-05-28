@@ -9,12 +9,9 @@
 </label>
 <label class="label">
     <span>Descripción</span>
-    {{-- Crepe (Markdown WYSIWYG) se monta sobre [data-task-desc-editor] al abrir
-         el modal; el textarea queda oculto como campo del form y sincronizado. --}}
-    <div data-task-desc-editor class="task-desc-editor mt-1" hidden></div>
-    <textarea name="description" rows="3"
+    <textarea name="description" rows="5"
               class="textarea mt-1 @error('description') is-invalid @enderror"
-              placeholder="Opcional · usa Markdown"></textarea>
+              placeholder="Descripción de la tarea (opcional)"></textarea>
     <x-field-error name="description" />
 </label>
 <div class="grid grid-cols-2 gap-3">

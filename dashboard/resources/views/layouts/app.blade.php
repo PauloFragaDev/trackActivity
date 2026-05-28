@@ -101,7 +101,7 @@
                                text-ink-600 dark:text-ink-300 hover:bg-ink-100 dark:hover:bg-ink-800">
                     <span aria-hidden="true">🔍</span>
                     <span>Buscar</span>
-                    <span class="ml-auto text-[10px] text-faint">Ctrl K</span>
+                    <x-kbd class="ml-auto">Ctrl K</x-kbd>
                 </button>
 
                 {{-- Inicio --}}
@@ -275,7 +275,7 @@
                     @endforeach
                 </select>
             </label>
-            <div class="flex justify-end gap-2 pt-1">
+            <div class="modal-footer flex justify-end gap-2">
                 <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
                 <button type="submit" class="btn">Crear</button>
             </div>
@@ -373,7 +373,7 @@
                           class="input mt-1 w-full resize-y" placeholder="Opcional · qué hiciste, qué bloqueó, etc."></textarea>
             </label>
 
-            <div class="flex justify-between items-center pt-1">
+            <div class="modal-footer flex justify-between items-center">
                 <button type="button" class="btn-ghost text-xs" data-focus-skip>Saltar</button>
                 <button type="submit" class="btn">Guardar y continuar</button>
             </div>

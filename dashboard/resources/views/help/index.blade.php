@@ -397,7 +397,7 @@ php artisan schedule:work</code></pre>
             <li>Un aviso si el tracker lleva tiempo sin registrar actividad.</li>
         </ul>
         <p class="text-sm mt-3">
-            <strong>Paleta de comandos</strong>: pulsa <code class="chip">Ctrl/Cmd + K</code> (o
+            <strong>Paleta de comandos</strong>: pulsa <x-kbd>Ctrl K</x-kbd> / <x-kbd>⌘ K</x-kbd> (o
             «Buscar» en el menú lateral) para saltar a cualquier sección o nota al instante.
         </p>
     </section>

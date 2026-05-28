@@ -55,13 +55,10 @@
     </div>
 
     @if ($totalMinutes === 0)
-        <div class="card p-10 text-center">
-            <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-ink-100 dark:bg-ink-800 text-ink-500 mb-3">
-                <x-icon name="clock" class="w-6 h-6" />
-            </div>
-            <h3 class="text-base font-semibold mb-1">Sin datos para este periodo</h3>
-            <p class="text-sm text-muted">Asegúrate de que el tracker está en marcha o cambia de periodo.</p>
-        </div>
+        <x-empty-state
+            icon="clock"
+            title="Sin datos para este periodo"
+            text="Asegúrate de que el tracker está en marcha o cambia de periodo." />
     @else
         <div class="grid gap-4 md:grid-cols-2 mb-6">
             {{-- Por proyecto (CSS bars) --}}

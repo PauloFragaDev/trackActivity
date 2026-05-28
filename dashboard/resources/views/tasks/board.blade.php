@@ -23,32 +23,42 @@
                     </button>
                 </form>
             @endif
+            {{-- Filtros del board. Ancho fijo en wrappers para que Choices.js
+                 NO ajuste el control al texto seleccionado (provocaría que el
+                 layout salte cada vez que cambias de filtro). --}}
             <form method="GET" action="{{ route('tasks.index') }}" class="flex gap-2">
-                <select name="project" class="select text-sm" style="width:auto" onchange="this.form.submit()">
-                    <option value="">Todos los proyectos</option>
-                    @foreach ($projects as $pr)
-                        <option value="{{ $pr->id }}" @selected($projectId === $pr->id)>{{ $pr->code }} · {{ $pr->name }}</option>
-                    @endforeach
-                </select>
-                <select name="priority" class="select text-sm" style="width:auto" onchange="this.form.submit()">
-                    <option value="">Toda prioridad</option>
-                    @foreach ($priorities as $p)
-                        <option value="{{ $p->value }}" @selected($priority === $p->value)>{{ $p->label() }}</option>
-                    @endforeach
-                </select>
+                <div class="w-56">
+                    <select name="project" class="select text-sm" onchange="this.form.submit()">
+                        <option value="">Todos los proyectos</option>
+                        @foreach ($projects as $pr)
+                            <option value="{{ $pr->id }}" @selected($projectId === $pr->id)>{{ $pr->code }} · {{ $pr->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="w-44">
+                    <select name="priority" class="select text-sm" onchange="this.form.submit()">
+                        <option value="">Toda prioridad</option>
+                        @foreach ($priorities as $p)
+                            <option value="{{ $p->value }}" @selected($priority === $p->value)>{{ $p->label() }}</option>
+                        @endforeach
+                    </select>
+                </div>
             </form>
         </div>
     </div>
 
     {{-- Barra de búsqueda + chips de labels (filtrado client-side). JS persiste en localStorage. --}}
     <div class="mb-4 flex items-center gap-3 flex-wrap" data-board-filters>
-        <div class="relative flex-1 min-w-[14rem] max-w-md">
-            <input type="search" data-task-search class="input text-sm pr-8"
+        <div class="input-group flex-1 min-w-[14rem] max-w-md">
+            <span class="input-group__prefix"><x-icon name="search" class="w-4 h-4" /></span>
+            <input type="search" data-task-search class="input text-sm"
                    placeholder="Buscar por título…" autocomplete="off" aria-label="Buscar tareas">
-            <button type="button" class="absolute right-1.5 top-1/2 -translate-y-1/2 icon-btn w-7 h-7 hidden"
-                    data-task-search-clear aria-label="Limpiar búsqueda" title="Limpiar">
-                <x-icon name="close" class="w-3.5 h-3.5" />
-            </button>
+            <span class="input-group__suffix hidden" data-task-search-clear-wrap>
+                <button type="button" class="icon-btn w-7 h-7"
+                        data-task-search-clear aria-label="Limpiar búsqueda" title="Limpiar">
+                    <x-icon name="close" class="w-3.5 h-3.5" />
+                </button>
+            </span>
         </div>
         @if ($labels->isNotEmpty())
             <div class="flex items-center gap-1.5 flex-wrap" data-label-filters>
@@ -84,7 +94,7 @@
                                 data-task-column-sort title="Ordenar A-Z (toggle)"
                                 aria-label="Ordenar columna alfabéticamente"
                                 onclick="event.stopPropagation()">
-                            <span aria-hidden="true" class="text-[10px] font-mono">A↓</span>
+                            <x-icon name="sort-asc" class="w-3.5 h-3.5" />
                         </button>
                         <button type="button" class="icon-btn" data-modal-open="#task-new"
                                 data-add-status="{{ $col->value }}"
@@ -122,30 +132,24 @@
         <form method="POST" action="{{ route('tasks.store') }}" class="space-y-3">
             @csrf
             @include('tasks.partials.form-fields')
-            <div class="flex justify-end gap-2 pt-1">
+            <div class="modal-footer flex justify-end gap-2">
                 <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
                 <button type="submit" class="btn">Crear</button>
             </div>
         </form>
     </dialog>
 
-    <dialog id="task-edit" class="modal">
+    <dialog id="task-edit" class="modal modal-lg">
         @include('layouts.partials.modal-header', ['title' => 'Editar tarea'])
-        <form method="POST" data-task-edit-form class="space-y-3">
-            @csrf
-            @method('PATCH')
-            @include('tasks.partials.form-fields')
-            <div class="flex items-center justify-between gap-2 pt-1">
-                <button type="submit" form="task-delete-form" class="btn-ghost text-rose-600 dark:text-rose-400 text-sm inline-flex items-center gap-1">
-                    <x-icon name="trash" class="w-3.5 h-3.5" /> Archivar
-                </button>
-                <div class="flex gap-2">
-                    <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
-                    <button type="submit" class="btn">Guardar</button>
-                </div>
-            </div>
-        </form>
-        {{-- Form de borrado aparte: el botón "Eliminar" lo envía vía form="…" --}}
+
+        {{-- IMPORTANTE: forms NO se anidan en HTML5. El navegador los
+             des-anida en parse, lo que desconecta el botón Guardar de
+             su form y los del modal click-bubble al <dialog>.
+             Solución: cada form es hermano (no descendiente) del otro,
+             y los botones del footer apuntan con `form="ID"` al form
+             principal aunque estén fuera de él. --}}
+
+        {{-- Form 1: borrado (Archivar). Oculto, lo dispara el botón con form="task-delete-form". --}}
         <form method="POST" id="task-delete-form" data-task-delete-form
               data-confirm="¿Archivar esta tarea? La podrás restaurar desde /tasks/archived."
               data-confirm-button="Sí, archivar">
@@ -153,29 +157,59 @@
             @method('DELETE')
         </form>
 
-        {{-- Subtareas (gestionadas por AJAX desde kanban.js) --}}
-        <section data-task-subtasks class="mt-4 pt-4 border-t divider">
+        {{-- Form 2: principal. Submit con el botón "Guardar" del footer. --}}
+        <form method="POST" id="task-edit-main-form" data-task-edit-form class="space-y-4">
+            @csrf
+            @method('PATCH')
+            @include('tasks.partials.form-fields')
+        </form>
+
+        {{-- Subtareas: form aparte, gestionado por AJAX desde kanban.js. --}}
+        <section data-task-subtasks class="pt-4 mt-4 border-t divider">
             <div class="flex items-center justify-between mb-2">
-                <h4 class="text-sm font-semibold">Subtareas</h4>
-                <span class="text-xs text-faint" data-subtasks-progress></span>
+                <h4 class="text-sm font-semibold flex items-center gap-1.5">
+                    <x-icon name="check" class="w-3.5 h-3.5 text-emerald-500" /> Subtareas
+                </h4>
+                <span class="text-xs text-faint font-mono" data-subtasks-progress></span>
             </div>
             <ul data-subtasks-list class="space-y-1 text-sm mb-2"></ul>
-            <form data-subtasks-add class="flex gap-1.5">
+            <form data-subtasks-add class="input-group">
                 <input type="text" name="title" required maxlength="200"
-                       class="input text-sm flex-1" placeholder="Nueva subtarea — Enter para añadir">
-                <button type="submit" class="btn-ghost text-sm" aria-label="Añadir subtarea">+</button>
+                       class="input text-sm" placeholder="Nueva subtarea — Enter para añadir">
+                <span class="input-group__suffix">
+                    <button type="submit" class="icon-btn" aria-label="Añadir subtarea" title="Añadir">
+                        <x-icon name="plus" class="w-3.5 h-3.5" />
+                    </button>
+                </span>
             </form>
         </section>
 
-        {{-- Comentarios (gestionados por AJAX desde kanban.js) --}}
-        <section data-task-comments class="mt-4 pt-4 border-t divider">
-            <h4 class="text-sm font-semibold mb-2">Comentarios</h4>
+        {{-- Comentarios: form aparte, gestionado por AJAX. --}}
+        <section data-task-comments class="pt-4 mt-4 border-t divider">
+            <h4 class="text-sm font-semibold mb-2 flex items-center gap-1.5">
+                <x-icon name="chat" class="w-3.5 h-3.5 text-sky-500" /> Comentarios
+            </h4>
             <ul data-comments-list class="space-y-2 text-sm mb-2"></ul>
-            <form data-comments-add class="flex gap-1.5">
-                <textarea name="body" required maxlength="5000" rows="2"
-                          class="textarea text-sm flex-1" placeholder="Añadir un comentario…"></textarea>
-                <button type="submit" class="btn-ghost text-sm self-end" aria-label="Publicar comentario">Publicar</button>
+            <form data-comments-add class="space-y-2">
+                <textarea name="body" required maxlength="5000" rows="3"
+                          class="textarea text-sm w-full" placeholder="Añadir un comentario…"></textarea>
+                <div class="flex justify-end">
+                    <button type="submit" class="btn">Publicar</button>
+                </div>
             </form>
         </section>
+
+        {{-- Footer: los botones submit usan `form="ID"` para apuntar a sus forms
+             aunque vivan fuera de ellos. Esto es HTML estándar (HTML5 form attr). --}}
+        <div class="modal-footer flex items-center justify-between gap-2">
+            <button type="submit" form="task-delete-form"
+                    class="btn-ghost text-rose-600 dark:text-rose-400 text-sm inline-flex items-center gap-1">
+                <x-icon name="trash" class="w-3.5 h-3.5" /> Archivar
+            </button>
+            <div class="flex gap-2">
+                <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
+                <button type="submit" form="task-edit-main-form" class="btn">Guardar</button>
+            </div>
+        </div>
     </dialog>
 @endsection

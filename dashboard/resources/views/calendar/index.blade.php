@@ -110,7 +110,7 @@
                        value="{{ old('date', $formDate) }}">
             </label>
             @include('timeline.partials.manual-entry-fields', ['entry' => null])
-            <div class="flex items-center justify-end gap-2 pt-1">
+            <div class="modal-footer flex items-center justify-end gap-2">
                 <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
                 <button type="submit" class="btn">Añadir entrada</button>
             </div>

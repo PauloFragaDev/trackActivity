@@ -12,6 +12,10 @@
 @import '@fontsource/inter/latin-ext-700.css';
 @import '@fontsource/jetbrains-mono/latin-400.css';
 @import '@fontsource/jetbrains-mono/latin-500.css';
+/* CSS oficial de Choices.js (combobox sobre todos los <select>).
+   Más abajo solo retocamos colores y radius para que encaje con el
+   sistema; layout y comportamiento los pone este import. */
+@import 'choices.js/public/assets/styles/choices.css';
 
 @tailwind base;
 @tailwind components;
@@ -98,41 +102,136 @@
         @apply dark:bg-ink-900 dark:border-ink-800;
     }
 
-    /* Formularios */
+    /* Formularios — controles base.
+       rounded-md (6px) en vez de rounded (4px) para un look más suave y
+       acorde con cards/botones. Hover sutil para descubribilidad. Focus
+       con ring emerald más visible que antes (opacity 0.4 → 0.5). */
     .input, .select, .textarea {
-        @apply w-full rounded px-3 py-2 text-sm transition;
-        @apply bg-white border border-ink-300 text-ink-900 placeholder:text-ink-400;
-        @apply focus:outline-none focus:ring-2 focus:ring-emerald-400/40 focus:border-emerald-400/40;
+        @apply w-full rounded-md px-3 py-2 text-sm transition;
+        @apply bg-white border border-ink-200 text-ink-900 placeholder:text-ink-400;
+        @apply hover:border-ink-300;
+        @apply focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500;
         @apply dark:bg-ink-800 dark:border-ink-700 dark:text-ink-100 dark:placeholder:text-ink-500;
+        @apply dark:hover:border-ink-600 dark:focus:border-emerald-400 dark:focus:ring-emerald-400/40;
     }
-    /* Estado inválido: borde y ring rojos. Se aplica vía la utility
-       .is-invalid sobre el control (lo añade el Blade @error helper). */
+    /* Estado inválido. */
     .input.is-invalid, .select.is-invalid, .textarea.is-invalid {
-        @apply border-rose-400/80 focus:ring-rose-400/40 focus:border-rose-400/80;
+        @apply border-rose-400 focus:ring-rose-400/40 focus:border-rose-400;
     }
+
+    /* Input group: wrapper para inputs con icono prefijo y/o sufijo.
+       Uso:
+         <div class="input-group">
+           <span class="input-group__prefix"><x-icon name="search"/></span>
+           <input class="input" />
+         </div>
+       El input compensa el padding-left automáticamente. */
+    .input-group { @apply relative; }
+    .input-group__prefix,
+    .input-group__suffix {
+        @apply absolute top-1/2 -translate-y-1/2 inline-flex items-center justify-center;
+        @apply text-ink-400 dark:text-ink-500 pointer-events-none;
+        width: 2rem;
+        height: 2.375rem;
+    }
+    .input-group__prefix { left: 0; }
+    .input-group__suffix { right: 0; pointer-events: auto; }
+    .input-group:has(.input-group__prefix) .input { padding-left: 2.25rem; }
+    .input-group:has(.input-group__suffix) .input { padding-right: 2.25rem; }
+    /* Sufijo clickable (botones tipo "limpiar"): cursor + hover. */
+    .input-group__suffix > button { pointer-events: auto; }
+    /* Label = wrapper de un input. La etiqueta superior ya no es uppercase:
+       más legible, sin esa estética "telegrama". */
     .label {
         @apply block;
     }
     .label > span:first-child {
-        @apply text-xs uppercase tracking-wider;
-        @apply text-ink-500 dark:text-ink-400;
+        @apply text-sm font-medium block mb-1;
+        @apply text-ink-700 dark:text-ink-200;
     }
     .label > .input, .label > .select, .label > .textarea {
-        @apply mt-1;
+        @apply mt-0;
     }
 
-    /* Modal nativo <dialog> */
+    /* Modal nativo <dialog>.
+       width subido de 34rem a 40rem para forms complejos (task-edit con
+       subtareas + comentarios). Padding global p-6; los headers/footers
+       opcionales (.modal-header, .modal-footer) cancelan ese padding con
+       margen negativo para ocupar el ancho completo con un divider. */
     .modal {
-        @apply rounded-lg border p-5 shadow-2xl;
+        @apply rounded-lg border p-6 shadow-2xl;
         @apply bg-white border-ink-200 text-ink-900;
         @apply dark:bg-ink-900 dark:border-ink-800 dark:text-ink-100;
-        width: min(34rem, calc(100vw - 2rem));
+        width: min(40rem, calc(100vw - 2rem));
         max-height: calc(100vh - 4rem);
         overflow-y: auto;
+    }
+    /* Variante ancha para forms densos (task-edit con subtareas/comentarios,
+       proyectos con mucha config, etc.). */
+    .modal-lg {
+        width: min(52rem, calc(100vw - 2rem));
     }
     .modal::backdrop {
         background-color: rgb(15 23 42 / 0.55);
         backdrop-filter: blur(2px);
+    }
+    /* Header del modal: ancho completo + divider inferior. */
+    .modal-header {
+        @apply -mx-6 -mt-6 mb-5 px-6 pt-5 pb-4;
+        @apply flex items-center justify-between gap-3;
+        @apply border-b border-ink-200 dark:border-ink-800;
+    }
+    /* Footer opcional para grupos de botones de acción. Mantiene el
+       justify y gap que el modal ya tuviese; solo añade el divider
+       superior y el padding extendido a ancho completo. */
+    .modal-footer {
+        @apply -mx-6 -mb-6 mt-5 px-6 pt-4 pb-5;
+        @apply border-t border-ink-200 dark:border-ink-800;
+    }
+
+    /* Atajos de teclado: <kbd> con borde, fondo sutil, fuente monospace.
+       Pensado para audiencia técnica acostumbrada a leer combinaciones. */
+    .kbd {
+        @apply inline-flex items-center justify-center min-w-[1.4rem] h-5 px-1.5;
+        @apply text-[10px] font-mono font-medium leading-none;
+        @apply rounded border border-ink-200 dark:border-ink-700;
+        @apply bg-ink-50 dark:bg-ink-800;
+        @apply text-ink-700 dark:text-ink-300;
+    }
+
+    /* Empty state reutilizable. Padding amplio para que respire, icono
+       circular como ancla visual, tipografía coherente. */
+    .empty-state {
+        @apply card p-10 text-center;
+    }
+    .empty-state__icon {
+        @apply inline-flex items-center justify-center w-12 h-12 rounded-full mb-3;
+        @apply bg-ink-100 dark:bg-ink-800 text-ink-500 dark:text-ink-400;
+    }
+    .empty-state__title {
+        @apply text-base font-semibold mb-1;
+        @apply text-ink-900 dark:text-ink-100;
+    }
+    .empty-state__text {
+        @apply text-sm text-muted;
+    }
+    .empty-state__actions {
+        @apply mt-4 flex items-center justify-center gap-2;
+    }
+
+    /* Chip de label de tarea. Recibe el color del label via la variable
+       inline --label-color. El background-color se calcula con color-mix
+       sobre esa variable; la opacidad sube en dark mode porque colores
+       saturados pierden mucho contraste sobre fondo oscuro al 15%. */
+    .label-chip-tint {
+        background-color: color-mix(in srgb, var(--label-color) 18%, transparent);
+        color: var(--label-color);
+    }
+    html.dark .label-chip-tint {
+        background-color: color-mix(in srgb, var(--label-color) 32%, transparent);
+        /* Mezclamos también el color de texto con blanco para que un
+           label de tono oscuro (ej. #344563) siga siendo legible. */
+        color: color-mix(in srgb, var(--label-color) 50%, white);
     }
     /* Chevron del select reemplazado por un SVG discreto. */
     .select {
@@ -463,3 +562,161 @@ html.sidebar-collapsed [data-timer-dock-title] { display: none; }
 }
 [data-task-inline-add] input:focus { background-color: var(--ink-50, rgb(248 250 252)); }
 html.dark [data-task-inline-add] input:focus { background-color: rgb(30 41 59 / 0.4); }
+
+
+
+/* ─── Choices.js · overrides mínimos para alinear con el sistema ──
+   Solo retocamos colores, radius y dark mode. El layout completo lo
+   pone el CSS base importado en la cabecera. */
+
+.choices { margin-bottom: 0; }                 /* Choices añade 24px por defecto */
+
+.choices__inner {
+    background-color: white;
+    border: 1px solid rgb(229 231 235);        /* ink-200 */
+    border-radius: 0.375rem;
+    min-height: 2.375rem;
+    padding: 0.45rem 0.75rem;
+    font-size: 0.875rem;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+.choices__inner:hover { border-color: rgb(156 163 175); }       /* ink-300 */
+.choices.is-focused .choices__inner,
+.choices.is-open    .choices__inner {
+    border-color: rgb(16 185 129);                              /* emerald-500 */
+    box-shadow: 0 0 0 2px rgb(16 185 129 / 0.4);
+}
+.choices__list--single .choices__item {
+    padding: 0;
+    font-size: 0.875rem;
+}
+.choices__list--dropdown,
+.choices__list[aria-expanded] {
+    border: 1px solid rgb(229 231 235);
+    border-radius: 0.375rem;
+    margin-top: 4px;
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.12);
+    z-index: 60;                                                 /* sobre el modal */
+}
+.choices__list--dropdown .choices__item--selectable {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+}
+.choices__list--dropdown .choices__item--selectable.is-highlighted {
+    background-color: rgb(243 244 246);                          /* ink-100 */
+}
+.choices__list--dropdown .choices__input {
+    margin: 0;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid rgb(229 231 235);
+    background-color: transparent;
+    font-size: 0.8125rem;
+}
+.choices__placeholder { opacity: 0.6; }
+
+/* Modo oscuro */
+html.dark .choices__inner {
+    background-color: rgb(30 41 59);                             /* ink-800 */
+    border-color: rgb(51 65 85);                                 /* ink-700 */
+    color: rgb(241 245 249);
+}
+html.dark .choices__inner:hover { border-color: rgb(71 85 105); }
+html.dark .choices.is-focused .choices__inner,
+html.dark .choices.is-open    .choices__inner {
+    border-color: rgb(52 211 153);                               /* emerald-400 */
+    box-shadow: 0 0 0 2px rgb(52 211 153 / 0.35);
+}
+html.dark .choices__list--dropdown,
+html.dark .choices__list[aria-expanded] {
+    background-color: rgb(30 41 59);
+    border-color: rgb(51 65 85);
+    color: rgb(241 245 249);
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.4);
+}
+html.dark .choices__list--dropdown .choices__item--selectable.is-highlighted {
+    background-color: rgb(51 65 85);
+}
+html.dark .choices__list--dropdown .choices__input {
+    border-bottom-color: rgb(51 65 85);
+    color: rgb(241 245 249);
+}
+html.dark .choices__list--single .choices__item { color: rgb(241 245 249); }
+
+/* ─── Choices.js · overrides mínimos para alinear con el sistema ──
+   Solo retocamos colores, radius y dark mode. El layout completo lo
+   pone el CSS base importado en la cabecera. */
+
+.choices {
+    margin-bottom: 0;                          /* el default trae 24px que estorba */
+    width: 100%;                               /* tomar el ancho del wrapper del padre
+                                                  para evitar que ajuste al texto del
+                                                  item seleccionado */
+}
+
+.choices__inner {
+    background-color: white;
+    border: 1px solid rgb(229 231 235);        /* ink-200 */
+    border-radius: 0.375rem;
+    min-height: 2.375rem;
+    padding: 0.45rem 0.75rem;
+    font-size: 0.875rem;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+.choices__inner:hover { border-color: rgb(156 163 175); }       /* ink-300 */
+.choices.is-focused .choices__inner,
+.choices.is-open    .choices__inner {
+    border-color: rgb(16 185 129);                              /* emerald-500 */
+    box-shadow: 0 0 0 2px rgb(16 185 129 / 0.4);
+}
+.choices__list--single .choices__item { padding: 0; font-size: 0.875rem; }
+.choices__list--dropdown,
+.choices__list[aria-expanded] {
+    border: 1px solid rgb(229 231 235);
+    border-radius: 0.375rem;
+    margin-top: 4px;
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.12);
+    z-index: 60;                                                 /* sobre los dialogs */
+}
+.choices__list--dropdown .choices__item--selectable {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+}
+.choices__list--dropdown .choices__item--selectable.is-highlighted {
+    background-color: rgb(243 244 246);
+}
+.choices__list--dropdown .choices__input {
+    margin: 0;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid rgb(229 231 235);
+    background-color: transparent;
+    font-size: 0.8125rem;
+}
+.choices__placeholder { opacity: 0.6; }
+
+/* Modo oscuro */
+html.dark .choices__inner {
+    background-color: rgb(30 41 59);                             /* ink-800 */
+    border-color: rgb(51 65 85);                                 /* ink-700 */
+    color: rgb(241 245 249);
+}
+html.dark .choices__inner:hover { border-color: rgb(71 85 105); }
+html.dark .choices.is-focused .choices__inner,
+html.dark .choices.is-open    .choices__inner {
+    border-color: rgb(52 211 153);                               /* emerald-400 */
+    box-shadow: 0 0 0 2px rgb(52 211 153 / 0.35);
+}
+html.dark .choices__list--dropdown,
+html.dark .choices__list[aria-expanded] {
+    background-color: rgb(30 41 59);
+    border-color: rgb(51 65 85);
+    color: rgb(241 245 249);
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.4);
+}
+html.dark .choices__list--dropdown .choices__item--selectable.is-highlighted {
+    background-color: rgb(51 65 85);
+}
+html.dark .choices__list--dropdown .choices__input {
+    border-bottom-color: rgb(51 65 85);
+    color: rgb(241 245 249);
+}
+html.dark .choices__list--single .choices__item { color: rgb(241 245 249); }

@@ -257,7 +257,7 @@
                     @endforeach
                 </select>
             </label>
-            <div class="flex justify-end gap-2 pt-1">
+            <div class="modal-footer flex justify-end gap-2">
                 <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
                 <button type="submit" class="btn">Crear</button>
             </div>
@@ -279,7 +279,7 @@
                     <span>Icono</span>
                     <div class="mt-1">@include('notes.partials.icon-field', ['value' => $currentFolder->icon])</div>
                 </label>
-                <div class="flex justify-end gap-2 pt-1">
+                <div class="modal-footer flex justify-end gap-2">
                     <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
                     <button type="submit" class="btn">Guardar</button>
                 </div>
