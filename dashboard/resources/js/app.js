@@ -188,8 +188,15 @@ window.addEventListener('DOMContentLoaded', () => {
             btn.addEventListener('click', () => dlg.close());
         });
         // Click en el backdrop (fuera del contenido) cierra el modal.
+        // Usamos detección por bounding rect en vez de `e.target === dlg`:
+        // el segundo método dispara también cuando el usuario clica en el
+        // padding interior del <dialog>, lo que provoca cierres accidentales
+        // al hacer click "dentro" del modal pero entre elementos.
         dlg.addEventListener('click', (e) => {
-            if (e.target === dlg) dlg.close();
+            const rect = dlg.getBoundingClientRect();
+            const outsideHorizontal = e.clientX < rect.left || e.clientX > rect.right;
+            const outsideVertical   = e.clientY < rect.top  || e.clientY > rect.bottom;
+            if (outsideHorizontal || outsideVertical) dlg.close();
         });
     });
 
@@ -282,13 +289,6 @@ window.addEventListener('DOMContentLoaded', () => {
     // contrato están en resources/js/combobox/README.md.
     if (document.querySelector('select:not([data-no-combobox])')) {
         import('./combobox/index.js').then((m) => m.initComboboxes());
-    }
-
-    // Markdown editor (tabs Editar / Vista previa). Sólo se carga si la
-    // página contiene algún [data-markdown-editor]. Detalle en
-    // resources/js/markdown-editor/README.md.
-    if (document.querySelector('[data-markdown-editor]')) {
-        import('./markdown-editor/index.js').then((m) => m.initMarkdownEditors());
     }
 });
 
