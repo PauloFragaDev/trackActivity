@@ -39,12 +39,17 @@ export function initKanban() {
         return d.innerHTML;
     };
 
-    const send = (url, method, params = {}) =>
-        fetch(url, {
+    const send = (url, method, params = {}) => {
+        // Marca de mutación propia: el polling JS la usa para no recargar
+        // por un cambio que YO mismo acabo de hacer (drag, subtask toggle,
+        // comentario, etc.). Ver `initLivePolling`.
+        window.__taskMutationAt = Date.now();
+        return fetch(url, {
             method: 'POST',
             headers: { Accept: 'application/json' },
             body: new URLSearchParams({ _token: csrf, _method: method, ...params }),
         });
+    };
 
     // ─── Subtareas ────────────────────────────────────────────
     const renderSubtasks = () => {
@@ -352,6 +357,7 @@ export function initKanban() {
                 const card   = evt.item;
                 const status = evt.to.dataset.taskList;
 
+                window.__taskMutationAt = Date.now();
                 fetch(`/tasks/${card.dataset.taskId}/move`, {
                     method: 'POST',
                     body: new URLSearchParams({
@@ -540,12 +546,22 @@ export function initKanban() {
 
         let pendingReload = false;
         let lastSeen = null;
+        // Ventana de gracia tras una mutación propia (drag, AJAX) para que
+        // el polling no haga reload por un cambio que YO mismo acabo de
+        // hacer (perdería el contexto de UI que esté manipulando ahora).
+        // Cualquier mutador del board actualiza este timestamp.
+        window.__taskMutationAt = 0;
 
         const isUserBusy = () => {
+            // Dialog abierto cuenta como "ocupado" — no recargar mientras
+            // el usuario edita en el modal.
             if (document.querySelector('dialog[open]')) return true;
+            // Inputs con TEXTO en marcha: no perder lo que está escribiendo.
+            // El foco sin texto no bloquea (sería casi siempre verdad y
+            // bloquearía cualquier reload aunque hiciera falta).
             const active = document.activeElement;
             if (active?.matches?.('input[type="search"], input[type="text"], textarea')) {
-                return (active.value || '').trim() !== '' || active.matches(':focus');
+                return (active.value || '').trim() !== '';
             }
             return false;
         };
@@ -572,6 +588,13 @@ export function initKanban() {
                     return;
                 }
                 if (latest && latest !== lastSeen) {
+                    // Si el cambio coincide con una mutación que el propio
+                    // cliente acaba de hacer (≤3 s atrás), no recargar:
+                    // adoptamos el timestamp y seguimos.
+                    if (Date.now() - window.__taskMutationAt < 3000) {
+                        lastSeen = latest;
+                        return;
+                    }
                     lastSeen = latest;
                     doReload();
                 }
@@ -580,11 +603,8 @@ export function initKanban() {
             }
         };
 
-        // Primer tick para establecer el baseline, luego cada 5s.
         tick();
         setInterval(tick, 5000);
-        // Tick extra al recuperar el foco de la ventana — refresco más responsivo
-        // cuando el usuario vuelve al navegador tras editar en otra app.
         window.addEventListener('focus', () => { tick(); });
     }
 }

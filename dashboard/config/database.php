@@ -37,8 +37,14 @@ return [
             'database' => env('DB_DATABASE', database_path('database.sqlite')),
             'prefix' => '',
             'foreign_key_constraints' => env('DB_FOREIGN_KEYS', true),
-            'busy_timeout' => null,
-            'journal_mode' => null,
+            // 5 s de espera ante contención. Con WAL mode (que ya está
+            // activo en la BBDD) los reads no bloquean writes, pero ante
+            // un write largo el reader esperaría aquí en vez de fallar.
+            'busy_timeout' => 5000,
+            // WAL permite múltiples readers + 1 writer concurrentes.
+            // Necesario con el SSE polling (lector continuo) + PATCHs
+            // del web (writers esporádicos).
+            'journal_mode' => 'wal',
             'synchronous' => null,
         ],
 
