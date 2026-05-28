@@ -313,7 +313,7 @@
                                 <input type="hidden" name="date" value="{{ $day->toDateString() }}">
                                 <input type="hidden" name="return" value="day">
                                 @include('timeline.partials.manual-entry-fields', ['entry' => $entry])
-                                <div class="flex items-center justify-end gap-2 pt-1">
+                                <div class="modal-footer flex items-center justify-end gap-2">
                                     <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
                                     <button type="submit" class="btn">Guardar cambios</button>
                                 </div>
@@ -340,7 +340,7 @@
             <input type="hidden" name="date" value="{{ $day->toDateString() }}">
             <input type="hidden" name="return" value="day">
             @include('timeline.partials.manual-entry-fields', ['entry' => null])
-            <div class="flex items-center justify-end gap-2 pt-1">
+            <div class="modal-footer flex items-center justify-end gap-2">
                 <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
                 <button type="submit" class="btn">Añadir</button>
             </div>
@@ -375,7 +375,7 @@
             <p class="text-xs text-muted">
                 Al guardar, el bloque que contiene este evento se reatribuirá al proyecto elegido.
             </p>
-            <div class="flex items-center justify-end gap-2 pt-1">
+            <div class="modal-footer flex items-center justify-end gap-2">
                 <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
                 <button type="submit" class="btn">Guardar</button>
             </div>

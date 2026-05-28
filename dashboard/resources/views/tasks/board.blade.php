@@ -122,7 +122,7 @@
         <form method="POST" action="{{ route('tasks.store') }}" class="space-y-3">
             @csrf
             @include('tasks.partials.form-fields')
-            <div class="flex justify-end gap-2 pt-1">
+            <div class="modal-footer flex justify-end gap-2">
                 <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
                 <button type="submit" class="btn">Crear</button>
             </div>
@@ -135,7 +135,7 @@
             @csrf
             @method('PATCH')
             @include('tasks.partials.form-fields')
-            <div class="flex items-center justify-between gap-2 pt-1">
+            <div class="modal-footer flex items-center justify-between gap-2">
                 <button type="submit" form="task-delete-form" class="btn-ghost text-rose-600 dark:text-rose-400 text-sm inline-flex items-center gap-1">
                     <x-icon name="trash" class="w-3.5 h-3.5" /> Archivar
                 </button>

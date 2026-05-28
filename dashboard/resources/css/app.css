@@ -98,41 +98,64 @@
         @apply dark:bg-ink-900 dark:border-ink-800;
     }
 
-    /* Formularios */
+    /* Formularios — controles base.
+       rounded-md (6px) en vez de rounded (4px) para un look más suave y
+       acorde con cards/botones. Hover sutil para descubribilidad. Focus
+       con ring emerald más visible que antes (opacity 0.4 → 0.5). */
     .input, .select, .textarea {
-        @apply w-full rounded px-3 py-2 text-sm transition;
-        @apply bg-white border border-ink-300 text-ink-900 placeholder:text-ink-400;
-        @apply focus:outline-none focus:ring-2 focus:ring-emerald-400/40 focus:border-emerald-400/40;
+        @apply w-full rounded-md px-3 py-2 text-sm transition;
+        @apply bg-white border border-ink-200 text-ink-900 placeholder:text-ink-400;
+        @apply hover:border-ink-300;
+        @apply focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500;
         @apply dark:bg-ink-800 dark:border-ink-700 dark:text-ink-100 dark:placeholder:text-ink-500;
+        @apply dark:hover:border-ink-600 dark:focus:border-emerald-400 dark:focus:ring-emerald-400/40;
     }
-    /* Estado inválido: borde y ring rojos. Se aplica vía la utility
-       .is-invalid sobre el control (lo añade el Blade @error helper). */
+    /* Estado inválido. */
     .input.is-invalid, .select.is-invalid, .textarea.is-invalid {
-        @apply border-rose-400/80 focus:ring-rose-400/40 focus:border-rose-400/80;
+        @apply border-rose-400 focus:ring-rose-400/40 focus:border-rose-400;
     }
+    /* Label = wrapper de un input. La etiqueta superior ya no es uppercase:
+       más legible, sin esa estética "telegrama". */
     .label {
         @apply block;
     }
     .label > span:first-child {
-        @apply text-xs uppercase tracking-wider;
-        @apply text-ink-500 dark:text-ink-400;
+        @apply text-sm font-medium block mb-1;
+        @apply text-ink-700 dark:text-ink-200;
     }
     .label > .input, .label > .select, .label > .textarea {
-        @apply mt-1;
+        @apply mt-0;
     }
 
-    /* Modal nativo <dialog> */
+    /* Modal nativo <dialog>.
+       width subido de 34rem a 40rem para forms complejos (task-edit con
+       subtareas + comentarios). Padding global p-6; los headers/footers
+       opcionales (.modal-header, .modal-footer) cancelan ese padding con
+       margen negativo para ocupar el ancho completo con un divider. */
     .modal {
-        @apply rounded-lg border p-5 shadow-2xl;
+        @apply rounded-lg border p-6 shadow-2xl;
         @apply bg-white border-ink-200 text-ink-900;
         @apply dark:bg-ink-900 dark:border-ink-800 dark:text-ink-100;
-        width: min(34rem, calc(100vw - 2rem));
+        width: min(40rem, calc(100vw - 2rem));
         max-height: calc(100vh - 4rem);
         overflow-y: auto;
     }
     .modal::backdrop {
         background-color: rgb(15 23 42 / 0.55);
         backdrop-filter: blur(2px);
+    }
+    /* Header del modal: ancho completo + divider inferior. */
+    .modal-header {
+        @apply -mx-6 -mt-6 mb-5 px-6 pt-5 pb-4;
+        @apply flex items-center justify-between gap-3;
+        @apply border-b border-ink-200 dark:border-ink-800;
+    }
+    /* Footer opcional para grupos de botones de acción. Mantiene el
+       justify y gap que el modal ya tuviese; solo añade el divider
+       superior y el padding extendido a ancho completo. */
+    .modal-footer {
+        @apply -mx-6 -mb-6 mt-5 px-6 pt-4 pb-5;
+        @apply border-t border-ink-200 dark:border-ink-800;
     }
     /* Chevron del select reemplazado por un SVG discreto. */
     .select {
