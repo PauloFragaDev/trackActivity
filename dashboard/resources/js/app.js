@@ -193,6 +193,12 @@ window.addEventListener('DOMContentLoaded', () => {
         // padding interior del <dialog>, lo que provoca cierres accidentales
         // al hacer click "dentro" del modal pero entre elementos.
         dlg.addEventListener('click', (e) => {
+            // Los dropdowns de Choices.js viven en el DOM dentro del dialog,
+            // pero visualmente pueden sobresalir del bounding rect (selects
+            // cerca del borde inferior). Si el click cae sobre la UI de
+            // Choices, NO es un click en el backdrop — bail out.
+            if (e.target.closest('.choices')) return;
+
             const rect = dlg.getBoundingClientRect();
             const outsideHorizontal = e.clientX < rect.left || e.clientX > rect.right;
             const outsideVertical   = e.clientY < rect.top  || e.clientY > rect.bottom;

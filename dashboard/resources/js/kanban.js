@@ -9,6 +9,7 @@
  * persistencia en localStorage — no toca BBDD.
  */
 import Sortable from 'sortablejs';
+import { setSelectValue } from './select.js';
 
 // ─── localStorage helpers ──────────────────────────────
 const LS_SEARCH    = 'kanban-search';
@@ -229,9 +230,18 @@ export function initKanban() {
                 editForm.action = `/tasks/${card.dataset.taskId}`;
                 if (delForm) delForm.action = `/tasks/${card.dataset.taskId}`;
 
+                // Para <select> controlados por Choices.js, asignar .value
+                // no actualiza la UI de la librería (sigue mostrando el
+                // placeholder). setSelectValue conoce la instancia y la
+                // sincroniza vía API oficial.
                 const set = (name, value) => {
                     const field = editForm.querySelector(`[name="${name}"]`);
-                    if (field) field.value = value ?? '';
+                    if (! field) return;
+                    if (field instanceof HTMLSelectElement) {
+                        setSelectValue(field, value);
+                    } else {
+                        field.value = value ?? '';
+                    }
                 };
                 set('title', card.dataset.title);
                 set('description', card.dataset.description);

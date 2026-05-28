@@ -48,6 +48,30 @@ function scan(root) {
     (root.querySelectorAll?.('select') ?? []).forEach(applyTo);
 }
 
+/**
+ * Asigna un valor a un <select> sincronizando Choices.js si está activo.
+ *
+ * Asignar `select.value = X` solo actualiza el atributo del DOM; Choices.js
+ * no se entera y sigue mostrando el item antiguo (típicamente el placeholder)
+ * en su control visual. Esta función usa la API oficial cuando hay instancia.
+ *
+ * Acepta '' / null / undefined para "sin valor" → vuelve al placeholder.
+ */
+export function setSelectValue(select, value) {
+    if (! (select instanceof HTMLSelectElement)) return;
+    const v = value == null ? '' : String(value);
+    const instance = INSTANCES.get(select);
+    if (instance) {
+        // removeActiveItems() limpia el item actual (Choices respeta el
+        // placeholder). setChoiceByValue('') es no-op, así que solo lo
+        // llamamos si hay valor real.
+        instance.removeActiveItems();
+        if (v !== '') instance.setChoiceByValue(v);
+    } else {
+        select.value = v;
+    }
+}
+
 export function initSelects() {
     scan(document);
 
