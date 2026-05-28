@@ -11,7 +11,6 @@ use App\Services\Scoring\Scorer;
 use App\Services\SessionBuilder;
 use App\Services\Summaries\EvidenceExtractor;
 use App\Services\Summaries\SummaryGenerator;
-use App\Models\ActiveTimer;
 use App\Services\ModuleVisibility;
 use App\Services\SchedulerManager;
 use App\Services\TrackerManager;
@@ -42,13 +41,10 @@ class AppServiceProvider extends ServiceProvider
         // El layout muestra un mini-pill con el estado del tracking. El pill
         // se enciende si está vivo cualquiera de los dos procesos (daemon
         // o scheduler) — un clic en el botón los gestiona conjuntamente.
-        // El cronómetro de tarea (active timer) también se inyecta para
-        // pintar el pill flotante "▶ trabajando en X" en cualquier página.
         View::composer('layouts.app', function ($view) {
             $tracker   = app(TrackerManager::class)->status()['running'];
             $scheduler = app(SchedulerManager::class)->status()['running'];
             $view->with('trackerRunning', $tracker || $scheduler);
-            $view->with('activeTimer', ActiveTimer::with('task')->first());
         });
 
         // Visibilidad de módulos. Composer (lazy) en lugar de View::share

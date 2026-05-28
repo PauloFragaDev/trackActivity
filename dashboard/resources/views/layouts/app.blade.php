@@ -177,6 +177,12 @@
                        class="block px-2 py-1.5 rounded {{ $navItem(['tasks.*']) }}">Tareas</a>
                 @endif
 
+                {{-- Pomodoro: timer independiente, una sola página. --}}
+                @if ($modules['pomodoro']['enabled'] ?? true)
+                    <a href="{{ route('pomodoro.index') }}"
+                       class="block px-2 py-1.5 rounded {{ $navItem(['pomodoro.*']) }}">Pomodoro</a>
+                @endif
+
                 {{-- Configuración: una sola entrada. El layout `settings`
                      pinta un mini-sidebar con las subsecciones. --}}
                 <a href="{{ route('settings.index') }}"
@@ -189,20 +195,6 @@
                    class="block px-2 py-1.5 rounded {{ $navItem(['help']) }}">Ayuda</a>
             </nav>
 
-            {{-- Slot del cronómetro minimizado. Renderiza siempre que haya timer activo;
-                 JS controla con .timer-dock--visible si está minimizado o no. Click expande. --}}
-            @if (! empty($activeTimer))
-                <button type="button" id="timer-dock"
-                        class="timer-dock w-full px-2 py-2 border-t divider hidden items-center gap-2 text-sm
-                               hover:bg-ink-100 dark:hover:bg-ink-800 transition"
-                        title="Expandir cronómetro" aria-label="Expandir cronómetro">
-                    <span class="timer-pill__dot inline-block w-2 h-2 rounded-full" data-timer-dock-dot></span>
-                    <span class="sidebar-full flex-1 min-w-0 text-left truncate" data-timer-dock-title>
-                        {{ $activeTimer->task?->title ?? 'Sin tarea' }}
-                    </span>
-                    <span class="font-mono text-faint tabular-nums text-xs" data-timer-dock-elapsed>00:00</span>
-                </button>
-            @endif
 
             <div class="sidebar-full p-2 border-t divider">
                 <button id="theme-toggle" type="button"
@@ -277,103 +269,27 @@
         </form>
     </dialog>
 
-    {{-- Pill flotante del cronómetro (visible en cualquier página). El módulo
-         pomodoro.js cablea estados, ticker, transiciones y modal de cierre. --}}
-    @if (! empty($activeTimer))
-        @php
-            $tp = $activeTimer;
-            $cfg = app(\App\Services\PomodoroService::class)->currentConfig();
-            $phaseSec = match ($tp->state) {
-                \App\Models\ActiveTimer::STATE_SHORT_BREAK => $cfg['pomodoro_short_break_min'] * 60,
-                \App\Models\ActiveTimer::STATE_LONG_BREAK  => $cfg['pomodoro_long_break_min'] * 60,
-                default                                     => $cfg['pomodoro_focus_min'] * 60,
-            };
-            $stateLabel = match ($tp->state) {
-                \App\Models\ActiveTimer::STATE_SHORT_BREAK => 'Pausa corta',
-                \App\Models\ActiveTimer::STATE_LONG_BREAK  => 'Pausa larga',
-                default                                     => 'Foco',
-            };
-        @endphp
-        <div id="timer-pill"
-             data-state="{{ $tp->state }}"
-             data-phase-started-at="{{ $tp->phase_started_at?->toIso8601String() ?? $tp->starts_at->toIso8601String() }}"
-             data-paused-at="{{ $tp->paused_at?->toIso8601String() }}"
-             data-paused-offset-seconds="{{ $tp->paused_offset_seconds }}"
-             data-phase-duration-seconds="{{ $phaseSec }}"
-             data-cycle-count="{{ $tp->cycle_count }}"
-             data-task-id="{{ $tp->task_id }}"
-             data-task-title="{{ $tp->task?->title ?? 'Sin tarea' }}"
-             class="fixed bottom-4 left-1/2 -translate-x-1/2 z-40
-                    card shadow-2xl pl-3 pr-2 py-2 flex items-center gap-2 text-sm select-none
-                    timer-pill timer-pill--{{ str_replace('_', '-', $tp->state) }} {{ $tp->paused_at ? 'timer-pill--paused' : '' }}">
-            {{-- Zona de arrastre: todo lo que no sean botones agarra la pill. JS la activa solo en desktop. --}}
-            <div class="flex items-center gap-2 timer-pill__handle" data-timer-handle>
-                <span class="timer-pill__dot inline-block w-2 h-2 rounded-full" data-timer-dot></span>
-                <span class="text-[11px] uppercase tracking-wider text-muted hidden sm:inline" data-timer-state-label>{{ $stateLabel }}</span>
-                <span class="font-medium max-w-[16rem] truncate" data-timer-task-title>{{ $tp->task?->title ?? 'Sin tarea' }}</span>
-                <span class="font-mono text-faint tabular-nums" data-timer-elapsed>00:00</span>
-                <span class="text-[10px] text-faint" title="Ciclos de foco completados" data-timer-cycles>#{{ $tp->cycle_count }}</span>
-            </div>
-
-            <div class="flex items-center gap-0.5 ml-1 border-l divider pl-1">
-                <button type="button" class="icon-btn" data-timer-toggle-pause
-                        aria-label="Pausar / reanudar" title="Pausar / reanudar">
-                    <span data-timer-icon-pause class="{{ $tp->paused_at ? 'hidden' : 'inline-flex' }}"><x-icon name="pause" class="w-3.5 h-3.5" /></span>
-                    <span data-timer-icon-play  class="{{ $tp->paused_at ? 'inline-flex' : 'hidden' }}"><x-icon name="play"  class="w-3.5 h-3.5" /></span>
-                </button>
-                <button type="button" class="icon-btn text-faint" data-timer-skip
-                        aria-label="Saltar a la siguiente fase" title="Saltar fase">
-                    <x-icon name="skip-forward" class="w-3.5 h-3.5" />
-                </button>
-                {{-- Minimizar a sidebar (sólo desktop; CSS lo oculta en móvil). --}}
-                <button type="button" class="icon-btn text-faint timer-pill__minimize" data-timer-minimize
-                        aria-label="Minimizar al sidebar" title="Minimizar al sidebar">
-                    <x-icon name="minus" class="w-3.5 h-3.5" />
-                </button>
-                <button type="button" class="icon-btn text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/30"
-                        data-timer-stop aria-label="Parar cronómetro" title="Parar cronómetro">
-                    <x-icon name="stop" class="w-3.5 h-3.5" />
-                </button>
-            </div>
-        </div>
+    {{-- Dock flotante del Pomodoro: visible en cualquier página mientras
+         haya una fase corriendo o esperando. El JS lo muestra/oculta con
+         la clase .pomodoro-dock--visible. Lleva la config como data-attrs
+         para poder pintar el contador sin necesidad de la página principal. --}}
+    @if ($modules['pomodoro']['enabled'] ?? true)
+        @php $pomCfg = app(\App\Services\PomodoroService::class)->currentConfig(); @endphp
+        <a href="{{ route('pomodoro.index') }}"
+           id="pomodoro-dock"
+           class="pomodoro-dock"
+           data-focus-min="{{ $pomCfg['pomodoro_focus_min'] }}"
+           data-short-break-min="{{ $pomCfg['pomodoro_short_break_min'] }}"
+           data-long-break-min="{{ $pomCfg['pomodoro_long_break_min'] }}"
+           data-cycles-until-long="{{ $pomCfg['pomodoro_cycles_until_long'] }}"
+           title="Abrir Pomodoro">
+            <span class="pomodoro-dock__dot" aria-hidden="true"></span>
+            <span class="pomodoro-dock__phase text-[11px] uppercase tracking-wider" data-pomodoro-dock-phase>Foco</span>
+            <span class="pomodoro-dock__time font-mono tabular-nums" data-pomodoro-dock-time>00:00</span>
+            <button type="button" class="pomodoro-dock__pause icon-btn"
+                    data-pomodoro-dock-pause aria-label="Pausar / reanudar">·</button>
+        </a>
     @endif
-
-    {{-- Modal de cierre del focus (rellena mood/progress/nota). Se abre desde JS. --}}
-    <dialog id="focus-close-modal" class="modal" aria-labelledby="focus-close-title">
-        <form id="focus-close-form" class="space-y-3" novalidate>
-            <h2 id="focus-close-title" class="text-base font-semibold">¿Cómo fue ese foco?</h2>
-            <p class="text-xs text-faint" data-focus-summary></p>
-
-            <div>
-                <span class="text-sm font-medium">Mood</span>
-                <div class="mt-1 flex items-center gap-1" data-focus-mood role="radiogroup" aria-label="Mood">
-                    @foreach (['😣' => 1, '🙁' => 2, '😐' => 3, '🙂' => 4, '😄' => 5] as $emoji => $v)
-                        <button type="button" class="icon-btn text-lg" data-mood-value="{{ $v }}" aria-label="Mood {{ $v }}">{{ $emoji }}</button>
-                    @endforeach
-                </div>
-            </div>
-
-            <div>
-                <span class="text-sm font-medium">¿Avanzaste?</span>
-                <div class="mt-1 flex flex-wrap gap-1" data-focus-progress role="radiogroup" aria-label="Progreso">
-                    <button type="button" class="btn-ghost text-xs" data-progress-value="yes">Sí</button>
-                    <button type="button" class="btn-ghost text-xs" data-progress-value="partial">A medias</button>
-                    <button type="button" class="btn-ghost text-xs" data-progress-value="no">No</button>
-                </div>
-            </div>
-
-            <label class="block">
-                <span class="text-sm font-medium">Nota</span>
-                <textarea name="notes" rows="2" maxlength="2000"
-                          class="input mt-1 w-full resize-y" placeholder="Opcional · qué hiciste, qué bloqueó, etc."></textarea>
-            </label>
-
-            <div class="modal-footer flex justify-between items-center">
-                <button type="button" class="btn-ghost text-xs" data-focus-skip>Saltar</button>
-                <button type="submit" class="btn">Guardar y continuar</button>
-            </div>
-        </form>
-    </dialog>
 
 </body>
 </html>

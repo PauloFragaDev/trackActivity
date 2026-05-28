@@ -461,48 +461,81 @@ html.dark [data-note-editor] .milkdown blockquote {
     background-color: color-mix(in srgb, currentColor 15%, transparent);
 }
 
-/* Pomodoro · pill con colores por estado para que el usuario sepa de un vistazo
-   si está en foco, en una pausa corta o larga. */
-.timer-pill { transition: background-color .2s, border-color .2s; }
-.timer-pill--focus       { border-color: rgb(16 185 129 / 0.6); }
-.timer-pill--short-break { border-color: rgb(245 158 11 / 0.6); background-color: rgb(245 158 11 / 0.06); }
-.timer-pill--long-break  { border-color: rgb(56 189 248 / 0.6); background-color: rgb(56 189 248 / 0.08); }
-.timer-pill--paused      { opacity: 0.75; }
-html.dark .timer-pill--short-break { background-color: rgb(245 158 11 / 0.12); }
-html.dark .timer-pill--long-break  { background-color: rgb(56 189 248 / 0.15); }
+/* ─────────────────── Pomodoro ───────────────────
+   Layout simple: una sección centrada con badge de fase, display gigante
+   y controles. El dock flotante aparece encima de cualquier página
+   cuando hay una fase corriendo o esperando. */
 
-/* Heatmap focus (hora × día) — celdas pequeñas con tinte por intensidad. */
-.focus-heatmap { display: grid; grid-template-columns: 2rem repeat(24, minmax(0, 1fr)); gap: 2px; }
-.focus-heatmap__hour-label,
-.focus-heatmap__day-label   { font-size: 10px; color: var(--text-faint, #94a3b8); text-align: center; }
-.focus-heatmap__day-label   { text-align: right; padding-right: 4px; line-height: 1.1; }
-.focus-heatmap__cell        { aspect-ratio: 1; border-radius: 3px; background: rgb(148 163 184 / 0.10); }
-.focus-heatmap__cell--l1    { background: rgb(16 185 129 / 0.22); }
-.focus-heatmap__cell--l2    { background: rgb(16 185 129 / 0.45); }
-.focus-heatmap__cell--l3    { background: rgb(16 185 129 / 0.70); }
-.focus-heatmap__cell--l4    { background: rgb(16 185 129 / 0.95); }
+.pomodoro-shell        { max-width: 36rem; margin: 0 auto; }
+.pomodoro-header       { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 1.25rem; }
+.pomodoro-card         { padding: 2rem 1.5rem; text-align: center; }
 
-/* Daily focus goal · barra de progreso accesible y simple. */
-.focus-goal-bar      { height: 8px; border-radius: 999px; background: rgb(148 163 184 / 0.18); overflow: hidden; }
-.focus-goal-bar > span { display: block; height: 100%; background: linear-gradient(90deg, #10b981, #059669); transition: width .4s; }
+.pomodoro-phase        { display: inline-flex; align-items: center; gap: 0.5rem;
+                         font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.1em;
+                         color: var(--text-muted, #64748b); margin-bottom: 1rem; }
+.pomodoro-phase__dot   { width: 0.5rem; height: 0.5rem; border-radius: 999px;
+                         background: rgb(148 163 184 / 0.6); transition: background-color .2s; }
+[data-phase="focus"]          .pomodoro-phase__dot { background: rgb(16 185 129); }
+[data-phase="short"]          .pomodoro-phase__dot { background: rgb(245 158 11); }
+[data-phase="long"]           .pomodoro-phase__dot { background: rgb(56 189 248); }
+[data-phase="awaiting_break"] .pomodoro-phase__dot { background: rgb(245 158 11); animation: pomodoro-pulse 1.4s infinite; }
+[data-phase="awaiting_focus"] .pomodoro-phase__dot { background: rgb(16 185 129); animation: pomodoro-pulse 1.4s infinite; }
 
-/* Pomodoro · handle de arrastre de la pill flotante. El cursor cambia en
-   desktop; en móvil se neutraliza para que sea solo tap. */
-@media (min-width: 768px) {
-    .timer-pill__handle { cursor: grab; }
-    .timer-pill.is-dragging .timer-pill__handle { cursor: grabbing; }
-    .timer-pill.is-dragging { transition: none; }
-}
-/* El botón de minimizar sólo tiene sentido con sidebar a la vista. */
-@media (max-width: 767px) {
-    .timer-pill__minimize { display: none; }
+.pomodoro-display      { font-size: clamp(4rem, 14vw, 7rem); font-weight: 200;
+                         font-variant-numeric: tabular-nums; line-height: 1;
+                         letter-spacing: -0.04em; margin: 0.25rem 0 0.5rem;
+                         font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.pomodoro-cycles       { margin-bottom: 1.5rem; }
+.pomodoro-controls     { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; }
+.pomodoro-btn-primary  { min-width: 9rem; }
+.pomodoro-hint         { margin-top: 1.25rem; }
+
+@keyframes pomodoro-pulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.35; }
 }
 
-/* Pomodoro · dock del cronómetro dentro del sidebar (estado minimizado).
-   Visible solo cuando JS lo activa con .timer-dock--visible (default: hidden). */
-.timer-dock--visible { display: flex !important; }
-html.sidebar-collapsed .timer-dock { justify-content: center; gap: 0.25rem; }
-html.sidebar-collapsed [data-timer-dock-title] { display: none; }
+/* Dock flotante — visible en cualquier página mientras el timer corre.
+   Default oculto: JS añade .pomodoro-dock--visible cuando hay state. */
+.pomodoro-dock {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    z-index: 40;
+    display: none;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.5rem 0.5rem 0.75rem;
+    border-radius: 999px;
+    background: var(--surface, #fff);
+    color: var(--text, #0f172a);
+    border: 1px solid var(--border, rgb(0 0 0 / 0.08));
+    box-shadow: 0 10px 25px rgb(0 0 0 / 0.08), 0 4px 10px rgb(0 0 0 / 0.04);
+    text-decoration: none;
+    font-size: 0.8125rem;
+    transition: opacity .2s, transform .2s;
+}
+.pomodoro-dock--visible { display: inline-flex; }
+.pomodoro-dock:hover    { transform: translateY(-1px); }
+
+.pomodoro-dock__dot     { width: 0.5rem; height: 0.5rem; border-radius: 999px;
+                          background: rgb(148 163 184 / 0.6); }
+.pomodoro-dock[data-phase="focus"]          .pomodoro-dock__dot { background: rgb(16 185 129); }
+.pomodoro-dock[data-phase="short"]          .pomodoro-dock__dot { background: rgb(245 158 11); }
+.pomodoro-dock[data-phase="long"]           .pomodoro-dock__dot { background: rgb(56 189 248); }
+.pomodoro-dock[data-phase="awaiting_break"] .pomodoro-dock__dot,
+.pomodoro-dock[data-phase="awaiting_focus"] .pomodoro-dock__dot { animation: pomodoro-pulse 1.4s infinite; }
+.pomodoro-dock[data-paused="1"]             { opacity: 0.75; }
+
+.pomodoro-dock__phase   { color: var(--text-muted, #64748b); }
+.pomodoro-dock__pause   { padding: 0 0.5rem; }
+.pomodoro-dock__pause[disabled] { opacity: 0.3; cursor: default; }
+
+html.dark .pomodoro-dock {
+    background: rgb(30 41 59);
+    color: rgb(241 245 249);
+    border-color: rgb(255 255 255 / 0.08);
+}
 
 /* Kanban v2 · columna colapsada — banda estrecha con título vertical.
    El board es flex; cada columna expandida ocupa 1fr (flex: 1 1 0) con un

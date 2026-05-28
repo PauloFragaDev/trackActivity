@@ -6,7 +6,6 @@ use App\Enums\TaskStatus;
 use App\Models\ActivityEvent;
 use App\Models\Note;
 use App\Models\Task;
-use App\Services\PomodoroService;
 use App\Services\SessionBuilder;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
@@ -18,10 +17,7 @@ use Illuminate\View\View;
  */
 class DashboardController extends Controller
 {
-    public function __construct(
-        private readonly SessionBuilder $sessions,
-        private readonly PomodoroService $pomodoro,
-    ) {}
+    public function __construct(private readonly SessionBuilder $sessions) {}
 
     public function index(): View
     {
@@ -50,13 +46,6 @@ class DashboardController extends Controller
             $trackerStaleSince = $latestEvent->occurred_at;
         }
 
-        // Pomodoro · meta diaria, racha y siguiente tarea sugerida.
-        $cfg          = $this->pomodoro->currentConfig();
-        $focusToday   = $this->pomodoro->dailyFocusMinutes($today);
-        $focusGoal    = (int) $cfg['pomodoro_daily_goal_min'];
-        $focusStreak  = $this->pomodoro->dailyStreak();
-        $nextTask     = $this->pomodoro->nextTask();
-
         return view('dashboard.index', [
             'week'              => $week,
             'heatmap'           => $this->heatmap($today),
@@ -68,10 +57,6 @@ class DashboardController extends Controller
                 ->get(),
             'tz'                => $tz,
             'trackerStaleSince' => $trackerStaleSince,
-            'focusToday'        => $focusToday,
-            'focusGoal'         => $focusGoal,
-            'focusStreak'       => $focusStreak,
-            'nextTask'          => $nextTask,
         ]);
     }
 

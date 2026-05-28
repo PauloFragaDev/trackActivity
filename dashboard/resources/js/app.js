@@ -280,13 +280,9 @@ window.addEventListener('DOMContentLoaded', () => {
         import('./reports.js').then((m) => m.initReports());
     }
 
-    // Pomodoro: módulo separado (estado rico, modal de cierre, transiciones).
-    // Sólo si hay pill o algún botón ▶/CTA en la página, para no cargarlo en blanco.
-    if (
-        document.getElementById('timer-pill') ||
-        document.querySelector('[data-timer-start]') ||
-        document.querySelector('[data-timer-next-cta]')
-    ) {
+    // Pomodoro: timer client-side. Lo necesitamos en cualquier página que
+    // tenga la sección principal (/pomodoro) o el dock flotante global.
+    if (document.getElementById('pomodoro-app') || document.getElementById('pomodoro-dock')) {
         import('./pomodoro.js').then((m) => m.initPomodoro());
     }
 
