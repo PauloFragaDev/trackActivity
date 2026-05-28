@@ -49,9 +49,8 @@
     @if ($taskLabels->isNotEmpty())
         <div class="flex flex-wrap gap-1 mt-2">
             @foreach ($taskLabels as $label)
-                <span class="text-[11px] rounded-full px-2 py-0.5"
-                      style="background-color: color-mix(in srgb, {{ $label->color }} 15%, transparent);
-                             color: {{ $label->color }};">{{ $label->title }}</span>
+                <span class="text-[11px] rounded-full px-2 py-0.5 label-chip-tint"
+                      style="--label-color: {{ $label->color }};">{{ $label->title }}</span>
             @endforeach
         </div>
     @endif

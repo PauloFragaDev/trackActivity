@@ -14,10 +14,14 @@
     </div>
 
     @if ($trackerStaleSince)
-        <div class="card p-3 mb-5 text-sm border-amber-400/60 bg-amber-50 dark:bg-amber-500/10
+        <div class="card p-3 mb-5 text-sm flex items-start gap-2 border-amber-400/60 bg-amber-50 dark:bg-amber-500/10
                     text-amber-800 dark:text-amber-300">
-            ⚠ El tracker no registra actividad desde {{ $trackerStaleSince->locale('es')->diffForHumans() }}.
-            Comprueba que el daemon esté en marcha.
+            <x-icon name="alert-triangle" class="w-4 h-4 mt-0.5 shrink-0" />
+            <span>
+                El tracker no registra actividad desde
+                <x-timestamp :at="$trackerStaleSince" class="text-amber-900 dark:text-amber-200 cursor-help" />.
+                Comprueba que el daemon esté en marcha.
+            </span>
         </div>
     @endif
 
@@ -37,14 +41,16 @@
                     @if ($latestEvent->repo_name)
                         <span class="chip ml-1">{{ $latestEvent->repo_name }}@if ($latestEvent->branch):{{ $latestEvent->branch }}@endif</span>
                     @elseif ($cwdHint)
-                        <span class="chip ml-1">📂 {{ basename($cwdHint) }}</span>
+                        <span class="chip ml-1 inline-flex items-center gap-1">
+                            <x-icon name="folder-open" class="w-3 h-3" /> {{ basename($cwdHint) }}
+                        </span>
                     @endif
                     @if ($cmdHint)
                         <span class="text-muted text-xs ml-1">▶ {{ \Illuminate\Support\Str::limit($cmdHint, 60, '…') }}</span>
                     @endif
                 @endif
             </span>
-            <span class="shrink-0 text-xs text-faint">{{ $latestEvent->occurred_at->locale('es')->diffForHumans() }}</span>
+            <x-timestamp :at="$latestEvent->occurred_at" class="shrink-0 text-xs" />
         </div>
     @endif
 
@@ -155,7 +161,7 @@
                        class="flex items-center gap-1.5 px-2 py-1.5 rounded text-sm hover:bg-ink-100 dark:hover:bg-ink-800">
                         <span>{{ $n->icon ?: '📄' }}</span>
                         <span class="flex-1 truncate">{{ $n->title }}</span>
-                        <span class="shrink-0 text-xs text-faint">{{ $n->updated_at->diffForHumans() }}</span>
+                        <x-timestamp :at="$n->updated_at" class="shrink-0 text-xs" />
                     </a>
                 @empty
                     <p class="text-sm text-muted">Aún no hay notas.</p>

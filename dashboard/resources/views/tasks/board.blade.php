@@ -84,7 +84,7 @@
                                 data-task-column-sort title="Ordenar A-Z (toggle)"
                                 aria-label="Ordenar columna alfabéticamente"
                                 onclick="event.stopPropagation()">
-                            <span aria-hidden="true" class="text-[10px] font-mono">A↓</span>
+                            <x-icon name="sort-asc" class="w-3.5 h-3.5" />
                         </button>
                         <button type="button" class="icon-btn" data-modal-open="#task-new"
                                 data-add-status="{{ $col->value }}"

@@ -157,6 +157,51 @@
         @apply -mx-6 -mb-6 mt-5 px-6 pt-4 pb-5;
         @apply border-t border-ink-200 dark:border-ink-800;
     }
+
+    /* Atajos de teclado: <kbd> con borde, fondo sutil, fuente monospace.
+       Pensado para audiencia técnica acostumbrada a leer combinaciones. */
+    .kbd {
+        @apply inline-flex items-center justify-center min-w-[1.4rem] h-5 px-1.5;
+        @apply text-[10px] font-mono font-medium leading-none;
+        @apply rounded border border-ink-200 dark:border-ink-700;
+        @apply bg-ink-50 dark:bg-ink-800;
+        @apply text-ink-700 dark:text-ink-300;
+    }
+
+    /* Empty state reutilizable. Padding amplio para que respire, icono
+       circular como ancla visual, tipografía coherente. */
+    .empty-state {
+        @apply card p-10 text-center;
+    }
+    .empty-state__icon {
+        @apply inline-flex items-center justify-center w-12 h-12 rounded-full mb-3;
+        @apply bg-ink-100 dark:bg-ink-800 text-ink-500 dark:text-ink-400;
+    }
+    .empty-state__title {
+        @apply text-base font-semibold mb-1;
+        @apply text-ink-900 dark:text-ink-100;
+    }
+    .empty-state__text {
+        @apply text-sm text-muted;
+    }
+    .empty-state__actions {
+        @apply mt-4 flex items-center justify-center gap-2;
+    }
+
+    /* Chip de label de tarea. Recibe el color del label via la variable
+       inline --label-color. El background-color se calcula con color-mix
+       sobre esa variable; la opacidad sube en dark mode porque colores
+       saturados pierden mucho contraste sobre fondo oscuro al 15%. */
+    .label-chip-tint {
+        background-color: color-mix(in srgb, var(--label-color) 18%, transparent);
+        color: var(--label-color);
+    }
+    html.dark .label-chip-tint {
+        background-color: color-mix(in srgb, var(--label-color) 32%, transparent);
+        /* Mezclamos también el color de texto con blanco para que un
+           label de tono oscuro (ej. #344563) siga siendo legible. */
+        color: color-mix(in srgb, var(--label-color) 50%, white);
+    }
     /* Chevron del select reemplazado por un SVG discreto. */
     .select {
         appearance: none;

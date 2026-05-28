@@ -101,7 +101,7 @@
                                text-ink-600 dark:text-ink-300 hover:bg-ink-100 dark:hover:bg-ink-800">
                     <span aria-hidden="true">🔍</span>
                     <span>Buscar</span>
-                    <span class="ml-auto text-[10px] text-faint">Ctrl K</span>
+                    <x-kbd class="ml-auto">Ctrl K</x-kbd>
                 </button>
 
                 {{-- Inicio --}}
