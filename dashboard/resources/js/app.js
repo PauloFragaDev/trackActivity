@@ -41,16 +41,29 @@ window.addEventListener('DOMContentLoaded', () => {
  * Configuración común de SweetAlert, alineada con el diseño de la app.
  * El aspecto del popup y de los botones se define en app.css
  * (.app-swal + las clases .btn-* de la app, gracias a buttonsStyling:false).
+ *
+ * `target` dinámico: si hay un <dialog> abierto, SweetAlert se renderiza
+ * dentro de él. Razón: los <dialog> nativos viven en el "top-layer" del
+ * navegador, encima de cualquier z-index del body. Si SweetAlert se
+ * monta en el body, queda DEBAJO del dialog (era el bug reportado).
+ * Montándolo dentro del dialog hereda su stacking context y se pinta
+ * por encima como toca.
  */
-const SWAL_BASE = {
-    buttonsStyling: false,
-    reverseButtons: true,
-    customClass: {
-        popup: 'app-swal',
-        confirmButton: 'btn-danger',
-        cancelButton: 'btn-ghost',
-    },
+const swalConfig = () => {
+    const openDialog = document.querySelector('dialog[open]');
+    return {
+        buttonsStyling: false,
+        reverseButtons: true,
+        customClass: {
+            popup: 'app-swal',
+            confirmButton: 'btn-danger',
+            cancelButton: 'btn-ghost',
+        },
+        ...(openDialog ? { target: openDialog } : {}),
+    };
 };
+// (Eliminado SWAL_BASE estático: todos los call sites usan swalConfig()
+//  para que el `target` se calcule en el momento de mostrar el swal.)
 
 /**
  * Toast de feedback. `variant` puede ser 'success' (por defecto), 'warn',
@@ -150,7 +163,7 @@ window.addEventListener('DOMContentLoaded', () => {
             if (form.dataset.confirmed === '1') return;   // ya confirmado: deja pasar
             e.preventDefault();
             Swal.fire({
-                ...SWAL_BASE,
+                ...swalConfig(),
                 title: form.dataset.confirmTitle || '¿Eliminar?',
                 text: form.dataset.confirm,
                 icon: 'warning',
@@ -192,7 +205,7 @@ window.addEventListener('DOMContentLoaded', () => {
     if (overlapEl) {
         const overlap = JSON.parse(overlapEl.textContent);
         Swal.fire({
-            ...SWAL_BASE,
+            ...swalConfig(),
             title: 'Solapamiento de horario',
             text: overlap.message,
             icon: 'warning',
