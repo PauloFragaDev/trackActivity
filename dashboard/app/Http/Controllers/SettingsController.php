@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\AppearanceService;
 use App\Services\ModuleVisibility;
 use App\Services\PomodoroService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -46,6 +48,27 @@ class SettingsController extends Controller
         return redirect()
             ->route('settings.general')
             ->with('status', 'Ajustes guardados.');
+    }
+
+    public function appearance(): View
+    {
+        return view('settings.appearance', [
+            'themes'  => AppearanceService::THEMES,
+            'current' => AppearanceService::current(),
+        ]);
+    }
+
+    /**
+     * Cambio de tema "al instante": el cliente ya aplicó el cambio en el
+     * DOM y localStorage; aquí solo persistimos para que sobreviva al
+     * próximo reload (y a otros navegadores). Devuelve JSON, no hace
+     * redirect, para no romper la UX inmediata.
+     */
+    public function saveAppearance(Request $request): JsonResponse
+    {
+        $id = (string) $request->input('theme_id', '');
+        AppearanceService::setCurrent($id);
+        return response()->json(['theme_id' => AppearanceService::current()]);
     }
 
     public function pomodoro(): View

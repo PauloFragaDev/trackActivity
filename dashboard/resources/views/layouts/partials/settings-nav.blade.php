@@ -11,8 +11,9 @@
 @php
     /** @var array $modules */
     $sections = [
-        ['label' => 'General',   'route' => 'settings.general',  'match' => ['settings.general']],
-        ['label' => 'Proyectos', 'route' => 'projects.index',    'match' => ['projects.*']],
+        ['label' => 'General',    'route' => 'settings.general',     'match' => ['settings.general']],
+        ['label' => 'Apariencia', 'route' => 'settings.appearance',  'match' => ['settings.appearance']],
+        ['label' => 'Proyectos',  'route' => 'projects.index',       'match' => ['projects.*']],
     ];
     if ($modules['tasks']['enabled'] ?? true) {
         $sections[] = ['label' => 'Etiquetas', 'route' => 'task-labels.index', 'match' => ['task-labels.*']];

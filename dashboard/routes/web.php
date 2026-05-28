@@ -131,10 +131,12 @@ Route::get('/pomodoro', [\App\Http\Controllers\PomodoroController::class, 'index
 // configuración (proyectos, etiquetas, export, data) mantienen sus URLs;
 // el cambio es solo de navegación (mini-sidebar en layouts.settings).
 Route::get('/settings',           [\App\Http\Controllers\SettingsController::class, 'index'])->name('settings.index');
-Route::get('/settings/general',   [\App\Http\Controllers\SettingsController::class, 'general'])->name('settings.general');
-Route::post('/settings/general',  [\App\Http\Controllers\SettingsController::class, 'saveGeneral'])->name('settings.general.save');
-Route::get('/settings/pomodoro',  [\App\Http\Controllers\SettingsController::class, 'pomodoro'])->name('settings.pomodoro');
-Route::post('/settings/pomodoro', [\App\Http\Controllers\SettingsController::class, 'savePomodoro'])->name('settings.pomodoro.save');
+Route::get('/settings/general',     [\App\Http\Controllers\SettingsController::class, 'general'])->name('settings.general');
+Route::post('/settings/general',    [\App\Http\Controllers\SettingsController::class, 'saveGeneral'])->name('settings.general.save');
+Route::get('/settings/appearance',  [\App\Http\Controllers\SettingsController::class, 'appearance'])->name('settings.appearance');
+Route::post('/settings/appearance', [\App\Http\Controllers\SettingsController::class, 'saveAppearance'])->name('settings.appearance.save');
+Route::get('/settings/pomodoro',    [\App\Http\Controllers\SettingsController::class, 'pomodoro'])->name('settings.pomodoro');
+Route::post('/settings/pomodoro',   [\App\Http\Controllers\SettingsController::class, 'savePomodoro'])->name('settings.pomodoro.save');
 
 // ─────────────────── Ayuda ───────────────────
 Route::get('/help', [HelpController::class, 'index'])->name('help');
