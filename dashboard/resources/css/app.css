@@ -46,9 +46,25 @@
        por número). Componentes nuevos las usan; los viejos siguen con
        las utilidades Tailwind. */
 
-    /* ── DEFAULT (slate + verde) ── */
+    /* ── DEFAULT (slate + verde) ────────────────────────────────────
+       Las vars --ink-N son tripletas RGB sin "rgb()" para que Tailwind
+       las componga con alpha en clases tipo bg-ink-100/50. Las vars
+       semánticas (--paper, --ink, --accent) siguen siendo hex normales
+       — las consumen los componentes manuales escritos en CSS. */
     :root,
     :root[data-theme="default"] {
+        --ink-50:  247 247 248;
+        --ink-100: 235 236 239;
+        --ink-200: 210 213 219;
+        --ink-300: 169 174 185;
+        --ink-400: 119 126 140;
+        --ink-500:  82  90 106;
+        --ink-600:  58  65  80;
+        --ink-700:  42  49  62;
+        --ink-800:  28  34  45;
+        --ink-900:  19  23  31;
+        --ink-950:  10  13  19;
+
         --paper:        #ffffff;
         --paper-warm:   #fafaf9;
         --paper-deep:   #f5f5f4;
@@ -62,6 +78,9 @@
     }
     html.dark,
     html.dark[data-theme="default"] {
+        /* En oscuro la escala se mantiene: las clases dark:bg-ink-900
+           que ya usa la app pintan el mismo tono — el invertido lo
+           hace el HTML con la clase .dark, no nosotros. */
         --paper:        #0f172a;
         --paper-warm:   #1e293b;
         --paper-deep:   #0b1220;
@@ -74,8 +93,20 @@
         --accent-soft:  rgb(52 211 153 / 0.16);
     }
 
-    /* ── PAPER · floral-notepaper: cremas cálidos + acento bambú ── */
+    /* ── PAPER · cremas cálidos (floral-notepaper) ───────────────── */
     :root[data-theme="paper"] {
+        --ink-50:  250 246 236;
+        --ink-100: 240 235 222;
+        --ink-200: 224 217 197;
+        --ink-300: 200 192 168;
+        --ink-400: 163 154 126;
+        --ink-500: 128 119  96;
+        --ink-600:  94  88  72;
+        --ink-700:  70  63  51;
+        --ink-800:  44  40  32;
+        --ink-900:  34  31  26;
+        --ink-950:  22  20  18;
+
         --paper:        #f6f3ec;
         --paper-warm:   #f0ebe0;
         --paper-deep:   #e8e1d3;
@@ -100,8 +131,20 @@
         --accent-soft:  rgb(79 170 112 / 0.18);
     }
 
-    /* ── NOTION · tolaria-ish: neutros cálidos + azul ── */
+    /* ── NOTION · neutros cálidos (tolaria) ──────────────────────── */
     :root[data-theme="notion"] {
+        --ink-50:  252 252 251;
+        --ink-100: 245 244 240;
+        --ink-200: 235 233 227;
+        --ink-300: 212 210 200;
+        --ink-400: 163 161 154;
+        --ink-500: 120 119 116;
+        --ink-600:  87  85  79;
+        --ink-700:  63  61  56;
+        --ink-800:  42  41  37;
+        --ink-900:  31  30  28;
+        --ink-950:  19  18  16;
+
         --paper:        #ffffff;
         --paper-warm:   #f7f6f3;
         --paper-deep:   #f1f0ed;
@@ -126,8 +169,20 @@
         --accent-soft:  rgb(76 141 255 / 0.18);
     }
 
-    /* ── MONO · grises puros, sin acento de color ── */
+    /* ── MONO · grises puros (Tailwind neutral) ──────────────────── */
     :root[data-theme="mono"] {
+        --ink-50:  250 250 250;
+        --ink-100: 245 245 245;
+        --ink-200: 229 229 229;
+        --ink-300: 212 212 212;
+        --ink-400: 163 163 163;
+        --ink-500: 115 115 115;
+        --ink-600:  82  82  82;
+        --ink-700:  64  64  64;
+        --ink-800:  38  38  38;
+        --ink-900:  23  23  23;
+        --ink-950:  10  10  10;
+
         --paper:        #fafafa;
         --paper-warm:   #f4f4f5;
         --paper-deep:   #e4e4e7;
@@ -988,3 +1043,5 @@ html.dark .theme-card {
     border-color: var(--accent, #10b981);
     box-shadow: inset 0 0 0 2px var(--paper, #fff);
 }
+
+
