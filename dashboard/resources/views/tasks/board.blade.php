@@ -134,7 +134,15 @@
 
     <dialog id="task-edit" class="modal modal-lg">
         @include('layouts.partials.modal-header', ['title' => 'Editar tarea'])
-        {{-- Form de borrado: oculto, recibe el submit del botón "Archivar". --}}
+
+        {{-- IMPORTANTE: forms NO se anidan en HTML5. El navegador los
+             des-anida en parse, lo que desconecta el botón Guardar de
+             su form y los del modal click-bubble al <dialog>.
+             Solución: cada form es hermano (no descendiente) del otro,
+             y los botones del footer apuntan con `form="ID"` al form
+             principal aunque estén fuera de él. --}}
+
+        {{-- Form 1: borrado (Archivar). Oculto, lo dispara el botón con form="task-delete-form". --}}
         <form method="POST" id="task-delete-form" data-task-delete-form
               data-confirm="¿Archivar esta tarea? La podrás restaurar desde /tasks/archived."
               data-confirm-button="Sí, archivar">
@@ -142,63 +150,59 @@
             @method('DELETE')
         </form>
 
-        <form method="POST" data-task-edit-form class="space-y-4">
+        {{-- Form 2: principal. Submit con el botón "Guardar" del footer. --}}
+        <form method="POST" id="task-edit-main-form" data-task-edit-form class="space-y-4">
             @csrf
             @method('PATCH')
             @include('tasks.partials.form-fields')
-
-            {{-- Subtareas — AJAX (kanban.js gestiona el listado y add/toggle/delete) --}}
-            <section data-task-subtasks class="pt-4 mt-2 border-t divider">
-                <div class="flex items-center justify-between mb-2">
-                    <h4 class="text-sm font-semibold flex items-center gap-1.5">
-                        <x-icon name="check" class="w-3.5 h-3.5 text-emerald-500" /> Subtareas
-                    </h4>
-                    <span class="text-xs text-faint font-mono" data-subtasks-progress></span>
-                </div>
-                <ul data-subtasks-list class="space-y-1 text-sm mb-2"></ul>
-                {{-- Patrón input-group: el botón "+" va ABSOLUTO dentro del
-                     input (suffix), no a su lado. Alineación garantizada por
-                     position:absolute + top:50% + translate. Mismo patrón que
-                     la búsqueda del board. --}}
-                <form data-subtasks-add class="input-group">
-                    <input type="text" name="title" required maxlength="200"
-                           class="input text-sm" placeholder="Nueva subtarea — Enter para añadir">
-                    <span class="input-group__suffix">
-                        <button type="submit" class="icon-btn" aria-label="Añadir subtarea" title="Añadir">
-                            <x-icon name="plus" class="w-3.5 h-3.5" />
-                        </button>
-                    </span>
-                </form>
-            </section>
-
-            {{-- Comentarios — AJAX --}}
-            <section data-task-comments class="pt-4 mt-2 border-t divider">
-                <h4 class="text-sm font-semibold mb-2 flex items-center gap-1.5">
-                    <x-icon name="chat" class="w-3.5 h-3.5 text-sky-500" /> Comentarios
-                </h4>
-                <ul data-comments-list class="space-y-2 text-sm mb-2"></ul>
-                {{-- Patrón GitHub/Linear: textarea ancho completo, botón
-                     "Publicar" debajo a la derecha. Más limpio que
-                     pelearse con stretch de altura entre dos controles
-                     de tamaño distinto. --}}
-                <form data-comments-add class="space-y-2">
-                    <textarea name="body" required maxlength="5000" rows="3"
-                              class="textarea text-sm w-full" placeholder="Añadir un comentario…"></textarea>
-                    <div class="flex justify-end">
-                        <button type="submit" class="btn">Publicar</button>
-                    </div>
-                </form>
-            </section>
-
-            <div class="modal-footer flex items-center justify-between gap-2">
-                <button type="submit" form="task-delete-form" class="btn-ghost text-rose-600 dark:text-rose-400 text-sm inline-flex items-center gap-1">
-                    <x-icon name="trash" class="w-3.5 h-3.5" /> Archivar
-                </button>
-                <div class="flex gap-2">
-                    <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
-                    <button type="submit" class="btn">Guardar</button>
-                </div>
-            </div>
         </form>
+
+        {{-- Subtareas: form aparte, gestionado por AJAX desde kanban.js. --}}
+        <section data-task-subtasks class="pt-4 mt-4 border-t divider">
+            <div class="flex items-center justify-between mb-2">
+                <h4 class="text-sm font-semibold flex items-center gap-1.5">
+                    <x-icon name="check" class="w-3.5 h-3.5 text-emerald-500" /> Subtareas
+                </h4>
+                <span class="text-xs text-faint font-mono" data-subtasks-progress></span>
+            </div>
+            <ul data-subtasks-list class="space-y-1 text-sm mb-2"></ul>
+            <form data-subtasks-add class="input-group">
+                <input type="text" name="title" required maxlength="200"
+                       class="input text-sm" placeholder="Nueva subtarea — Enter para añadir">
+                <span class="input-group__suffix">
+                    <button type="submit" class="icon-btn" aria-label="Añadir subtarea" title="Añadir">
+                        <x-icon name="plus" class="w-3.5 h-3.5" />
+                    </button>
+                </span>
+            </form>
+        </section>
+
+        {{-- Comentarios: form aparte, gestionado por AJAX. --}}
+        <section data-task-comments class="pt-4 mt-4 border-t divider">
+            <h4 class="text-sm font-semibold mb-2 flex items-center gap-1.5">
+                <x-icon name="chat" class="w-3.5 h-3.5 text-sky-500" /> Comentarios
+            </h4>
+            <ul data-comments-list class="space-y-2 text-sm mb-2"></ul>
+            <form data-comments-add class="space-y-2">
+                <textarea name="body" required maxlength="5000" rows="3"
+                          class="textarea text-sm w-full" placeholder="Añadir un comentario…"></textarea>
+                <div class="flex justify-end">
+                    <button type="submit" class="btn">Publicar</button>
+                </div>
+            </form>
+        </section>
+
+        {{-- Footer: los botones submit usan `form="ID"` para apuntar a sus forms
+             aunque vivan fuera de ellos. Esto es HTML estándar (HTML5 form attr). --}}
+        <div class="modal-footer flex items-center justify-between gap-2">
+            <button type="submit" form="task-delete-form"
+                    class="btn-ghost text-rose-600 dark:text-rose-400 text-sm inline-flex items-center gap-1">
+                <x-icon name="trash" class="w-3.5 h-3.5" /> Archivar
+            </button>
+            <div class="flex gap-2">
+                <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
+                <button type="submit" form="task-edit-main-form" class="btn">Guardar</button>
+            </div>
+        </div>
     </dialog>
 @endsection
