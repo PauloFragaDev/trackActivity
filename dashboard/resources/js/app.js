@@ -293,6 +293,11 @@ window.addEventListener('DOMContentLoaded', () => {
         import('./pomodoro.js').then((m) => m.initPomodoro());
     }
 
+    // Theme picker: solo en /settings/appearance.
+    if (document.querySelector('[data-theme-grid]')) {
+        import('./theme-picker.js').then((m) => m.initThemePicker());
+    }
+
     // Choices.js sobre todos los <select> para uniformidad visual + búsqueda.
     // Lazy-import: el chunk de la librería sólo se carga si hay selects.
     if (document.querySelector('select:not([data-no-search])')) {

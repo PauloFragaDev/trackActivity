@@ -11,6 +11,7 @@ use App\Services\Scoring\Scorer;
 use App\Services\SessionBuilder;
 use App\Services\Summaries\EvidenceExtractor;
 use App\Services\Summaries\SummaryGenerator;
+use App\Services\AppearanceService;
 use App\Services\ModuleVisibility;
 use App\Services\SchedulerManager;
 use App\Services\TrackerManager;
@@ -47,11 +48,12 @@ class AppServiceProvider extends ServiceProvider
             $view->with('trackerRunning', $tracker || $scheduler);
         });
 
-        // Visibilidad de módulos. Composer (lazy) en lugar de View::share
-        // para no tocar BD durante boot — los tests crean tablas tarde y
-        // ::share dispara consultas en cada boot del kernel.
+        // Visibilidad de módulos + tema activo. Composer (lazy) en lugar
+        // de View::share para no tocar BD durante boot — los tests crean
+        // tablas tarde y ::share dispara consultas en cada boot del kernel.
         View::composer(['layouts.app', 'layouts.settings'], function ($view) {
             $view->with('modules', ModuleVisibility::all());
+            $view->with('themeId', AppearanceService::current());
         });
     }
 }

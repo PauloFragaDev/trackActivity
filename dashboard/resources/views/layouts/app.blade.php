@@ -17,17 +17,34 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="trackActivity">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    {{-- Estado de tema y sidebar antes de pintar, para evitar parpadeo --}}
+    {{-- Estado de tema (modo + paleta) y sidebar antes de pintar.
+         themeId vive en localStorage como mirror del Setting (lo que ve
+         el servidor); si están desfasados ganan los datos del servidor
+         que el composer inyecta en data-theme inline más abajo. --}}
     <script>
         (() => {
             const stored = localStorage.getItem('theme');
             const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
             document.documentElement.classList.toggle('dark', (stored || (prefersDark ? 'dark' : 'light')) === 'dark');
+            const themeId = localStorage.getItem('themeId') || 'default';
+            document.documentElement.setAttribute('data-theme', themeId);
             if (localStorage.getItem('sidebar') === 'collapsed') {
                 document.documentElement.classList.add('sidebar-collapsed');
             }
             if (localStorage.getItem('notes-list') === 'collapsed') {
                 document.documentElement.classList.add('notes-list-collapsed');
+            }
+        })();
+    </script>
+    {{-- Auto-sync del themeId del servidor → localStorage. Si el usuario
+         cambió el tema desde otro navegador, la próxima carga aquí lo
+         refleja sin esperar al primer cambio manual. --}}
+    <script>
+        (() => {
+            const serverTheme = @json($themeId ?? 'default');
+            if (localStorage.getItem('themeId') !== serverTheme) {
+                localStorage.setItem('themeId', serverTheme);
+                document.documentElement.setAttribute('data-theme', serverTheme);
             }
         })();
     </script>

@@ -36,25 +36,51 @@
     }
 
     /* ── Paleta semántica "papel / tinta" ─────────────────────────────
-       Inspirada en floral-notepaper: nombrar por ROL (paper-warm para
-       superficies elevadas, ink-faint para metadatos, accent para CTAs)
-       en vez de por número (ink-100, ink-400). Convive con las clases
-       tailwind ink-* existentes y se aplica en componentes nuevos.
-       El sistema sigue siendo Tailwind: estas vars son una segunda
-       capa más expresiva para superficies y tipografía editorial. */
-    :root {
+       Cada tema redefine este conjunto de variables — el toggle ☀/🌙
+       sigue siendo ortogonal (alterna .dark dentro del mismo tema). Por
+       eso hay un bloque por (tema × modo). El default es lo que pintaba
+       la app antes de existir el catálogo de temas.
+
+       Conviven con las clases ink-* de Tailwind como una segunda capa
+       semántica (nombres por ROL — paper-warm, ink-faint, accent — no
+       por número). Componentes nuevos las usan; los viejos siguen con
+       las utilidades Tailwind. */
+
+    /* ── DEFAULT (slate + verde) ────────────────────────────────────
+       Las vars --ink-N son tripletas RGB sin "rgb()" para que Tailwind
+       las componga con alpha en clases tipo bg-ink-100/50. Las vars
+       semánticas (--paper, --ink, --accent) siguen siendo hex normales
+       — las consumen los componentes manuales escritos en CSS. */
+    :root,
+    :root[data-theme="default"] {
+        --ink-50:  247 247 248;
+        --ink-100: 235 236 239;
+        --ink-200: 210 213 219;
+        --ink-300: 169 174 185;
+        --ink-400: 119 126 140;
+        --ink-500:  82  90 106;
+        --ink-600:  58  65  80;
+        --ink-700:  42  49  62;
+        --ink-800:  28  34  45;
+        --ink-900:  19  23  31;
+        --ink-950:  10  13  19;
+
         --paper:        #ffffff;
-        --paper-warm:   #fafaf9;   /* hover / sutil elevación      */
-        --paper-deep:   #f5f5f4;   /* sidebar, panel rebajado      */
-        --ink-strong:   #0f172a;   /* títulos, bold                */
-        --ink:          #1e293b;   /* cuerpo                       */
-        --ink-soft:     #475569;   /* etiquetas                    */
-        --ink-faint:    #64748b;   /* placeholder, hints           */
-        --ink-ghost:    #94a3b8;   /* iconos descansados           */
-        --accent:       #10b981;   /* CTAs primarias               */
+        --paper-warm:   #fafaf9;
+        --paper-deep:   #f5f5f4;
+        --ink-strong:   #0f172a;
+        --ink:          #1e293b;
+        --ink-soft:     #475569;
+        --ink-faint:    #64748b;
+        --ink-ghost:    #94a3b8;
+        --accent:       #10b981;
         --accent-soft:  rgb(16 185 129 / 0.12);
     }
-    html.dark {
+    html.dark,
+    html.dark[data-theme="default"] {
+        /* En oscuro la escala se mantiene: las clases dark:bg-ink-900
+           que ya usa la app pintan el mismo tono — el invertido lo
+           hace el HTML con la clase .dark, no nosotros. */
         --paper:        #0f172a;
         --paper-warm:   #1e293b;
         --paper-deep:   #0b1220;
@@ -65,6 +91,120 @@
         --ink-ghost:    #64748b;
         --accent:       #34d399;
         --accent-soft:  rgb(52 211 153 / 0.16);
+    }
+
+    /* ── PAPER · cremas cálidos (floral-notepaper) ───────────────── */
+    :root[data-theme="paper"] {
+        --ink-50:  250 246 236;
+        --ink-100: 240 235 222;
+        --ink-200: 224 217 197;
+        --ink-300: 200 192 168;
+        --ink-400: 163 154 126;
+        --ink-500: 128 119  96;
+        --ink-600:  94  88  72;
+        --ink-700:  70  63  51;
+        --ink-800:  44  40  32;
+        --ink-900:  34  31  26;
+        --ink-950:  22  20  18;
+
+        --paper:        #f6f3ec;
+        --paper-warm:   #f0ebe0;
+        --paper-deep:   #e8e1d3;
+        --ink-strong:   #1a1a18;
+        --ink:          #2b2b27;
+        --ink-soft:     #3d3d38;
+        --ink-faint:    #8a8a80;
+        --ink-ghost:    #b8b8ae;
+        --accent:       #2d5a3d;
+        --accent-soft:  rgb(45 90 61 / 0.10);
+    }
+    html.dark[data-theme="paper"] {
+        --paper:        #222120;
+        --paper-warm:   #2c2a27;
+        --paper-deep:   #3c3935;
+        --ink-strong:   #e5e1da;
+        --ink:          #d1cdc4;
+        --ink-soft:     #b5b1a8;
+        --ink-faint:    #928f87;
+        --ink-ghost:    #706d67;
+        --accent:       #4faa70;
+        --accent-soft:  rgb(79 170 112 / 0.18);
+    }
+
+    /* ── NOTION · neutros cálidos (tolaria) ──────────────────────── */
+    :root[data-theme="notion"] {
+        --ink-50:  252 252 251;
+        --ink-100: 245 244 240;
+        --ink-200: 235 233 227;
+        --ink-300: 212 210 200;
+        --ink-400: 163 161 154;
+        --ink-500: 120 119 116;
+        --ink-600:  87  85  79;
+        --ink-700:  63  61  56;
+        --ink-800:  42  41  37;
+        --ink-900:  31  30  28;
+        --ink-950:  19  18  16;
+
+        --paper:        #ffffff;
+        --paper-warm:   #f7f6f3;
+        --paper-deep:   #f1f0ed;
+        --ink-strong:   #37352f;
+        --ink:          #4b4944;
+        --ink-soft:     #6b6964;
+        --ink-faint:    #9b9994;
+        --ink-ghost:    #b4b4b4;
+        --accent:       #155dff;
+        --accent-soft:  rgb(21 93 255 / 0.10);
+    }
+    html.dark[data-theme="notion"] {
+        --paper:        #191918;
+        --paper-warm:   #252523;
+        --paper-deep:   #1f1f1d;
+        --ink-strong:   #f5f4f0;
+        --ink:          #dbd9d3;
+        --ink-soft:     #a3a19a;
+        --ink-faint:    #7a7872;
+        --ink-ghost:    #5e5c57;
+        --accent:       #4c8dff;
+        --accent-soft:  rgb(76 141 255 / 0.18);
+    }
+
+    /* ── MONO · grises puros (Tailwind neutral) ──────────────────── */
+    :root[data-theme="mono"] {
+        --ink-50:  250 250 250;
+        --ink-100: 245 245 245;
+        --ink-200: 229 229 229;
+        --ink-300: 212 212 212;
+        --ink-400: 163 163 163;
+        --ink-500: 115 115 115;
+        --ink-600:  82  82  82;
+        --ink-700:  64  64  64;
+        --ink-800:  38  38  38;
+        --ink-900:  23  23  23;
+        --ink-950:  10  10  10;
+
+        --paper:        #fafafa;
+        --paper-warm:   #f4f4f5;
+        --paper-deep:   #e4e4e7;
+        --ink-strong:   #0a0a0a;
+        --ink:          #171717;
+        --ink-soft:     #404040;
+        --ink-faint:    #737373;
+        --ink-ghost:    #a3a3a3;
+        --accent:       #404040;
+        --accent-soft:  rgb(64 64 64 / 0.10);
+    }
+    html.dark[data-theme="mono"] {
+        --paper:        #0a0a0a;
+        --paper-warm:   #171717;
+        --paper-deep:   #050505;
+        --ink-strong:   #fafafa;
+        --ink:          #e5e5e5;
+        --ink-soft:     #d4d4d4;
+        --ink-faint:    #a3a3a3;
+        --ink-ghost:    #737373;
+        --accent:       #e5e5e5;
+        --accent-soft:  rgb(229 229 229 / 0.12);
     }
 
     /* Crossfade al togglear el tema. JS añade .theme-transition a <html>
@@ -827,3 +967,81 @@ html.dark .choices__list--single .choices__item { color: rgb(241 245 249); }
     opacity: 0.85;
 }
 .wikilink--missing:hover { opacity: 1; }
+
+/* ─────────────────── Theme picker ───────────────────
+   Grid de cards. Cada una pinta una mini-preview con la paleta del tema:
+   un bloque "papel" (background del tema), tres líneas de "tinta" con
+   tres opacidades y un círculo de acento. La activa lleva borde de
+   acento + radio relleno. */
+
+.theme-grid {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+    max-width: 50rem;
+}
+.theme-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.625rem;
+    text-align: left;
+    border: 1px solid var(--ink-200, rgb(229 231 235));
+    border-radius: 0.625rem;
+    background: var(--paper, #fff);
+    cursor: pointer;
+    transition: border-color .15s, transform .15s, box-shadow .15s;
+}
+.theme-card:hover { border-color: var(--ink-ghost, #94a3b8); transform: translateY(-1px); }
+.theme-card--active {
+    border-color: var(--accent, #10b981);
+    box-shadow: 0 0 0 2px var(--accent-soft, rgb(16 185 129 / 0.18));
+}
+html.dark .theme-card {
+    border-color: rgb(255 255 255 / 0.10);
+    background: var(--paper, #0f172a);
+}
+
+.theme-card__preview {
+    position: relative;
+    height: 5rem;
+    border-radius: 0.5rem;
+    border: 1px solid rgb(0 0 0 / 0.06);
+    overflow: hidden;
+    padding: 0.625rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.theme-card__lines { display: flex; flex-direction: column; gap: 0.3rem; }
+.theme-card__lines > span { display: block; height: 0.375rem; border-radius: 999px; }
+.theme-card__lines > span:nth-child(1) { width: 70%; }
+.theme-card__lines > span:nth-child(2) { width: 90%; }
+.theme-card__lines > span:nth-child(3) { width: 55%; }
+.theme-card__accent {
+    position: absolute;
+    bottom: 0.625rem;
+    right: 0.625rem;
+    width: 0.875rem;
+    height: 0.875rem;
+    border-radius: 999px;
+    box-shadow: 0 0 0 2px rgb(255 255 255 / 0.5);
+}
+
+.theme-card__meta { padding: 0 0.125rem 0.125rem; }
+.theme-card__radio {
+    display: inline-block;
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 999px;
+    border: 1.5px solid var(--ink-ghost, #94a3b8);
+    margin-left: auto;
+    transition: background-color .15s, border-color .15s;
+}
+.theme-card--active .theme-card__radio {
+    background: var(--accent, #10b981);
+    border-color: var(--accent, #10b981);
+    box-shadow: inset 0 0 0 2px var(--paper, #fff);
+}
+
+
