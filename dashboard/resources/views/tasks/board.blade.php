@@ -23,19 +23,26 @@
                     </button>
                 </form>
             @endif
+            {{-- Filtros del board. Ancho fijo en wrappers para que Choices.js
+                 NO ajuste el control al texto seleccionado (provocaría que el
+                 layout salte cada vez que cambias de filtro). --}}
             <form method="GET" action="{{ route('tasks.index') }}" class="flex gap-2">
-                <select name="project" class="select text-sm" style="min-width: 12rem" onchange="this.form.submit()">
-                    <option value="">Todos los proyectos</option>
-                    @foreach ($projects as $pr)
-                        <option value="{{ $pr->id }}" @selected($projectId === $pr->id)>{{ $pr->code }} · {{ $pr->name }}</option>
-                    @endforeach
-                </select>
-                <select name="priority" class="select text-sm" style="width:auto" onchange="this.form.submit()">
-                    <option value="">Toda prioridad</option>
-                    @foreach ($priorities as $p)
-                        <option value="{{ $p->value }}" @selected($priority === $p->value)>{{ $p->label() }}</option>
-                    @endforeach
-                </select>
+                <div class="w-56">
+                    <select name="project" class="select text-sm" onchange="this.form.submit()">
+                        <option value="">Todos los proyectos</option>
+                        @foreach ($projects as $pr)
+                            <option value="{{ $pr->id }}" @selected($projectId === $pr->id)>{{ $pr->code }} · {{ $pr->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="w-44">
+                    <select name="priority" class="select text-sm" onchange="this.form.submit()">
+                        <option value="">Toda prioridad</option>
+                        @foreach ($priorities as $p)
+                            <option value="{{ $p->value }}" @selected($priority === $p->value)>{{ $p->label() }}</option>
+                        @endforeach
+                    </select>
+                </div>
             </form>
         </div>
     </div>

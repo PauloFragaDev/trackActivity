@@ -646,7 +646,12 @@ html.dark .choices__list--single .choices__item { color: rgb(241 245 249); }
    Solo retocamos colores, radius y dark mode. El layout completo lo
    pone el CSS base importado en la cabecera. */
 
-.choices { margin-bottom: 0; }                 /* el default trae 24px que estorba */
+.choices {
+    margin-bottom: 0;                          /* el default trae 24px que estorba */
+    width: 100%;                               /* tomar el ancho del wrapper del padre
+                                                  para evitar que ajuste al texto del
+                                                  item seleccionado */
+}
 
 .choices__inner {
     background-color: white;
