@@ -515,4 +515,76 @@ export function initKanban() {
             setSorted(col, ! col.classList.contains('task-column--sorted'));
         });
     });
+
+    // ─── Live refresh vía polling ligero ──────────────────────────────
+    //
+    // Polling JS cada 5s a /tasks/peek (devuelve sólo { latest }). Si el
+    // timestamp difiere del anterior, hacemos reload condicional.
+    //
+    // ¿Por qué polling y no SSE? `php artisan serve` tiene workers
+    // limitados; una conexión SSE bloquea 1 worker permanente. Si además
+    // la extensión code-kanban tiene su SSE abierto, los PATCH del board
+    // se quedan sin workers libres. Polling termina cada request en ms y
+    // libera el worker — coexiste sin problema con el SSE de la extensión.
+    //
+    // Para no interrumpir al usuario, NO recargamos si está en mitad de
+    // algo (dialog abierto, input con texto, focus en textarea). En esos
+    // casos queda pendiente y se aplica al "soltarse".
+    initLivePolling();
+
+    function initLivePolling() {
+        const projectFilter = new URLSearchParams(window.location.search).get('project');
+        const url = projectFilter
+            ? `/tasks/peek?project=${encodeURIComponent(projectFilter)}`
+            : '/tasks/peek';
+
+        let pendingReload = false;
+        let lastSeen = null;
+
+        const isUserBusy = () => {
+            if (document.querySelector('dialog[open]')) return true;
+            const active = document.activeElement;
+            if (active?.matches?.('input[type="search"], input[type="text"], textarea')) {
+                return (active.value || '').trim() !== '' || active.matches(':focus');
+            }
+            return false;
+        };
+
+        const doReload = () => {
+            if (isUserBusy()) { pendingReload = true; return; }
+            window.location.reload();
+        };
+
+        document.addEventListener('focusout', () => {
+            if (pendingReload && ! isUserBusy()) setTimeout(doReload, 200);
+        });
+        document.addEventListener('close', () => {
+            if (pendingReload && ! isUserBusy()) setTimeout(doReload, 200);
+        }, true);
+
+        const tick = async () => {
+            try {
+                const res = await fetch(url, { headers: { Accept: 'application/json' } });
+                if (! res.ok) return;
+                const { latest } = await res.json();
+                if (lastSeen === null) {
+                    lastSeen = latest;
+                    return;
+                }
+                if (latest && latest !== lastSeen) {
+                    lastSeen = latest;
+                    doReload();
+                }
+            } catch {
+                // Red caída/server reiniciando — silencioso; siguiente tick reintenta.
+            }
+        };
+
+        // Primer tick para establecer el baseline, luego cada 5s.
+        tick();
+        setInterval(tick, 5000);
+        // Tick extra al recuperar el foco de la ventana — refresco más responsivo
+        // cuando el usuario vuelve al navegador tras editar en otra app.
+        window.addEventListener('focus', () => { tick(); });
+    }
 }

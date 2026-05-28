@@ -102,6 +102,33 @@ class TaskController extends Controller
         return redirect()->route('tasks.index')->with('status', 'Tarea archivada.');
     }
 
+    /**
+     * Endpoint ligero para que la página /tasks haga polling JS y se
+     * entere de cambios desde otras fuentes (la extensión code-kanban,
+     * otra pestaña, etc.). Devuelve { latest } con el MAX(updated_at)
+     * de las tasks (incluye soft-deleted vía withTrashed).
+     *
+     * Por qué polling y no SSE en la web: `php artisan serve` tiene
+     * workers limitados (PHP_CLI_SERVER_WORKERS=4 en .env). Una conexión
+     * SSE bloquea 1 worker permanentemente. Si además la extensión
+     * code-kanban abre otro SSE, te quedas con 2 workers para todo el
+     * navegador (estáticos, PATCH, etc.). Resultado: la app se atasca.
+     * Polling con un endpoint que termina inmediatamente libera el worker
+     * tras cada llamada — coexiste sin problema con el SSE de la extensión.
+     */
+    public function peek(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $projectId = $request->integer('project') ?: null;
+        $q = Task::withTrashed();
+        if ($projectId) {
+            $q->where('project_id', $projectId);
+        }
+        $latest = $q->max('updated_at');
+        return response()->json([
+            'latest' => $latest ? (string) $latest : null,
+        ]);
+    }
+
     /** Lista las tareas archivadas (soft-deleted) con su proyecto y labels. */
     public function archived(): View
     {

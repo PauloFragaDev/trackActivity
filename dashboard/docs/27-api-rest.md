@@ -16,6 +16,29 @@
    ```
 3. Reinicia el servidor (`php artisan config:clear` si la app está sirviendo).
 
+### ⚠ Si vas a usar la sync con code-kanban: arranca el server con `--no-reload`
+
+El endpoint `/api/sync/kanban/stream` es SSE — mantiene una conexión
+abierta durante 60 s. `php artisan serve` **sin `--no-reload`** corre con
+**un solo worker** (Laravel desactiva los workers múltiples para
+compatibilidad con el auto-reload-on-env-change). Resultado: la conexión
+SSE bloquea el único worker y todas las demás peticiones (incluido el
+`PATCH` que necesita la propia sync para reflejar tus cambios) se cuelgan
+hasta el timeout.
+
+Arranca el server así:
+
+```bash
+php artisan serve --no-reload
+# o, equivalente:
+composer serve
+```
+
+Con `--no-reload` Laravel respeta `PHP_CLI_SERVER_WORKERS=4` (ya está en
+`.env.example`), levanta 4 workers y todo coexiste sin problemas. Para
+desarrollo sin SSE (editando código backend con auto-reload), usa el
+clásico `php artisan serve` sin más.
+
 ## Auth
 
 Todas las rutas bajo `/api/*` (excepto `/up` que es health-check

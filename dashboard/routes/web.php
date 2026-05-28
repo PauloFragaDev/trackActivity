@@ -94,6 +94,7 @@ Route::delete('/note-folders/{noteFolder}', [NoteFolderController::class, 'destr
 
 // ─────────────────── Tareas (Kanban) ───────────────────
 Route::get('/tasks',                [TaskController::class, 'index'])->name('tasks.index');
+Route::get('/tasks/peek',           [TaskController::class, 'peek'])->name('tasks.peek');
 Route::get('/tasks/archived',       [TaskController::class, 'archived'])->name('tasks.archived');
 Route::post('/tasks',               [TaskController::class, 'store'])->name('tasks.store');
 Route::post('/tasks/sync',          [TaskController::class, 'sync'])->name('tasks.sync');
