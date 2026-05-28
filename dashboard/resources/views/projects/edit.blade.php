@@ -10,16 +10,6 @@
         <a href="{{ route('projects.index') }}" class="btn-ghost">← Volver</a>
     </div>
 
-    @if ($errors->any())
-        <div class="card p-4 mb-4 border-rose-400/60 text-rose-700 dark:text-rose-300">
-            <ul class="list-disc pl-5 space-y-0.5 text-sm">
-                @foreach ($errors->all() as $e)
-                    <li>{{ $e }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
     <form method="POST"
           action="{{ $isNew ? route('projects.store') : route('projects.update', $project) }}"
           class="card p-6 max-w-2xl space-y-5">
@@ -36,7 +26,8 @@
                        pattern="[A-Z0-9_\-]+"
                        maxlength="32"
                        placeholder="JASPER"
-                       class="input font-mono">
+                       class="input font-mono @error('code') is-invalid @enderror">
+                <x-field-error name="code" />
             </label>
             <label class="label">
                 <span>Nombre</span>
@@ -44,7 +35,8 @@
                        value="{{ old('name', $project->name) }}"
                        maxlength="128"
                        placeholder="Jasper"
-                       class="input">
+                       class="input @error('name') is-invalid @enderror">
+                <x-field-error name="name" />
             </label>
         </div>
 
@@ -58,17 +50,19 @@
                            id="color-picker">
                     <input type="text" name="color_text" form="never"
                            value="{{ old('color', $project->color ?? '#10b981') }}"
-                           class="input font-mono"
+                           class="input font-mono @error('color') is-invalid @enderror"
                            id="color-text"
                            oninput="document.getElementById('color-picker').value = this.value">
                 </div>
+                <x-field-error name="color" />
             </label>
         </div>
 
         <label class="label">
             <span>Descripción (opcional)</span>
             <textarea name="description" rows="2" maxlength="1000"
-                      class="input">{{ old('description', $project->description) }}</textarea>
+                      class="input @error('description') is-invalid @enderror">{{ old('description', $project->description) }}</textarea>
+            <x-field-error name="description" />
         </label>
 
         <div class="pt-2 border-t divider flex items-center justify-between">
