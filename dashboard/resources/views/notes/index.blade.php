@@ -198,14 +198,35 @@
                     </div>
                 </form>
 
-                @if ($backlinks->isNotEmpty())
-                    {{-- Backlinks: notas que enlazan a esta --}}
+                {{-- Wikilinks: enlaces salientes (lo que ESTA nota referencia
+                     con [[…]]) y backlinks (quién la referencia). Los huérfanos
+                     (target_note_id null) se muestran punteados — clickearlos
+                     busca el título; al crear esa nota se adopta el huérfano. --}}
+                @if ($outgoing->isNotEmpty())
                     <div class="mt-3 shrink-0 flex items-start gap-2 text-sm">
-                        <span class="text-muted shrink-0 pt-1">🔗 Enlazada desde:</span>
+                        <span class="text-muted shrink-0 pt-1">→ Enlaza a:</span>
+                        <div class="flex flex-wrap gap-1.5">
+                            @foreach ($outgoing as $link)
+                                @if ($link->target)
+                                    <a href="{{ route('notes.index', ['note' => $link->target->id]) }}"
+                                       class="chip wikilink hover:bg-ink-200 dark:hover:bg-ink-700">{{ $link->target->icon ?: '📄' }} {{ $link->target->title }}</a>
+                                @else
+                                    <a href="{{ route('notes.index', ['q' => $link->target_title]) }}"
+                                       class="chip wikilink wikilink--missing"
+                                       title="No existe todavía — click para buscar / crear">+ {{ $link->target_title }}</a>
+                                @endif
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
+                @if ($backlinks->isNotEmpty())
+                    <div class="mt-2 shrink-0 flex items-start gap-2 text-sm">
+                        <span class="text-muted shrink-0 pt-1">← Enlazada desde:</span>
                         <div class="flex flex-wrap gap-1.5">
                             @foreach ($backlinks as $bl)
                                 <a href="{{ route('notes.index', ['note' => $bl->id]) }}"
-                                   class="chip hover:bg-ink-200 dark:hover:bg-ink-700">{{ $bl->icon ?: '📄' }} {{ $bl->title }}</a>
+                                   class="chip wikilink hover:bg-ink-200 dark:hover:bg-ink-700">{{ $bl->icon ?: '📄' }} {{ $bl->title }}</a>
                             @endforeach
                         </div>
                     </div>
