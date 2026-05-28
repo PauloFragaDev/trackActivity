@@ -76,16 +76,6 @@
         @apply inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition;
         @apply bg-rose-600 text-white hover:bg-rose-500;
     }
-    /* Add-button: cuadrado, mismo alto que un .input al lado (hereda
-       altura por `items-stretch` del flex padre). Hover sutil. Pensado
-       para "+ añadir" junto a un campo de texto. */
-    .btn-add {
-        @apply inline-flex items-center justify-center rounded-md transition;
-        @apply bg-ink-100 text-ink-700 hover:bg-ink-200;
-        @apply dark:bg-ink-800 dark:text-ink-200 dark:hover:bg-ink-700;
-        min-width: 2.375rem;       /* matches input height when stretched */
-        padding: 0 0.625rem;
-    }
     /* Botón solo-icono: cuadrado, discreto, ideal para filas y barras. */
     .icon-btn {
         @apply inline-flex items-center justify-center rounded-md w-7 h-7 text-sm transition;

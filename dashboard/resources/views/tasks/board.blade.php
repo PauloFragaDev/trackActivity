@@ -156,14 +156,18 @@
                     <span class="text-xs text-faint font-mono" data-subtasks-progress></span>
                 </div>
                 <ul data-subtasks-list class="space-y-1 text-sm mb-2"></ul>
-                {{-- items-stretch + btn-add → el botón hereda la altura
-                     exacta del input. Sin más align-self ni paddings ad hoc. --}}
-                <form data-subtasks-add class="flex items-stretch gap-2">
+                {{-- Patrón input-group: el botón "+" va ABSOLUTO dentro del
+                     input (suffix), no a su lado. Alineación garantizada por
+                     position:absolute + top:50% + translate. Mismo patrón que
+                     la búsqueda del board. --}}
+                <form data-subtasks-add class="input-group">
                     <input type="text" name="title" required maxlength="200"
-                           class="input text-sm flex-1" placeholder="Nueva subtarea — Enter para añadir">
-                    <button type="submit" class="btn-add" aria-label="Añadir subtarea" title="Añadir">
-                        <x-icon name="plus" class="w-4 h-4" />
-                    </button>
+                           class="input text-sm" placeholder="Nueva subtarea — Enter para añadir">
+                    <span class="input-group__suffix">
+                        <button type="submit" class="icon-btn" aria-label="Añadir subtarea" title="Añadir">
+                            <x-icon name="plus" class="w-3.5 h-3.5" />
+                        </button>
+                    </span>
                 </form>
             </section>
 
@@ -173,12 +177,16 @@
                     <x-icon name="chat" class="w-3.5 h-3.5 text-sky-500" /> Comentarios
                 </h4>
                 <ul data-comments-list class="space-y-2 text-sm mb-2"></ul>
-                <form data-comments-add class="flex items-stretch gap-2">
-                    <textarea name="body" required maxlength="5000" rows="2"
-                              class="textarea text-sm flex-1" placeholder="Añadir un comentario…"></textarea>
-                    <button type="submit" class="btn self-stretch px-4" aria-label="Publicar comentario">
-                        Publicar
-                    </button>
+                {{-- Patrón GitHub/Linear: textarea ancho completo, botón
+                     "Publicar" debajo a la derecha. Más limpio que
+                     pelearse con stretch de altura entre dos controles
+                     de tamaño distinto. --}}
+                <form data-comments-add class="space-y-2">
+                    <textarea name="body" required maxlength="5000" rows="3"
+                              class="textarea text-sm w-full" placeholder="Añadir un comentario…"></textarea>
+                    <div class="flex justify-end">
+                        <button type="submit" class="btn">Publicar</button>
+                    </div>
                 </form>
             </section>
 
