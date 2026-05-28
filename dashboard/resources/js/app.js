@@ -277,12 +277,11 @@ window.addEventListener('DOMContentLoaded', () => {
         import('./pomodoro.js').then((m) => m.initPomodoro());
     }
 
-    // Tom Select: aplica a TODOS los <select> de la página para uniformidad.
-    // Selects pequeños (≤5 opciones) muestran el dropdown sin input de
-    // búsqueda; los grandes activan la búsqueda automáticamente. El que
-    // quiera quedarse con el <select> nativo puede añadir data-no-search.
-    if (document.querySelector('select:not([data-no-search])')) {
-        import('./select-search.js').then((m) => m.initSearchableSelects());
+    // Combobox custom: reemplaza visualmente todos los <select> por un
+    // dropdown accesible (popover + búsqueda + teclado). El módulo y su
+    // contrato están en resources/js/combobox/README.md.
+    if (document.querySelector('select:not([data-no-combobox])')) {
+        import('./combobox/index.js').then((m) => m.initComboboxes());
     }
 });
 
