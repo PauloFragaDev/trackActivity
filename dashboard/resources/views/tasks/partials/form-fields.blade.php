@@ -39,8 +39,7 @@
     </label>
     <label class="label">
         <span>Proyecto</span>
-        <select name="project_id" data-searchable
-                class="select mt-1 @error('project_id') is-invalid @enderror">
+        <select name="project_id" class="select mt-1 @error('project_id') is-invalid @enderror">
             <option value="">— Sin proyecto —</option>
             @foreach ($projects as $pr)
                 <option value="{{ $pr->id }}">{{ $pr->code }} · {{ $pr->name }}</option>

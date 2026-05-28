@@ -24,8 +24,7 @@
                 </form>
             @endif
             <form method="GET" action="{{ route('tasks.index') }}" class="flex gap-2">
-                <select name="project" data-searchable
-                        class="select text-sm" style="min-width: 12rem" onchange="this.form.submit()">
+                <select name="project" class="select text-sm" style="min-width: 12rem" onchange="this.form.submit()">
                     <option value="">Todos los proyectos</option>
                     @foreach ($projects as $pr)
                         <option value="{{ $pr->id }}" @selected($projectId === $pr->id)>{{ $pr->code }} · {{ $pr->name }}</option>

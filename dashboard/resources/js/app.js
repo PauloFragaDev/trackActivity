@@ -277,10 +277,11 @@ window.addEventListener('DOMContentLoaded', () => {
         import('./pomodoro.js').then((m) => m.initPomodoro());
     }
 
-    // Tom Select: convierte cualquier <select data-searchable> en combobox
-    // con búsqueda. Lazy-import si hay alguno presente o si puede aparecer
-    // (modales con selects de proyecto, etc.).
-    if (document.querySelector('select[data-searchable]')) {
+    // Tom Select: aplica a TODOS los <select> de la página para uniformidad.
+    // Selects pequeños (≤5 opciones) muestran el dropdown sin input de
+    // búsqueda; los grandes activan la búsqueda automáticamente. El que
+    // quiera quedarse con el <select> nativo puede añadir data-no-search.
+    if (document.querySelector('select:not([data-no-search])')) {
         import('./select-search.js').then((m) => m.initSearchableSelects());
     }
 });
