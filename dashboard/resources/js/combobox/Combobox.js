@@ -122,8 +122,14 @@ export class Combobox {
                 'aria-selected': String(isSelected),
                 'data-value':    opt.value,
                 'data-index':    String(opt.originalIndex),
-                onClick:        () => this._commit(opt.originalIndex),
-                onMouseenter:   () => this._setActive(opt.originalIndex, /* scrollIntoView */ false),
+                // stopPropagation evita que el click burbujee hacia arriba y
+                // toque handlers del dialog/document. preventDefault no es
+                // necesario aquí (un <li> no tiene comportamiento default).
+                onClick: (e) => {
+                    e.stopPropagation();
+                    this._commit(opt.originalIndex);
+                },
+                onMouseenter: () => this._setActive(opt.originalIndex, /* scrollIntoView */ false),
             }, opt.text);
             this.listEl.appendChild(li);
         });
@@ -208,7 +214,12 @@ export class Combobox {
             this.select.dispatchEvent(new Event('input',  { bubbles: true }));
         }
         this.close();
-        this.trigger.focus();
+        // Diferimos el focus al siguiente frame: si lo hacemos sincronicamente,
+        // el click event que disparó este commit aún está propagándose. Al
+        // mover el foco al trigger en ese instante, algunos navegadores
+        // generan un click sintético sobre él → como `isOpen` ya es false,
+        // el handler del trigger llama a open() y el popover reaparece.
+        requestAnimationFrame(() => this.trigger.focus());
     }
 
     // ─── Eventos ───────────────────────────────────────────────
