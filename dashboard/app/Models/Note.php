@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Services\WikilinkResolver;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
@@ -38,6 +40,34 @@ class Note extends Model
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
+    }
+
+    /** Enlaces salientes (`[[…]]` que aparecen en mi body). */
+    public function outgoingLinks(): HasMany
+    {
+        return $this->hasMany(NoteLink::class, 'source_note_id');
+    }
+
+    /** Enlaces entrantes — otras notas cuyo body me referencia (backlinks). */
+    public function incomingLinks(): HasMany
+    {
+        return $this->hasMany(NoteLink::class, 'target_note_id');
+    }
+
+    /**
+     * Hooks de wikilinks. Después de guardar, re-materializo mis enlaces
+     * salientes; cuando la nota se acaba de crear o se renombra, los
+     * huérfanos que esperaban por mi título me adoptan. Todo ocurre en el
+     * mismo flujo del save — el usuario no nota el coste.
+     */
+    protected static function booted(): void
+    {
+        static::saved(function (Note $note) {
+            WikilinkResolver::rematerializeFromSource($note);
+            if ($note->wasRecentlyCreated || $note->wasChanged('title')) {
+                WikilinkResolver::adoptOrphans($note);
+            }
+        });
     }
 
     /**

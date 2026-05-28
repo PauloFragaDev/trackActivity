@@ -25,9 +25,16 @@ window.addEventListener('DOMContentLoaded', () => {
     };
 
     btn.addEventListener('click', () => {
-        const isDark = document.documentElement.classList.toggle('dark');
+        // Crossfade del cambio: marcamos <html> con .theme-transition,
+        // hacemos el toggle, y limpiamos la clase tras la duración del
+        // CSS. Así las transiciones no se activan en otros cambios de
+        // clase (.sidebar-collapsed, modales, etc.).
+        const root = document.documentElement;
+        root.classList.add('theme-transition');
+        const isDark = root.classList.toggle('dark');
         localStorage.setItem('theme', isDark ? 'dark' : 'light');
         sync();
+        window.setTimeout(() => root.classList.remove('theme-transition'), 400);
     });
 
     sync();

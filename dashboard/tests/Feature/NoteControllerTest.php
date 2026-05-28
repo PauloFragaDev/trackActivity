@@ -188,8 +188,10 @@ class NoteControllerTest extends TestCase
 
     public function test_backlinks_list_notes_that_link_here(): void
     {
+        // Los backlinks ahora viven en `note_links` materializados desde
+        // wikilinks [[Título]] en el body — no por URL.
         $target = Note::create(['title' => 'Destino']);
-        Note::create(['title' => 'Origen', 'body' => "ver [esto](/notes?note={$target->id})"]);
+        Note::create(['title' => 'Origen', 'body' => 'ver [[Destino]] aquí.']);
         Note::create(['title' => 'Ajena', 'body' => 'sin enlaces']);
 
         $backlinks = $this->get("/notes?note={$target->id}")->assertOk()->viewData('backlinks');

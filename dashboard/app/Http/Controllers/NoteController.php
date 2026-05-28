@@ -69,14 +69,24 @@ class NoteController extends Controller
             }
         }
 
-        // Backlinks: notas cuyo cuerpo enlaza a la nota abierta (?note=ID).
+        // Wikilinks: dos lados de la relación, ambos materializados en
+        // note_links por el observer de Note.
+        //   · backlinks: notas que enlazan a la abierta.
+        //   · outgoing: títulos que la abierta menciona (resueltos y huérfanos).
         $backlinks = collect();
+        $outgoing  = collect();
         if ($currentNote) {
             $backlinks = Note::query()
-                ->where('id', '!=', $currentNote->id)
-                ->get(['id', 'title', 'icon', 'body'])
-                ->filter(fn (Note $n) => preg_match('/[?&]note=' . $currentNote->id . '\b/', (string) $n->body))
-                ->values();
+                ->whereIn('id', function ($sub) use ($currentNote) {
+                    $sub->select('source_note_id')
+                        ->from('note_links')
+                        ->where('target_note_id', $currentNote->id);
+                })
+                ->get(['id', 'title', 'icon']);
+
+            $outgoing = $currentNote->outgoingLinks()
+                ->with('target:id,title,icon')
+                ->get();
         }
 
         return view('notes.index', [
@@ -90,6 +100,7 @@ class NoteController extends Controller
             'trashCount'    => $trashCount,
             'breadcrumb'    => $breadcrumb,
             'backlinks'     => $backlinks,
+            'outgoing'      => $outgoing,
             'projects'      => Project::orderBy('code')->get(),
         ]);
     }
