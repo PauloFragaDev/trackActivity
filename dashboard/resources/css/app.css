@@ -12,6 +12,10 @@
 @import '@fontsource/inter/latin-ext-700.css';
 @import '@fontsource/jetbrains-mono/latin-400.css';
 @import '@fontsource/jetbrains-mono/latin-500.css';
+/* CSS oficial de Choices.js (combobox sobre todos los <select>).
+   Más abajo solo retocamos colores y radius para que encaje con el
+   sistema; layout y comportamiento los pone este import. */
+@import 'choices.js/public/assets/styles/choices.css';
 
 @tailwind base;
 @tailwind components;
@@ -560,182 +564,154 @@ html.sidebar-collapsed [data-timer-dock-title] { display: none; }
 html.dark [data-task-inline-add] input:focus { background-color: rgb(30 41 59 / 0.4); }
 
 
-/* ─── Combobox (resources/js/combobox) ──────────────────────────────
-   Reemplazo visual de <select> con popover + búsqueda + teclado.
-   El <select> original queda oculto y se sincroniza con el control. */
 
-.combobox {
-    position: relative;
-    display: inline-block;
-    width: 100%;
-}
+/* ─── Choices.js · overrides mínimos para alinear con el sistema ──
+   Solo retocamos colores, radius y dark mode. El layout completo lo
+   pone el CSS base importado en la cabecera. */
 
-/* Trigger: el "botón" que muestra la selección actual. Estilo botón
-   sutil, NO un input. Pointer cursor explícito. */
-.combobox__trigger {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
-    width: 100%;
-    min-height: 2.375rem;
-    padding: 0.375rem 0.75rem;
-    text-align: left;
-    font-size: 0.875rem;
-    line-height: 1.25rem;
-    cursor: pointer;
-    border-radius: 0.375rem;
-    border: 1px solid rgb(229 231 235);                /* ink-200 */
+.choices { margin-bottom: 0; }                 /* Choices añade 24px por defecto */
+
+.choices__inner {
     background-color: white;
-    color: rgb(17 24 39);                              /* ink-900 */
-    transition: border-color 0.15s, background-color 0.15s, box-shadow 0.15s;
+    border: 1px solid rgb(229 231 235);        /* ink-200 */
+    border-radius: 0.375rem;
+    min-height: 2.375rem;
+    padding: 0.45rem 0.75rem;
+    font-size: 0.875rem;
+    transition: border-color 0.15s, box-shadow 0.15s;
 }
-.combobox__trigger:hover {
-    border-color: rgb(156 163 175);                    /* ink-300 */
-    background-color: rgb(249 250 251);                /* ink-50 */
-}
-.combobox.is-open .combobox__trigger,
-.combobox__trigger:focus-visible {
-    outline: none;
-    border-color: rgb(16 185 129);                     /* emerald-500 */
+.choices__inner:hover { border-color: rgb(156 163 175); }       /* ink-300 */
+.choices.is-focused .choices__inner,
+.choices.is-open    .choices__inner {
+    border-color: rgb(16 185 129);                              /* emerald-500 */
     box-shadow: 0 0 0 2px rgb(16 185 129 / 0.4);
 }
-.combobox__value {
-    flex: 1 1 auto;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-/* Chevron como pseudo SVG */
-.combobox__chevron {
-    flex: 0 0 auto;
-    width: 1rem;
-    height: 1rem;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%2394a3b8'><path d='M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 111.08 1.04l-4.25 4.39a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z'/></svg>");
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: contain;
-    transition: transform 0.15s;
-}
-.combobox.is-open .combobox__chevron {
-    transform: rotate(180deg);
-}
-
-/* Popover: dropdown que sale debajo del trigger.
-   Por defecto OCULTO. La clase .combobox.is-open lo muestra. Razón:
-   un selector de clase (.combobox__popover) gana por specificity al
-   atributo [hidden], así que `display: flex` directo dejaría el
-   popover SIEMPRE visible aunque JS lo escondiera. */
-.combobox__popover {
-    position: absolute;
-    top: calc(100% + 4px);
-    left: 0;
-    right: 0;
-    z-index: 50;
-    display: none;                                     /* oculto por defecto */
-    flex-direction: column;
-    max-height: 18rem;
-    border-radius: 0.375rem;
-    border: 1px solid rgb(229 231 235);
-    background-color: white;
-    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.12),
-                0 4px  6px -4px rgb(0 0 0 / 0.10);
-    overflow: hidden;
-    animation: combobox-pop 0.12s ease-out;
-}
-.combobox.is-open .combobox__popover {
-    display: flex;
-}
-@keyframes combobox-pop {
-    from { opacity: 0; transform: translateY(-4px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-.combobox__search {
-    flex: 0 0 auto;
-    width: 100%;
-    padding: 0.5rem 0.75rem;
-    font-size: 0.8125rem;
-    border: none;
-    border-bottom: 1px solid rgb(229 231 235);
-    outline: none;
-    background: transparent;
-    color: inherit;
-}
-.combobox__search::placeholder { color: rgb(156 163 175); }
-.combobox__list {
-    flex: 1 1 auto;
-    overflow-y: auto;
-    padding: 0.25rem 0;
-    margin: 0;
-    list-style: none;
-}
-.combobox__option {
-    padding: 0.4rem 0.75rem;
+.choices__list--single .choices__item {
+    padding: 0;
     font-size: 0.875rem;
-    cursor: pointer;
-    color: rgb(31 41 55);
-    transition: background-color 0.08s;
 }
-.combobox__option.is-active {
-    background-color: rgb(243 244 246);                /* ink-100 */
+.choices__list--dropdown,
+.choices__list[aria-expanded] {
+    border: 1px solid rgb(229 231 235);
+    border-radius: 0.375rem;
+    margin-top: 4px;
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.12);
+    z-index: 60;                                                 /* sobre el modal */
 }
-.combobox__option.is-selected {
-    color: rgb(6 95 70);                               /* emerald-800 */
-    font-weight: 500;
-}
-.combobox__option.is-selected.is-active {
-    background-color: rgb(209 250 229);                /* emerald-100 */
-}
-.combobox__empty {
+.choices__list--dropdown .choices__item--selectable {
     padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+}
+.choices__list--dropdown .choices__item--selectable.is-highlighted {
+    background-color: rgb(243 244 246);                          /* ink-100 */
+}
+.choices__list--dropdown .choices__input {
+    margin: 0;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid rgb(229 231 235);
+    background-color: transparent;
     font-size: 0.8125rem;
-    color: rgb(107 114 128);
-    font-style: italic;
 }
-
-/* Sublist de etiqueta inválida sigue funcionando (el <select> original
-   conserva la clase .is-invalid si la tenía). */
-.combobox:has(+ select.is-invalid) .combobox__trigger,
-select.is-invalid + .combobox .combobox__trigger {
-    border-color: rgb(248 113 113);                    /* rose-400 */
-}
+.choices__placeholder { opacity: 0.6; }
 
 /* Modo oscuro */
-html.dark .combobox__trigger {
-    border-color: rgb(51 65 85);                       /* ink-700 */
-    background-color: rgb(30 41 59);                   /* ink-800 */
+html.dark .choices__inner {
+    background-color: rgb(30 41 59);                             /* ink-800 */
+    border-color: rgb(51 65 85);                                 /* ink-700 */
     color: rgb(241 245 249);
 }
-html.dark .combobox__trigger:hover {
-    border-color: rgb(71 85 105);                      /* ink-600 */
-    background-color: rgb(15 23 42 / 0.6);
-}
-html.dark .combobox.is-open .combobox__trigger {
-    border-color: rgb(52 211 153);                     /* emerald-400 */
+html.dark .choices__inner:hover { border-color: rgb(71 85 105); }
+html.dark .choices.is-focused .choices__inner,
+html.dark .choices.is-open    .choices__inner {
+    border-color: rgb(52 211 153);                               /* emerald-400 */
     box-shadow: 0 0 0 2px rgb(52 211 153 / 0.35);
 }
-html.dark .combobox__chevron {
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%2364748b'><path d='M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 111.08 1.04l-4.25 4.39a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z'/></svg>");
-}
-html.dark .combobox__popover {
-    border-color: rgb(51 65 85);
+html.dark .choices__list--dropdown,
+html.dark .choices__list[aria-expanded] {
     background-color: rgb(30 41 59);
+    border-color: rgb(51 65 85);
+    color: rgb(241 245 249);
     box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.4);
 }
-html.dark .combobox__search {
+html.dark .choices__list--dropdown .choices__item--selectable.is-highlighted {
+    background-color: rgb(51 65 85);
+}
+html.dark .choices__list--dropdown .choices__input {
     border-bottom-color: rgb(51 65 85);
     color: rgb(241 245 249);
 }
-html.dark .combobox__search::placeholder { color: rgb(100 116 139); }
-html.dark .combobox__option { color: rgb(226 232 240); }
-html.dark .combobox__option.is-active {
+html.dark .choices__list--single .choices__item { color: rgb(241 245 249); }
+
+/* ─── Choices.js · overrides mínimos para alinear con el sistema ──
+   Solo retocamos colores, radius y dark mode. El layout completo lo
+   pone el CSS base importado en la cabecera. */
+
+.choices { margin-bottom: 0; }                 /* el default trae 24px que estorba */
+
+.choices__inner {
+    background-color: white;
+    border: 1px solid rgb(229 231 235);        /* ink-200 */
+    border-radius: 0.375rem;
+    min-height: 2.375rem;
+    padding: 0.45rem 0.75rem;
+    font-size: 0.875rem;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+.choices__inner:hover { border-color: rgb(156 163 175); }       /* ink-300 */
+.choices.is-focused .choices__inner,
+.choices.is-open    .choices__inner {
+    border-color: rgb(16 185 129);                              /* emerald-500 */
+    box-shadow: 0 0 0 2px rgb(16 185 129 / 0.4);
+}
+.choices__list--single .choices__item { padding: 0; font-size: 0.875rem; }
+.choices__list--dropdown,
+.choices__list[aria-expanded] {
+    border: 1px solid rgb(229 231 235);
+    border-radius: 0.375rem;
+    margin-top: 4px;
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.12);
+    z-index: 60;                                                 /* sobre los dialogs */
+}
+.choices__list--dropdown .choices__item--selectable {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+}
+.choices__list--dropdown .choices__item--selectable.is-highlighted {
+    background-color: rgb(243 244 246);
+}
+.choices__list--dropdown .choices__input {
+    margin: 0;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid rgb(229 231 235);
+    background-color: transparent;
+    font-size: 0.8125rem;
+}
+.choices__placeholder { opacity: 0.6; }
+
+/* Modo oscuro */
+html.dark .choices__inner {
+    background-color: rgb(30 41 59);                             /* ink-800 */
+    border-color: rgb(51 65 85);                                 /* ink-700 */
+    color: rgb(241 245 249);
+}
+html.dark .choices__inner:hover { border-color: rgb(71 85 105); }
+html.dark .choices.is-focused .choices__inner,
+html.dark .choices.is-open    .choices__inner {
+    border-color: rgb(52 211 153);                               /* emerald-400 */
+    box-shadow: 0 0 0 2px rgb(52 211 153 / 0.35);
+}
+html.dark .choices__list--dropdown,
+html.dark .choices__list[aria-expanded] {
+    background-color: rgb(30 41 59);
+    border-color: rgb(51 65 85);
+    color: rgb(241 245 249);
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.4);
+}
+html.dark .choices__list--dropdown .choices__item--selectable.is-highlighted {
     background-color: rgb(51 65 85);
 }
-html.dark .combobox__option.is-selected {
-    color: rgb(167 243 208);                           /* emerald-200 */
+html.dark .choices__list--dropdown .choices__input {
+    border-bottom-color: rgb(51 65 85);
+    color: rgb(241 245 249);
 }
-html.dark .combobox__option.is-selected.is-active {
-    background-color: rgb(6 78 59 / 0.6);
-}
-html.dark .combobox__empty { color: rgb(148 163 184); }
-
+html.dark .choices__list--single .choices__item { color: rgb(241 245 249); }

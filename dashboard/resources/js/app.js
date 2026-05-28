@@ -284,11 +284,10 @@ window.addEventListener('DOMContentLoaded', () => {
         import('./pomodoro.js').then((m) => m.initPomodoro());
     }
 
-    // Combobox custom: reemplaza visualmente todos los <select> por un
-    // dropdown accesible (popover + búsqueda + teclado). El módulo y su
-    // contrato están en resources/js/combobox/README.md.
-    if (document.querySelector('select:not([data-no-combobox])')) {
-        import('./combobox/index.js').then((m) => m.initComboboxes());
+    // Choices.js sobre todos los <select> para uniformidad visual + búsqueda.
+    // Lazy-import: el chunk de la librería sólo se carga si hay selects.
+    if (document.querySelector('select:not([data-no-search])')) {
+        import('./select.js').then((m) => m.initSelects());
     }
 });
 
