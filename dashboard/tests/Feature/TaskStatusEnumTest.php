@@ -3,8 +3,6 @@
 namespace Tests\Feature;
 
 use App\Enums\TaskStatus;
-use App\Models\Task;
-use App\Services\PomodoroService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -39,15 +37,4 @@ class TaskStatusEnumTest extends TestCase
         $this->assertFalse(TaskStatus::Done->isActionable());
     }
 
-    public function test_pomodoro_next_task_skips_blocked_and_standby(): void
-    {
-        // Una blocked con prioridad high — no debería ganar.
-        Task::create(['title' => 'Bloqueada',  'status' => 'blocked', 'priority' => 'high']);
-        Task::create(['title' => 'En espera',  'status' => 'standby', 'priority' => 'high']);
-        // La candidata real: Doing aunque sin prioridad.
-        $doing = Task::create(['title' => 'Activa', 'status' => 'doing']);
-
-        $next = app(PomodoroService::class)->nextTask();
-        $this->assertSame($doing->id, $next->id);
-    }
 }

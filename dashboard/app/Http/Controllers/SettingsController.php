@@ -62,7 +62,6 @@ class SettingsController extends Controller
             'pomodoro_short_break_min'   => ['required', 'integer', 'between:1,30'],
             'pomodoro_long_break_min'    => ['required', 'integer', 'between:5,60'],
             'pomodoro_cycles_until_long' => ['required', 'integer', 'between:2,10'],
-            'pomodoro_daily_goal_min'    => ['required', 'integer', 'between:15,720'],
         ]);
 
         $this->pomodoro->saveConfig($data);

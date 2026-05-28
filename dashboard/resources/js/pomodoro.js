@@ -1,434 +1,393 @@
 /**
- * Pomodoro · pill rica + transiciones + modal de cierre + drag + minimizar.
+ * Pomodoro · timer independiente, 100% client-side.
  *
- * El estado real vive en BBDD (active_timers). Este módulo:
- *   - Tickea el contador descontando offset de pausa.
- *   - Cuando llega a 0 (fin de fase), llama a /timer/advance:
- *       · si era focus → backend crea manual_entry y abre el modal de cierre.
- *       · si era break → vuelve a focus automáticamente.
- *   - Cablea pause/resume/skip/stop, el ▶ de las cards y el CTA del dashboard.
- *   - Drag de la pill (desktop): persistencia en localStorage, clamp al viewport,
- *     umbral de 5 px para no confundir click con drag.
- *   - Minimizar a sidebar: la pill se oculta, aparece un dock con dot+tiempo+
- *     título; click expande. El ticker sigue vivo y pinta lo que esté visible.
+ * Estado completo en localStorage bajo `pomodoro.state`, sincronizado
+ * entre pestañas con el evento `storage`. No hay backend para el timer:
+ * sólo /settings/pomodoro decide la duración de las fases.
+ *
+ * Fases:
+ *   idle              → nada corriendo, display = duración del foco
+ *   focus / short / long
+ *                     → corriendo
+ *   awaiting_break    → acaba el foco; espera click "Empezar pausa"
+ *   awaiting_focus    → acaba la pausa; espera click "Empezar foco"
+ *
+ * El módulo:
+ *   - tickea cada segundo cuando hay fase corriendo
+ *   - pinta dos UIs: la página /pomodoro (`#pomodoro-app`) y el dock
+ *     flotante global (`#pomodoro-dock`)
+ *   - flashea el <title> y dispara una notification cuando una fase
+ *     llega a 0 (siempre que el permiso esté concedido)
+ *   - persiste/lee estado entre recargas y entre pestañas
+ *
+ * Diseño manual: las fases NO se encadenan solas. El usuario decide
+ * cuándo arrancar la pausa o el siguiente foco.
  */
 
-import Swal from 'sweetalert2';
+const LS_KEY  = 'pomodoro.state';
+const TICK_MS = 1000;
 
-const csrf = () => document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+// Fase canónica.
+const PHASE = {
+    IDLE:            'idle',
+    FOCUS:           'focus',
+    SHORT:           'short',
+    LONG:            'long',
+    AWAITING_BREAK:  'awaiting_break',
+    AWAITING_FOCUS:  'awaiting_focus',
+};
 
-const LS_POS  = 'timer-pill-position';     // {left, top} en px, persistido por dispositivo
-const LS_MIN  = 'timer-pill-minimized';    // '1' si dock activo
-const DRAG_THRESHOLD = 5;                  // px antes de considerar drag
-const isDesktop = () => window.matchMedia('(min-width: 768px)').matches;
+const RUNNING  = new Set([PHASE.FOCUS, PHASE.SHORT, PHASE.LONG]);
+const AWAITING = new Set([PHASE.AWAITING_BREAK, PHASE.AWAITING_FOCUS]);
 
-function postJson(url, payload = {}) {
-    const body = new URLSearchParams({ _token: csrf(), ...payload });
-    return fetch(url, {
-        method: 'POST',
-        headers: { Accept: 'application/json' },
-        body,
-    }).then((r) => r.json().catch(() => ({})));
+/* ── Estado en localStorage ─────────────────────────────────────────── */
+
+function defaultState() {
+    return {
+        phase:        PHASE.IDLE,
+        startedAt:    null,  // ms epoch cuando arrancó la fase actual
+        pausedAt:     null,  // ms epoch cuando se pausó (null si corre)
+        pausedOffset: 0,     // ms acumulados en pausas previas de esta fase
+        cycle:        0,     // focos completados desde el último long break
+    };
 }
 
-function pad(n) {
-    return String(n).padStart(2, '0');
+function readState() {
+    try {
+        const raw = localStorage.getItem(LS_KEY);
+        if (! raw) return defaultState();
+        const s = JSON.parse(raw);
+        return { ...defaultState(), ...s };
+    } catch {
+        return defaultState();
+    }
 }
 
-function formatRemaining(sec) {
-    const abs = Math.abs(sec);
-    const m = Math.floor(abs / 60);
-    const s = abs % 60;
+function writeState(s) {
+    localStorage.setItem(LS_KEY, JSON.stringify(s));
+}
+
+/* ── Cálculo de tiempo restante ─────────────────────────────────────── */
+
+function phaseDurationMs(phase, config) {
+    switch (phase) {
+        case PHASE.FOCUS: return config.focusMin       * 60_000;
+        case PHASE.SHORT: return config.shortBreakMin  * 60_000;
+        case PHASE.LONG:  return config.longBreakMin   * 60_000;
+        default:          return 0;
+    }
+}
+
+function remainingMs(state, config) {
+    if (! RUNNING.has(state.phase) || state.startedAt == null) return 0;
+    const now      = Date.now();
+    const pauseAdd = state.pausedAt ? (now - state.pausedAt) : 0;
+    const elapsed  = now - state.startedAt - state.pausedOffset - pauseAdd;
+    const total    = phaseDurationMs(state.phase, config);
+    return Math.max(0, total - elapsed);
+}
+
+/* ── Format helpers ─────────────────────────────────────────────────── */
+
+const pad = (n) => String(n).padStart(2, '0');
+
+function formatMmSs(ms) {
+    const total = Math.ceil(ms / 1000);
+    const m = Math.floor(total / 60);
+    const s = total % 60;
     return `${pad(m)}:${pad(s)}`;
 }
 
-/** Segundos restantes en la fase actual, descontando offset de pausa. */
-function remainingSeconds(pill) {
-    const phaseStart = Date.parse(pill.dataset.phaseStartedAt);
-    const offset     = parseInt(pill.dataset.pausedOffsetSeconds || '0', 10);
-    const duration   = parseInt(pill.dataset.phaseDurationSeconds || '0', 10);
-    const pausedAt   = pill.dataset.pausedAt ? Date.parse(pill.dataset.pausedAt) : null;
-    const now        = Date.now();
-    let elapsed = Math.floor((now - phaseStart) / 1000) - offset;
-    if (pausedAt) {
-        elapsed -= Math.max(0, Math.floor((now - pausedAt) / 1000));
-    }
-    return duration - elapsed;
-}
+const PHASE_LABEL = {
+    [PHASE.IDLE]:            'Listo',
+    [PHASE.FOCUS]:           'Foco',
+    [PHASE.SHORT]:           'Pausa corta',
+    [PHASE.LONG]:            'Pausa larga',
+    [PHASE.AWAITING_BREAK]:  '¡Foco completado!',
+    [PHASE.AWAITING_FOCUS]:  '¡Pausa terminada!',
+};
 
-function refreshDot(pill) {
-    const dot = pill.querySelector('[data-timer-dot]');
-    if (!dot) return;
-    const paused = !!pill.dataset.pausedAt;
-    const classes = ['bg-emerald-500', 'bg-amber-500', 'bg-sky-500', 'bg-ink-400', 'animate-pulse'];
-    dot.classList.remove(...classes);
-    if (paused) { dot.classList.add('bg-ink-400'); return; }
-    dot.classList.add('animate-pulse');
-    if (pill.dataset.state === 'focus') dot.classList.add('bg-emerald-500');
-    else if (pill.dataset.state === 'short_break') dot.classList.add('bg-amber-500');
-    else if (pill.dataset.state === 'long_break') dot.classList.add('bg-sky-500');
-    else dot.classList.add('bg-emerald-500');
-    // El dot del dock comparte color con el de la pill.
-    const dockDot = document.querySelector('[data-timer-dock-dot]');
-    if (dockDot) {
-        dockDot.classList.remove(...classes);
-        dockDot.classList.add(...dot.classList);
-    }
-}
+/* ── State transitions ──────────────────────────────────────────────── */
 
-function setStateLabel(pill) {
-    const lbl = pill.querySelector('[data-timer-state-label]');
-    if (!lbl) return;
-    const map = { focus: 'Foco', short_break: 'Pausa corta', long_break: 'Pausa larga' };
-    lbl.textContent = pill.dataset.pausedAt ? 'Pausado' : (map[pill.dataset.state] || 'Foco');
-}
-
-function applyTimerData(pill, payload) {
-    if (!payload?.running) return;
-    pill.dataset.state                 = payload.state || 'focus';
-    pill.dataset.phaseStartedAt        = payload.phase_started_at || '';
-    pill.dataset.pausedAt              = payload.paused_at || '';
-    pill.dataset.pausedOffsetSeconds   = String(payload.paused_offset_seconds ?? 0);
-    pill.dataset.phaseDurationSeconds  = String(payload.phase_duration_seconds ?? 0);
-    pill.dataset.cycleCount            = String(payload.cycle_count ?? 0);
-    if (payload.task_title) {
-        pill.dataset.taskTitle = payload.task_title;
-        const title = pill.querySelector('[data-timer-task-title]');
-        if (title) title.textContent = payload.task_title;
-        const dockTitle = document.querySelector('[data-timer-dock-title]');
-        if (dockTitle) dockTitle.textContent = payload.task_title;
-    }
-    const cycles = pill.querySelector('[data-timer-cycles]');
-    if (cycles) cycles.textContent = `#${payload.cycle_count ?? 0}`;
-
-    pill.classList.remove('timer-pill--focus', 'timer-pill--short-break', 'timer-pill--long-break', 'timer-pill--paused');
-    pill.classList.add(`timer-pill--${(payload.state || 'focus').replace('_', '-')}`);
-    if (payload.paused_at) pill.classList.add('timer-pill--paused');
-
-    const iconPause = pill.querySelector('[data-timer-icon-pause]');
-    const iconPlay  = pill.querySelector('[data-timer-icon-play]');
-    if (iconPause && iconPlay) {
-        iconPause.classList.toggle('hidden',      !!payload.paused_at);
-        iconPause.classList.toggle('inline-flex', !payload.paused_at);
-        iconPlay.classList.toggle('hidden',       !payload.paused_at);
-        iconPlay.classList.toggle('inline-flex',  !!payload.paused_at);
-    }
-
-    refreshDot(pill);
-    setStateLabel(pill);
-}
-
-/**
- * Modal de cierre (mood / progress / nota). Devuelve los datos si el usuario
- * envía el form, o null si lo salta.
- */
-function openFocusCloseModal(summaryText) {
-    const dlg = document.getElementById('focus-close-modal');
-    if (!dlg) return Promise.resolve(null);
-    const form = dlg.querySelector('#focus-close-form');
-    form.querySelector('[data-focus-summary]').textContent = summaryText || '';
-
-    let mood = null;
-    let progress = null;
-    const moodGroup     = form.querySelector('[data-focus-mood]');
-    const progressGroup = form.querySelector('[data-focus-progress]');
-    moodGroup.querySelectorAll('[data-mood-value]').forEach((b) => {
-        b.classList.remove('ring-2', 'ring-emerald-500');
-        b.onclick = () => {
-            mood = parseInt(b.dataset.moodValue, 10);
-            moodGroup.querySelectorAll('[data-mood-value]').forEach((x) => x.classList.remove('ring-2', 'ring-emerald-500'));
-            b.classList.add('ring-2', 'ring-emerald-500');
-        };
-    });
-    progressGroup.querySelectorAll('[data-progress-value]').forEach((b) => {
-        b.classList.remove('ring-2', 'ring-emerald-500');
-        b.onclick = () => {
-            progress = b.dataset.progressValue;
-            progressGroup.querySelectorAll('[data-progress-value]').forEach((x) => x.classList.remove('ring-2', 'ring-emerald-500'));
-            b.classList.add('ring-2', 'ring-emerald-500');
-        };
-    });
-    form.querySelector('textarea[name="notes"]').value = '';
-
-    return new Promise((resolve) => {
-        const onSubmit = (e) => {
-            e.preventDefault();
-            cleanup();
-            const notes = form.querySelector('textarea[name="notes"]').value.trim();
-            dlg.close();
-            resolve({ mood, progress, notes });
-        };
-        const onSkip = () => { cleanup(); dlg.close(); resolve(null); };
-        const cleanup = () => {
-            form.removeEventListener('submit', onSubmit);
-            form.querySelector('[data-focus-skip]').removeEventListener('click', onSkip);
-        };
-        form.addEventListener('submit', onSubmit);
-        form.querySelector('[data-focus-skip]').addEventListener('click', onSkip);
-        if (typeof dlg.showModal === 'function') dlg.showModal();
-    });
-}
-
-/**
- * Confirmación previa al stop: si era focus, además se abre luego el modal
- * de cierre breve para enriquecer la entry.
- */
-async function confirmStop(pill) {
-    const wasFocus = pill.dataset.state === 'focus';
-    const rem = remainingSeconds(pill);
-    const phaseDur = parseInt(pill.dataset.phaseDurationSeconds || '0', 10);
-    const elapsedSec = Math.max(0, phaseDur - rem);
-    const elapsedMin = Math.floor(elapsedSec / 60);
-
-    const html = wasFocus
-        ? `Llevas <b>${elapsedMin} min</b> de foco. Se guardarán como entrada manual.`
-        : 'Vas a salir del Pomodoro durante una pausa. No se guarda nada.';
-
-    const res = await Swal.fire({
-        title: '¿Parar el Pomodoro?',
-        html,
-        customClass: { popup: 'app-swal', confirmButton: 'btn-danger', cancelButton: 'btn-ghost' },
-        buttonsStyling: false,
-        reverseButtons: true,
-        showCancelButton: true,
-        confirmButtonText: 'Sí, parar',
-        cancelButtonText: 'Seguir',
-    });
-    return res.isConfirmed;
-}
-
-/* ─────────────── Drag de la pill (desktop) ─────────────── */
-
-/** Lee la posición persistida y la aplica al pill si existe; valida viewport. */
-function applyStoredPosition(pill) {
-    if (!isDesktop()) return;
-    try {
-        const raw = localStorage.getItem(LS_POS);
-        if (!raw) return;
-        const { left, top } = JSON.parse(raw);
-        if (typeof left !== 'number' || typeof top !== 'number') return;
-        positionPill(pill, left, top);
-    } catch { /* ignore */ }
-}
-
-/** Aplica una posición absoluta clampada al viewport. */
-function positionPill(pill, left, top) {
-    const margin = 8;
-    const w = pill.offsetWidth;
-    const h = pill.offsetHeight;
-    const maxLeft = window.innerWidth  - w - margin;
-    const maxTop  = window.innerHeight - h - margin;
-    const clampedLeft = Math.min(Math.max(margin, left), Math.max(margin, maxLeft));
-    const clampedTop  = Math.min(Math.max(margin, top),  Math.max(margin, maxTop));
-    // Quitamos el preset bottom-center y aplicamos top/left absolutos.
-    pill.classList.remove('bottom-4', 'left-1/2', '-translate-x-1/2');
-    pill.style.left = clampedLeft + 'px';
-    pill.style.top  = clampedTop + 'px';
-    pill.style.right = 'auto';
-    pill.style.bottom = 'auto';
-    pill.style.transform = 'none';
-}
-
-function initDrag(pill) {
-    if (!isDesktop()) return;
-    const handle = pill.querySelector('[data-timer-handle]');
-    if (!handle) return;
-
-    let startX = 0, startY = 0, originLeft = 0, originTop = 0;
-    let dragging = false;
-    let pointerId = null;
-
-    const onPointerDown = (e) => {
-        // Sólo botón principal o touch.
-        if (e.button !== undefined && e.button !== 0) return;
-        // Si el evento nace dentro de un botón hijo, dejarlo pasar (no drag).
-        if (e.target.closest('button')) return;
-        pointerId = e.pointerId;
-        handle.setPointerCapture?.(pointerId);
-
-        // Asegúrate de tener una left/top absolutas para hacer delta sobre ellas.
-        const rect = pill.getBoundingClientRect();
-        originLeft = rect.left;
-        originTop  = rect.top;
-        startX = e.clientX;
-        startY = e.clientY;
-        dragging = false; // se confirmará al superar el umbral
+function configFromRoot(root) {
+    return {
+        focusMin:        Number(root.dataset.focusMin)        || 25,
+        shortBreakMin:   Number(root.dataset.shortBreakMin)   || 5,
+        longBreakMin:    Number(root.dataset.longBreakMin)    || 15,
+        cyclesUntilLong: Number(root.dataset.cyclesUntilLong) || 4,
     };
+}
 
-    const onPointerMove = (e) => {
-        if (pointerId === null || e.pointerId !== pointerId) return;
-        const dx = e.clientX - startX;
-        const dy = e.clientY - startY;
-        if (!dragging) {
-            if (Math.hypot(dx, dy) < DRAG_THRESHOLD) return;
-            dragging = true;
-            pill.classList.add('is-dragging');
-            // Antes del primer move real, fijamos las coords actuales.
-            positionPill(pill, originLeft, originTop);
-        }
-        positionPill(pill, originLeft + dx, originTop + dy);
+function configFromDock() {
+    // Si entras a una página sin #pomodoro-app, el dock lleva la config
+    // como data-attrs para que pueda renderizar sin la página principal.
+    const dock = document.getElementById('pomodoro-dock');
+    if (! dock) return { focusMin: 25, shortBreakMin: 5, longBreakMin: 15, cyclesUntilLong: 4 };
+    return configFromRoot(dock);
+}
+
+function nextBreakPhase(state, config) {
+    // Tras completar (cycle+1) focos se gana pausa larga; las anteriores son cortas.
+    return ((state.cycle + 1) % config.cyclesUntilLong === 0) ? PHASE.LONG : PHASE.SHORT;
+}
+
+function startPhase(phase) {
+    const s = readState();
+    s.phase        = phase;
+    s.startedAt    = Date.now();
+    s.pausedAt     = null;
+    s.pausedOffset = 0;
+    writeState(s);
+}
+
+function pause() {
+    const s = readState();
+    if (! RUNNING.has(s.phase) || s.pausedAt) return;
+    s.pausedAt = Date.now();
+    writeState(s);
+}
+
+function resume() {
+    const s = readState();
+    if (! s.pausedAt) return;
+    s.pausedOffset += Date.now() - s.pausedAt;
+    s.pausedAt = null;
+    writeState(s);
+}
+
+function completePhaseTransition(prevPhase) {
+    // Se llamó al consumir el tiempo restante: pasamos a estado de espera.
+    const s = readState();
+    if (prevPhase === PHASE.FOCUS) {
+        s.cycle += 1;
+        s.phase  = PHASE.AWAITING_BREAK;
+    } else {
+        s.phase  = PHASE.AWAITING_FOCUS;
+    }
+    s.startedAt    = null;
+    s.pausedAt     = null;
+    s.pausedOffset = 0;
+    writeState(s);
+    onPhaseEnd(prevPhase);
+}
+
+function skip() {
+    const s = readState();
+    if (s.phase === PHASE.IDLE) return;
+
+    if (s.phase === PHASE.FOCUS) {
+        // Saltamos en pleno foco: cuenta como ciclo y pasa a awaiting_break.
+        s.cycle    += 1;
+        s.phase     = PHASE.AWAITING_BREAK;
+    } else if (s.phase === PHASE.SHORT || s.phase === PHASE.LONG) {
+        s.phase     = PHASE.AWAITING_FOCUS;
+    } else if (s.phase === PHASE.AWAITING_BREAK) {
+        s.phase     = PHASE.AWAITING_FOCUS;
+    } else if (s.phase === PHASE.AWAITING_FOCUS) {
+        s.phase     = PHASE.AWAITING_BREAK;
+    }
+    s.startedAt    = null;
+    s.pausedAt     = null;
+    s.pausedOffset = 0;
+    writeState(s);
+}
+
+function reset() {
+    writeState(defaultState());
+}
+
+/* ── Fin de fase: notificación + flash de título ────────────────────── */
+
+let originalTitle = null;
+let flashHandle   = null;
+
+function flashTitle(message) {
+    if (originalTitle == null) originalTitle = document.title;
+    let toggle = false;
+    clearInterval(flashHandle);
+    flashHandle = setInterval(() => {
+        document.title = toggle ? originalTitle : `🍅 ${message}`;
+        toggle = ! toggle;
+    }, 1000);
+    // Al primer click/focus/visibility devolvemos el título.
+    const stop = () => {
+        clearInterval(flashHandle);
+        flashHandle = null;
+        document.title = originalTitle ?? document.title;
+        originalTitle = null;
+        window.removeEventListener('focus', stop);
+        document.removeEventListener('visibilitychange', stop);
+        document.removeEventListener('click', stop, true);
     };
+    window.addEventListener('focus', stop);
+    document.addEventListener('visibilitychange', stop);
+    document.addEventListener('click', stop, true);
+}
 
-    const onPointerUp = (e) => {
-        if (pointerId === null) return;
-        if (e.pointerId !== pointerId) return;
-        try { handle.releasePointerCapture?.(pointerId); } catch { /* ignore */ }
-        pointerId = null;
-        if (dragging) {
-            pill.classList.remove('is-dragging');
-            // Persistir la posición final si supera el umbral.
-            const rect = pill.getBoundingClientRect();
-            try {
-                localStorage.setItem(LS_POS, JSON.stringify({ left: rect.left, top: rect.top }));
-            } catch { /* ignore */ }
-            // Evita que un click se dispare después de un drag.
-            const swallow = (ev) => { ev.stopPropagation(); ev.preventDefault(); window.removeEventListener('click', swallow, true); };
-            window.addEventListener('click', swallow, true);
+function notify(title, body) {
+    if (! ('Notification' in window)) return;
+    if (Notification.permission === 'granted') {
+        try { new Notification(title, { body, silent: true }); } catch {}
+    }
+}
+
+function requestNotificationPermissionOnce() {
+    if (! ('Notification' in window)) return;
+    if (Notification.permission === 'default') {
+        Notification.requestPermission().catch(() => {});
+    }
+}
+
+function onPhaseEnd(prevPhase) {
+    const wasFocus = prevPhase === PHASE.FOCUS;
+    const title    = wasFocus ? 'Foco completado' : 'Pausa terminada';
+    const body     = wasFocus ? 'Toca "Empezar pausa" cuando quieras.'
+                              : 'Cuando estés listo, arranca el siguiente foco.';
+    flashTitle(title);
+    notify(title, body);
+}
+
+/* ── Render ─────────────────────────────────────────────────────────── */
+
+function buildDisplay(state, config) {
+    if (RUNNING.has(state.phase)) return formatMmSs(remainingMs(state, config));
+    if (AWAITING.has(state.phase)) return '00:00';
+    // idle: mostramos la duración del próximo foco.
+    return formatMmSs(phaseDurationMs(PHASE.FOCUS, config));
+}
+
+function primaryButtonLabel(state) {
+    if (state.phase === PHASE.IDLE)           return 'Empezar foco';
+    if (state.phase === PHASE.AWAITING_BREAK) return 'Empezar pausa';
+    if (state.phase === PHASE.AWAITING_FOCUS) return 'Empezar foco';
+    if (state.pausedAt)                       return 'Reanudar';
+    return 'Pausar';
+}
+
+function renderMain(state, config) {
+    const root = document.getElementById('pomodoro-app');
+    if (! root) return;
+
+    root.dataset.phase  = state.phase;
+    root.dataset.paused = state.pausedAt ? '1' : '0';
+
+    const phaseEl = root.querySelector('[data-pomodoro-phase-label]');
+    if (phaseEl) phaseEl.textContent = (state.pausedAt && RUNNING.has(state.phase))
+        ? `${PHASE_LABEL[state.phase]} · pausado`
+        : PHASE_LABEL[state.phase];
+
+    const disp = root.querySelector('[data-pomodoro-display]');
+    if (disp) disp.textContent = buildDisplay(state, config);
+
+    const cycEl = root.querySelector('[data-pomodoro-cycle-count]');
+    if (cycEl) cycEl.textContent = String(state.cycle);
+
+    const primary = root.querySelector('[data-pomodoro-action="primary"]');
+    if (primary) primary.textContent = primaryButtonLabel(state);
+}
+
+function renderDock(state, config) {
+    const dock = document.getElementById('pomodoro-dock');
+    if (! dock) return;
+
+    // Visible solo si hay algo que enseñar (cualquier cosa salvo idle).
+    const visible = state.phase !== PHASE.IDLE;
+    dock.classList.toggle('pomodoro-dock--visible', visible);
+    if (! visible) return;
+
+    dock.dataset.phase  = state.phase;
+    dock.dataset.paused = state.pausedAt ? '1' : '0';
+
+    const phaseEl = dock.querySelector('[data-pomodoro-dock-phase]');
+    if (phaseEl) phaseEl.textContent = PHASE_LABEL[state.phase];
+
+    const tEl = dock.querySelector('[data-pomodoro-dock-time]');
+    if (tEl) tEl.textContent = buildDisplay(state, config);
+
+    const pauseBtn = dock.querySelector('[data-pomodoro-dock-pause]');
+    if (pauseBtn) {
+        const isRunning = RUNNING.has(state.phase) && ! state.pausedAt;
+        pauseBtn.textContent = isRunning ? '❚❚' : (state.pausedAt ? '▶' : '·');
+        pauseBtn.disabled = ! RUNNING.has(state.phase);
+        pauseBtn.title = isRunning ? 'Pausar' : (state.pausedAt ? 'Reanudar' : '');
+    }
+}
+
+function renderAll() {
+    const state  = readState();
+    // Si la página tiene la sección principal, su config gana; si no, la del dock.
+    const root   = document.getElementById('pomodoro-app');
+    const config = root ? configFromRoot(root) : configFromDock();
+
+    // Detectar fin de fase entre ticks.
+    if (RUNNING.has(state.phase) && remainingMs(state, config) <= 0) {
+        completePhaseTransition(state.phase);
+        return renderAll(); // re-render con el nuevo estado
+    }
+
+    renderMain(state, config);
+    renderDock(state, config);
+}
+
+/* ── Wiring ─────────────────────────────────────────────────────────── */
+
+function bindMainActions() {
+    const root = document.getElementById('pomodoro-app');
+    if (! root) return;
+
+    root.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-pomodoro-action]');
+        if (! btn) return;
+        const action = btn.dataset.pomodoroAction;
+        const state  = readState();
+        const config = configFromRoot(root);
+
+        if (action === 'primary') {
+            requestNotificationPermissionOnce();
+            if (state.phase === PHASE.IDLE)                startPhase(PHASE.FOCUS);
+            else if (state.phase === PHASE.AWAITING_BREAK) startPhase(nextBreakPhase(state, config));
+            else if (state.phase === PHASE.AWAITING_FOCUS) startPhase(PHASE.FOCUS);
+            else if (RUNNING.has(state.phase) && state.pausedAt) resume();
+            else if (RUNNING.has(state.phase))             pause();
+        } else if (action === 'skip') {
+            skip();
+        } else if (action === 'reset') {
+            reset();
         }
-        dragging = false;
-    };
-
-    handle.addEventListener('pointerdown', onPointerDown);
-    window.addEventListener('pointermove', onPointerMove);
-    window.addEventListener('pointerup',   onPointerUp);
-    window.addEventListener('pointercancel', onPointerUp);
-
-    // Reclamp al cambiar tamaño de ventana.
-    window.addEventListener('resize', () => {
-        if (!isDesktop()) return;
-        const rect = pill.getBoundingClientRect();
-        positionPill(pill, rect.left, rect.top);
+        renderAll();
     });
 }
 
-/* ─────────────── Minimizar a sidebar (desktop) ─────────────── */
+function bindDockActions() {
+    const dock = document.getElementById('pomodoro-dock');
+    if (! dock) return;
 
-function setMinimized(pill, dock, isMin) {
-    pill.classList.toggle('hidden', isMin);
-    dock?.classList.toggle('timer-dock--visible', isMin);
-    try { localStorage.setItem(LS_MIN, isMin ? '1' : '0'); } catch { /* ignore */ }
-}
-
-function initMinimize(pill, dock) {
-    if (!dock) return;
-    // Estado inicial: persisted, pero sólo si estamos en desktop (en móvil
-    // la pill siempre flota).
-    const stored = localStorage.getItem(LS_MIN) === '1';
-    if (stored && isDesktop()) setMinimized(pill, dock, true);
-
-    pill.querySelector('[data-timer-minimize]')?.addEventListener('click', () => {
-        if (!isDesktop()) return;
-        setMinimized(pill, dock, true);
-    });
-    dock.addEventListener('click', () => setMinimized(pill, dock, false));
-
-    // Al cambiar a móvil, expulsamos del dock (no tiene sentido ahí).
-    window.addEventListener('resize', () => {
-        if (!isDesktop() && dock.classList.contains('timer-dock--visible')) {
-            setMinimized(pill, dock, false);
-        }
+    dock.querySelector('[data-pomodoro-dock-pause]')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const s = readState();
+        if (! RUNNING.has(s.phase)) return;
+        if (s.pausedAt) resume(); else pause();
+        renderAll();
     });
 }
+
+function bindCrossTabSync() {
+    window.addEventListener('storage', (e) => {
+        if (e.key === LS_KEY) renderAll();
+    });
+}
+
+/* ── Entry-point ────────────────────────────────────────────────────── */
 
 export function initPomodoro() {
-    const pill = document.getElementById('timer-pill');
-    const dock = document.getElementById('timer-dock');
+    const hasMain = !! document.getElementById('pomodoro-app');
+    const hasDock = !! document.getElementById('pomodoro-dock');
+    if (! hasMain && ! hasDock) return;
 
-    let advancing = false;
-    if (pill) {
-        applyStoredPosition(pill);
-        initDrag(pill);
-        initMinimize(pill, dock);
-
-        const elapsed     = pill.querySelector('[data-timer-elapsed]');
-        const dockElapsed = document.querySelector('[data-timer-dock-elapsed]');
-
-        const tick = async () => {
-            if (!pill.isConnected) return;
-            const rem = remainingSeconds(pill);
-            const paused = !!pill.dataset.pausedAt;
-            const text = formatRemaining(rem);
-            elapsed.textContent = text;
-            if (dockElapsed) dockElapsed.textContent = text;
-            elapsed.classList.toggle('text-rose-500', rem < 0 && !paused);
-            dockElapsed?.classList.toggle('text-rose-500', rem < 0 && !paused);
-            if (!paused && rem <= 0 && !advancing) {
-                advancing = true;
-                await advancePhase();
-                advancing = false;
-            }
-        };
-        tick();
-        setInterval(tick, 1000);
-
-        pill.querySelector('[data-timer-toggle-pause]')?.addEventListener('click', async () => {
-            const isPaused = !!pill.dataset.pausedAt;
-            const payload = await postJson(isPaused ? '/timer/resume' : '/timer/pause');
-            applyTimerData(pill, payload);
-        });
-
-        pill.querySelector('[data-timer-skip]')?.addEventListener('click', advancePhase);
-
-        pill.querySelector('[data-timer-stop]')?.addEventListener('click', async () => {
-            if (! await confirmStop(pill)) return;
-            const wasFocus = pill.dataset.state === 'focus';
-            const taskTitle = pill.dataset.taskTitle;
-            if (wasFocus) {
-                const meta = await openFocusCloseModal(`Foco · ${taskTitle}`);
-                const payload = meta
-                    ? { mood: meta.mood ?? '', progress: meta.progress ?? '', notes: meta.notes ?? '' }
-                    : {};
-                const res = await postJson('/timer/stop', payload);
-                if (typeof window.toast === 'function' && res?.minutes_logged) {
-                    window.toast(`Foco guardado · ${res.minutes_logged} min`, 'success');
-                }
-            } else {
-                await postJson('/timer/stop');
-            }
-            // Limpiamos la posición persistida: al volver, vuelve al default.
-            try { localStorage.removeItem(LS_POS); localStorage.removeItem(LS_MIN); } catch { /* ignore */ }
-            window.location.reload();
-        });
-    }
-
-    async function advancePhase() {
-        if (!pill) return;
-        const wasFocus = pill.dataset.state === 'focus';
-        const taskTitle = pill.dataset.taskTitle;
-        let meta = null;
-        if (wasFocus) {
-            meta = await openFocusCloseModal(`Foco · ${taskTitle}`);
-        }
-        const payload = meta
-            ? { mood: meta.mood ?? '', progress: meta.progress ?? '', notes: meta.notes ?? '' }
-            : {};
-        const res = await postJson('/timer/advance', payload);
-        applyTimerData(pill, res);
-        if (typeof window.toast === 'function') {
-            if (wasFocus && res.minutes_logged) {
-                window.toast(`Foco guardado · ${res.minutes_logged} min · toca pausa`, 'success');
-            } else if (!wasFocus) {
-                window.toast('Vuelta al foco', 'info');
-            }
-        }
-    }
-
-    // ▶ en las cards del Kanban.
-    document.querySelectorAll('[data-timer-start]').forEach((btn) => {
-        btn.addEventListener('click', async (e) => {
-            e.stopPropagation();
-            await postJson('/timer/start', { task_id: btn.dataset.taskId });
-            window.location.reload();
-        });
-    });
-
-    // CTA "Empezar siguiente" del dashboard.
-    document.querySelectorAll('[data-timer-next-cta]').forEach((btn) => {
-        btn.addEventListener('click', async () => {
-            const taskId = btn.dataset.taskId;
-            if (!taskId) return;
-            await postJson('/timer/start', { task_id: taskId });
-            window.location.reload();
-        });
-    });
+    bindMainActions();
+    bindDockActions();
+    bindCrossTabSync();
+    renderAll();
+    setInterval(renderAll, TICK_MS);
 }

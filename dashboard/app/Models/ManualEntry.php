@@ -17,15 +17,12 @@ class ManualEntry extends Model
 {
     protected $fillable = [
         'starts_at', 'ends_at', 'project_id', 'task_id', 'kind', 'title', 'notes',
-        'mood', 'progress', 'focused_ratio',
     ];
 
     protected $casts = [
-        'starts_at'     => 'datetime',
-        'ends_at'       => 'datetime',
-        'kind'          => EntryKind::class,
-        'mood'          => 'integer',
-        'focused_ratio' => 'float',
+        'starts_at' => 'datetime',
+        'ends_at'   => 'datetime',
+        'kind'      => EntryKind::class,
     ];
 
     public function project(): BelongsTo

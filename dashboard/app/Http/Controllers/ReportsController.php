@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\PomodoroService;
 use App\Services\ReportsService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
@@ -14,7 +13,7 @@ use Illuminate\View\View;
  */
 class ReportsController extends Controller
 {
-    public function index(Request $request, ReportsService $reports, PomodoroService $pomodoro): View
+    public function index(Request $request, ReportsService $reports): View
     {
         $tz     = config('tracker.display_timezone', 'UTC');
         $period = $request->input('period', 'week');
@@ -28,15 +27,6 @@ class ReportsController extends Controller
         $daysActive   = count(array_filter($byDay, fn ($r) => $r['minutes'] > 0));
         $projectCount = count(array_filter($byProject, fn ($r) => $r['project_id'] !== null));
 
-        // Heatmap "tus mejores horas" — minutos de focus por hora×día de la semana.
-        $focusHeatmap = $pomodoro->focusHeatmap($start, $end);
-        $heatmapMax   = 0;
-        foreach ($focusHeatmap as $row) {
-            foreach ($row as $m) {
-                if ($m > $heatmapMax) $heatmapMax = $m;
-            }
-        }
-
         return view('reports.index', [
             'period'       => $period,
             'start'        => $start,
@@ -48,8 +38,6 @@ class ReportsController extends Controller
             'totalMinutes' => $totalMinutes,
             'daysActive'   => $daysActive,
             'projectCount' => $projectCount,
-            'focusHeatmap' => $focusHeatmap,
-            'heatmapMax'   => $heatmapMax,
         ]);
     }
 

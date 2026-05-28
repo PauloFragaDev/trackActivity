@@ -25,13 +25,12 @@ class SettingsTest extends TestCase
             'pomodoro_short_break_min'   => 10,
             'pomodoro_long_break_min'    => 20,
             'pomodoro_cycles_until_long' => 3,
-            'pomodoro_daily_goal_min'    => 180,
         ])
             ->assertRedirect('/settings/pomodoro')
             ->assertSessionHas('status');
 
-        $this->assertSame(50,  Setting::get('pomodoro_focus_min'));
-        $this->assertSame(180, Setting::get('pomodoro_daily_goal_min'));
+        $this->assertSame(50, Setting::get('pomodoro_focus_min'));
+        $this->assertSame(20, Setting::get('pomodoro_long_break_min'));
     }
 
     public function test_save_pomodoro_rejects_out_of_range(): void
@@ -41,7 +40,6 @@ class SettingsTest extends TestCase
             'pomodoro_short_break_min'   => 5,
             'pomodoro_long_break_min'    => 15,
             'pomodoro_cycles_until_long' => 4,
-            'pomodoro_daily_goal_min'    => 120,
         ])->assertSessionHasErrors('pomodoro_focus_min');
     }
 

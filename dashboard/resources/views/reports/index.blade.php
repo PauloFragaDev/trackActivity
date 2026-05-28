@@ -92,38 +92,6 @@
             </div>
         </div>
 
-        {{-- Heatmap focus hora × día — "tus mejores horas" --}}
-        @if ($heatmapMax > 0)
-            <div class="card p-4 mb-4">
-                <h2 class="text-xs font-medium uppercase tracking-wider text-muted mb-3">Tus mejores horas (foco)</h2>
-                @php
-                    $weekdayLabels = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
-                    $lvl = function (int $m) use ($heatmapMax) {
-                        if ($m <= 0) return 0;
-                        $r = $m / max(1, $heatmapMax);
-                        if ($r < 0.25) return 1;
-                        if ($r < 0.50) return 2;
-                        if ($r < 0.75) return 3;
-                        return 4;
-                    };
-                @endphp
-                <div class="focus-heatmap">
-                    <div></div>
-                    @for ($h = 0; $h < 24; $h++)
-                        <div class="focus-heatmap__hour-label">{{ $h % 3 === 0 ? $h : '' }}</div>
-                    @endfor
-                    @foreach ($focusHeatmap as $i => $row)
-                        <div class="focus-heatmap__day-label">{{ $weekdayLabels[$i] }}</div>
-                        @foreach ($row as $h => $m)
-                            <div class="focus-heatmap__cell focus-heatmap__cell--l{{ $lvl($m) }}"
-                                 title="{{ $weekdayLabels[$i] }} · {{ $h }}:00 — {{ $fmt($m) }}"></div>
-                        @endforeach
-                    @endforeach
-                </div>
-                <p class="text-xs text-faint mt-3">Minutos de foco (manual_entries kind=focus) por hora local y día de la semana.</p>
-            </div>
-        @endif
-
         @if (! empty($topApps))
             <div class="card p-4">
                 <h2 class="text-xs font-medium uppercase tracking-wider text-muted mb-3">Top apps</h2>

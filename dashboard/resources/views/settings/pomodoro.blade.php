@@ -5,7 +5,7 @@
 @section('settings-content')
     <div class="mb-5">
         <h1 class="text-xl font-semibold tracking-tight">Pomodoro</h1>
-        <p class="text-sm text-muted mt-1">Duración de los ciclos y meta diaria de foco.</p>
+        <p class="text-sm text-muted mt-1">Duración de las fases y cuántos ciclos hasta la pausa larga.</p>
     </div>
 
     <form method="POST" action="{{ route('settings.pomodoro.save') }}" class="card p-5 max-w-xl space-y-4">
@@ -42,20 +42,9 @@
             </label>
         </div>
 
-        <label class="block">
-            <span class="text-sm font-medium">Meta diaria de foco (min)</span>
-            <input type="number" name="pomodoro_daily_goal_min" min="15" max="720"
-                   value="{{ old('pomodoro_daily_goal_min', $config['pomodoro_daily_goal_min']) }}"
-                   class="input mt-1 w-full @error('pomodoro_daily_goal_min') is-invalid @enderror" required>
-            <x-field-error name="pomodoro_daily_goal_min" />
-            <p class="text-xs text-faint mt-1">
-                Cuántos minutos de foco quieres acumular al día. Se muestra en el inicio y dispara la racha.
-            </p>
-        </label>
-
-        <div class="pt-2 flex items-center justify-between">
+        <div class="pt-3 flex items-center justify-between border-t divider">
             <p class="text-xs text-faint">
-                Tras cada ciclo de foco se abre el cierre breve (mood + nota). Las entradas {{ '< 1 min' }} se descartan.
+                El timer corre en tu navegador y se sincroniza entre pestañas.
             </p>
             <button type="submit" class="btn">Guardar</button>
         </div>
