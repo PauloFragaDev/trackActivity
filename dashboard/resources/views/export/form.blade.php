@@ -1,8 +1,8 @@
-@extends('layouts.app')
+@extends('layouts.settings')
 
 @section('title', 'Export')
 
-@section('content')
+@section('settings-content')
     <h1 class="text-xl font-semibold tracking-tight mb-6">Exportar timesheet</h1>
 
     <form method="POST" action="{{ url('/export') }}" class="card p-6 max-w-2xl space-y-5">

@@ -1,8 +1,8 @@
-@extends('layouts.app')
+@extends('layouts.settings')
 
 @section('title', 'Datos')
 
-@section('content')
+@section('settings-content')
     @php
         $human = fn (int $b) => $b >= 1048576
             ? round($b / 1048576, 1) . ' MB'

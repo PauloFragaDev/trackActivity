@@ -130,7 +130,13 @@ Route::post('/timer/resume',  [TimerController::class, 'resume'])->name('timer.r
 Route::post('/timer/advance', [TimerController::class, 'advance'])->name('timer.advance');
 Route::get('/timer/next',     [TimerController::class, 'next'])->name('timer.next');
 
-// ─────────────────── Ajustes (Pomodoro) ───────────────────
+// ─────────────────── Ajustes (hub) ───────────────────
+// /settings redirige a /settings/general. Las "viejas" páginas de
+// configuración (proyectos, etiquetas, export, data) mantienen sus URLs;
+// el cambio es solo de navegación (mini-sidebar en layouts.settings).
+Route::get('/settings',           [\App\Http\Controllers\SettingsController::class, 'index'])->name('settings.index');
+Route::get('/settings/general',   [\App\Http\Controllers\SettingsController::class, 'general'])->name('settings.general');
+Route::post('/settings/general',  [\App\Http\Controllers\SettingsController::class, 'saveGeneral'])->name('settings.general.save');
 Route::get('/settings/pomodoro',  [\App\Http\Controllers\SettingsController::class, 'pomodoro'])->name('settings.pomodoro');
 Route::post('/settings/pomodoro', [\App\Http\Controllers\SettingsController::class, 'savePomodoro'])->name('settings.pomodoro.save');
 
