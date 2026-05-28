@@ -1,8 +1,8 @@
-@extends('layouts.app')
+@extends('layouts.settings')
 
 @section('title', 'Pomodoro')
 
-@section('content')
+@section('settings-content')
     <div class="mb-5">
         <h1 class="text-xl font-semibold tracking-tight">Pomodoro</h1>
         <p class="text-sm text-muted mt-1">Duración de los ciclos y meta diaria de foco.</p>

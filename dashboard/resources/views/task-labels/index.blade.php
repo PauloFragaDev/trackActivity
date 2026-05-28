@@ -1,8 +1,8 @@
-@extends('layouts.app')
+@extends('layouts.settings')
 
 @section('title', 'Etiquetas')
 
-@section('content')
+@section('settings-content')
     <div class="mb-5">
         <h1 class="text-xl font-semibold tracking-tight">Etiquetas</h1>
         <p class="text-sm text-muted mt-1">Paleta global de etiquetas para las tareas del tablero.</p>

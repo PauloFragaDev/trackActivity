@@ -108,7 +108,8 @@
                 <a href="{{ route('dashboard') }}"
                    class="block px-2 py-1.5 rounded {{ $navItem(['dashboard']) }}">Inicio</a>
 
-                {{-- Tracking --}}
+                {{-- Tracking. Hoy/Semana son núcleo; Mes/Informes respetan
+                     la visibilidad configurada en /settings/general. --}}
                 <details class="group" @if (request()->routeIs('timeline.*', 'calendar.*', 'reports.*')) open @endif>
                     <summary class="flex items-center gap-1.5 px-2 py-1.5 rounded cursor-pointer select-none list-none
                                     text-[11px] uppercase tracking-wider text-muted hover:bg-ink-100 dark:hover:bg-ink-800">
@@ -120,14 +121,19 @@
                            class="block px-2 py-1.5 rounded {{ $navItem(['timeline.today', 'timeline.day']) }}">Hoy</a>
                         <a href="{{ route('timeline.this_week') }}"
                            class="block px-2 py-1.5 rounded {{ $navItem(['timeline.this_week', 'timeline.week']) }}">Semana</a>
-                        <a href="{{ route('calendar.current') }}"
-                           class="block px-2 py-1.5 rounded {{ $navItem(['calendar.current', 'calendar.month']) }}">Mes</a>
-                        <a href="{{ route('reports.index') }}"
-                           class="block px-2 py-1.5 rounded {{ $navItem(['reports.*']) }}">Informes</a>
+                        @if ($modules['calendar']['enabled'] ?? true)
+                            <a href="{{ route('calendar.current') }}"
+                               class="block px-2 py-1.5 rounded {{ $navItem(['calendar.current', 'calendar.month']) }}">Mes</a>
+                        @endif
+                        @if ($modules['reports']['enabled'] ?? true)
+                            <a href="{{ route('reports.index') }}"
+                               class="block px-2 py-1.5 rounded {{ $navItem(['reports.*']) }}">Informes</a>
+                        @endif
                     </div>
                 </details>
 
                 {{-- Notas: grupo desplegable con el árbol de carpetas --}}
+                @if ($modules['notes']['enabled'] ?? true)
                 <details class="group" @if (request()->routeIs('notes.*')) open @endif>
                     <summary class="flex items-center gap-1.5 px-2 py-1.5 rounded cursor-pointer select-none list-none
                                     text-[11px] uppercase tracking-wider text-muted hover:bg-ink-100 dark:hover:bg-ink-800">
@@ -163,31 +169,20 @@
                         </button>
                     </div>
                 </details>
+                @endif
 
                 {{-- Tareas --}}
-                <a href="{{ route('tasks.index') }}"
-                   class="block px-2 py-1.5 rounded {{ $navItem(['tasks.*']) }}">Tareas</a>
+                @if ($modules['tasks']['enabled'] ?? true)
+                    <a href="{{ route('tasks.index') }}"
+                       class="block px-2 py-1.5 rounded {{ $navItem(['tasks.*']) }}">Tareas</a>
+                @endif
 
-                {{-- Configuración --}}
-                <details class="group" @if (request()->routeIs('projects.*', 'export.*', 'data.*', 'task-labels.*', 'settings.*')) open @endif>
-                    <summary class="flex items-center gap-1.5 px-2 py-1.5 rounded cursor-pointer select-none list-none
-                                    text-[11px] uppercase tracking-wider text-muted hover:bg-ink-100 dark:hover:bg-ink-800">
-                        <span class="transition-transform group-open:rotate-90 inline-flex" aria-hidden="true"><x-icon name="chevron-right" class="w-2.5 h-2.5" /></span>
-                        Configuración
-                    </summary>
-                    <div class="mt-0.5 ml-2 space-y-0.5">
-                        <a href="{{ route('projects.index') }}"
-                           class="block px-2 py-1.5 rounded {{ $navItem(['projects.*']) }}">Proyectos</a>
-                        <a href="{{ route('task-labels.index') }}"
-                           class="block px-2 py-1.5 rounded {{ $navItem(['task-labels.*']) }}">Etiquetas</a>
-                        <a href="{{ route('settings.pomodoro') }}"
-                           class="block px-2 py-1.5 rounded {{ $navItem(['settings.*']) }}">Pomodoro</a>
-                        <a href="{{ route('export.form') }}"
-                           class="block px-2 py-1.5 rounded {{ $navItem(['export.*']) }}">Export</a>
-                        <a href="{{ route('data.index') }}"
-                           class="block px-2 py-1.5 rounded {{ $navItem(['data.*']) }}">Datos</a>
-                    </div>
-                </details>
+                {{-- Configuración: una sola entrada. El layout `settings`
+                     pinta un mini-sidebar con las subsecciones. --}}
+                <a href="{{ route('settings.index') }}"
+                   class="block px-2 py-1.5 rounded {{ $navItem(['settings.*', 'projects.*', 'task-labels.*', 'export.*', 'data.*']) }}">
+                    Configuración
+                </a>
 
                 {{-- Ayuda --}}
                 <a href="{{ route('help') }}"

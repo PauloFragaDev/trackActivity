@@ -1,8 +1,8 @@
-@extends('layouts.app')
+@extends('layouts.settings')
 
 @section('title', 'Proyectos')
 
-@section('content')
+@section('settings-content')
     <div class="flex items-center justify-between mb-6">
         <div>
             <h1 class="text-xl font-semibold tracking-tight">Proyectos</h1>

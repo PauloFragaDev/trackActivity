@@ -1,8 +1,8 @@
-@extends('layouts.app')
+@extends('layouts.settings')
 
 @section('title', $isNew ? 'Nuevo proyecto' : ('Editar · ' . $project->code))
 
-@section('content')
+@section('settings-content')
     <div class="flex items-center justify-between mb-6">
         <h1 class="text-xl font-semibold tracking-tight">
             {{ $isNew ? 'Nuevo proyecto' : 'Editar ' . $project->code }}

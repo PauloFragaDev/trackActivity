@@ -12,6 +12,7 @@ use App\Services\SessionBuilder;
 use App\Services\Summaries\EvidenceExtractor;
 use App\Services\Summaries\SummaryGenerator;
 use App\Models\ActiveTimer;
+use App\Services\ModuleVisibility;
 use App\Services\SchedulerManager;
 use App\Services\TrackerManager;
 use Illuminate\Support\Facades\View;
@@ -48,6 +49,13 @@ class AppServiceProvider extends ServiceProvider
             $scheduler = app(SchedulerManager::class)->status()['running'];
             $view->with('trackerRunning', $tracker || $scheduler);
             $view->with('activeTimer', ActiveTimer::with('task')->first());
+        });
+
+        // Visibilidad de módulos. Composer (lazy) en lugar de View::share
+        // para no tocar BD durante boot — los tests crean tablas tarde y
+        // ::share dispara consultas en cada boot del kernel.
+        View::composer(['layouts.app', 'layouts.settings'], function ($view) {
+            $view->with('modules', ModuleVisibility::all());
         });
     }
 }
