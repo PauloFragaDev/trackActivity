@@ -70,14 +70,14 @@
                 <span class="chip {{ $overdue ? 'text-rose-600 dark:text-rose-400 font-medium' : '' }}">{{ $task->due_date->format('d/m') }}</span>
             @endif
             @if ($logged > 0)
-                <span class="chip" title="Tiempo registrado">⏱ {{ $logged >= 60 ? intdiv($logged, 60) . 'h ' . ($logged % 60) . 'm' : $logged . 'm' }}</span>
+                <span class="chip" title="Tiempo registrado"><x-icon name="clock" class="w-3 h-3" />{{ $logged >= 60 ? intdiv($logged, 60) . 'h ' . ($logged % 60) . 'm' : $logged . 'm' }}</span>
             @endif
             @if ($checkboxAll > 0)
                 <span class="chip {{ $checkboxDone === $checkboxAll ? 'text-emerald-600 dark:text-emerald-400' : '' }}"
-                      title="Subtareas" data-card-subtasks-badge>☑ {{ $checkboxDone }}/{{ $checkboxAll }}</span>
+                      title="Subtareas" data-card-subtasks-badge><x-icon name="check" class="w-3 h-3" />{{ $checkboxDone }}/{{ $checkboxAll }}</span>
             @endif
             @if ($comments->isNotEmpty())
-                <span class="chip" title="Comentarios" data-card-comments-badge>💬 {{ $comments->count() }}</span>
+                <span class="chip" title="Comentarios" data-card-comments-badge><x-icon name="chat" class="w-3 h-3" />{{ $comments->count() }}</span>
             @endif
         </div>
     @endif

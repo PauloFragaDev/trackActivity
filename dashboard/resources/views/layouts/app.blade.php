@@ -116,7 +116,7 @@
                 <button type="button" data-qs-open
                         class="w-full flex items-center gap-1.5 px-2 py-1.5 rounded
                                text-ink-600 dark:text-ink-300 hover:bg-ink-100 dark:hover:bg-ink-800">
-                    <span aria-hidden="true">🔍</span>
+                    <x-icon name="search" class="w-4 h-4" />
                     <span>Buscar</span>
                     <x-kbd class="ml-auto">Ctrl K</x-kbd>
                 </button>
@@ -164,7 +164,7 @@
                                class="block px-2 py-1.5 rounded text-sm truncate
                                       {{ (int) request()->query('note') === $fav->id ? 'bg-ink-100 dark:bg-ink-800 text-ink-900 dark:text-ink-50 font-medium' : 'text-ink-600 dark:text-ink-300 hover:bg-ink-100 dark:hover:bg-ink-800' }}"
                                title="{{ $fav->title }}">
-                                <span class="text-amber-500">★</span> {{ $fav->title }}
+                                <x-icon name="star" class="w-3.5 h-3.5 inline-block align-text-bottom text-amber-500" /> {{ $fav->title }}
                             </a>
                         @endforeach
                         @if ($sidebarPinned->isNotEmpty())
@@ -178,7 +178,7 @@
 
                         <a href="{{ route('notes.index', ['trash' => 1]) }}"
                            class="block px-2 py-1.5 rounded {{ request()->boolean('trash') ? 'bg-ink-100 dark:bg-ink-800 text-ink-900 dark:text-ink-50 font-medium' : 'text-ink-600 dark:text-ink-300 hover:bg-ink-100 dark:hover:bg-ink-800' }}">
-                            🗑 Papelera
+                            <x-icon name="trash" class="w-4 h-4 inline-block align-text-bottom" /> Papelera
                         </a>
                         <button type="button" data-modal-open="#folder-new"
                                 class="w-full text-left block px-2 py-1.5 rounded text-ink-600 dark:text-ink-300 hover:bg-ink-100 dark:hover:bg-ink-800">
