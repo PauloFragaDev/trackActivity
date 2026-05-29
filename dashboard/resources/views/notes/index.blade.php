@@ -144,7 +144,7 @@
                         <details class="shrink-0 relative">
                             <summary class="list-none cursor-pointer select-none text-3xl leading-none px-1"
                                      title="Cambiar icono">{{ $currentNote->icon ?: '📄' }}</summary>
-                            <div class="absolute z-10 mt-1 p-2 rounded border divider bg-white dark:bg-ink-900 shadow-lg">
+                            <div class="absolute z-10 mt-1 p-2 rounded border divider bg-[var(--paper)] dark:bg-ink-900 shadow-lg">
                                 @include('notes.partials.icon-field', ['value' => $currentNote->icon])
                             </div>
                         </details>

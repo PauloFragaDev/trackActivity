@@ -254,9 +254,14 @@
 }
 
 @layer components {
-    /* Superficies semanticas con variantes claro/oscuro */
+    /* Superficies semanticas con variantes claro/oscuro.
+       En claro usan var(--paper) (cada tema la define: blanco, crema,
+       blanco-Notion, casi-negro-mono). En oscuro siguen con dark:bg-ink-900,
+       que ya es tematico porque la escala ink-* cambia por tema. Antes el
+       claro estaba cableado a bg-white literal y los temas no se veian. */
     .surface {
-        @apply bg-white border-ink-200;
+        background-color: var(--paper);
+        @apply border-ink-200;
         @apply dark:bg-ink-900 dark:border-ink-800;
     }
     .surface-soft {
@@ -264,7 +269,8 @@
         @apply dark:bg-ink-800;
     }
     .surface-strong {
-        @apply bg-white/85 backdrop-blur;
+        background-color: color-mix(in srgb, var(--paper) 85%, transparent);
+        @apply backdrop-blur;
         @apply dark:bg-ink-900/80;
     }
     .divider {
@@ -341,8 +347,8 @@
         @apply dark:bg-ink-800 dark:text-ink-300;
     }
     .card {
-        @apply rounded-lg border;
-        @apply bg-white border-ink-200;
+        @apply rounded-lg border border-ink-200;
+        background-color: var(--paper);
         @apply dark:bg-ink-900 dark:border-ink-800;
     }
 
@@ -357,7 +363,8 @@
         transition: background-color var(--dur-fast) var(--ease-out),
                     border-color     var(--dur-fast) var(--ease-out),
                     box-shadow       var(--dur-fast) var(--ease-out);
-        @apply bg-white border border-ink-200 text-ink-900 placeholder:text-ink-400;
+        background-color: var(--paper);
+        @apply border border-ink-200 text-ink-900 placeholder:text-ink-400;
         @apply hover:border-ink-300;
         @apply focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500;
         @apply dark:bg-ink-800 dark:border-ink-700 dark:text-ink-100 dark:placeholder:text-ink-500;
@@ -409,7 +416,8 @@
        margen negativo para ocupar el ancho completo con un divider. */
     .modal {
         @apply rounded-lg border p-6 shadow-2xl;
-        @apply bg-white border-ink-200 text-ink-900;
+        background-color: var(--paper);
+        @apply border-ink-200 text-ink-900;
         @apply dark:bg-ink-900 dark:border-ink-800 dark:text-ink-100;
         width: min(40rem, calc(100vw - 2rem));
         max-height: calc(100vh - 4rem);
@@ -540,7 +548,8 @@
 
     /* Toast de feedback (Toastify-js) */
     .toastify.app-toast {
-        @apply rounded-lg border border-ink-200 bg-white text-ink-800;
+        @apply rounded-lg border border-ink-200 text-ink-800;
+        background-color: var(--paper);
         @apply dark:border-ink-800 dark:bg-ink-900 dark:text-ink-100;
         /* Toastify trae un degradado azul por defecto: lo anulamos. */
         background-image: none;
@@ -610,7 +619,8 @@
 
     /* Diálogos SweetAlert — alineados con el sistema de diseño */
     .swal2-popup.app-swal {
-        @apply rounded-lg border border-ink-200 bg-white text-ink-900;
+        @apply rounded-lg border border-ink-200 text-ink-900;
+        background-color: var(--paper);
         @apply dark:border-ink-800 dark:bg-ink-900 dark:text-ink-100;
         padding: 1.5rem 1.5rem 1.25rem;
         box-shadow: 0 24px 60px -15px rgb(0 0 0 / 0.5);
