@@ -38,7 +38,7 @@
             {{-- Cabecera: carpeta actual o resultados de búsqueda --}}
             <div class="panel-full p-3 border-b divider flex items-center justify-between gap-2">
                 @if ($isTrash)
-                    <span class="text-sm font-medium truncate">🗑 Papelera</span>
+                    <span class="text-sm font-medium inline-flex items-center gap-1.5"><x-icon name="trash" class="w-4 h-4" />Papelera</span>
                     @if ($trashCount > 0)
                         <form method="POST" action="{{ route('notes.trash.empty') }}" class="shrink-0"
                               data-confirm="¿Vaciar la papelera? Se eliminarán definitivamente {{ $trashCount }} nota(s). No se puede deshacer."
@@ -55,11 +55,11 @@
                     <span class="text-sm font-medium truncate">{{ $currentFolder?->name ?? 'Notas' }}</span>
                     <div class="flex items-center gap-1 shrink-0">
                         @if ($currentFolder)
-                            <button type="button" class="btn-ghost text-xs" data-modal-open="#folder-edit" title="Renombrar carpeta" aria-label="Renombrar carpeta">✎</button>
+                            <button type="button" class="btn-ghost text-xs" data-modal-open="#folder-edit" title="Renombrar carpeta" aria-label="Renombrar carpeta"><x-icon name="edit" class="w-3.5 h-3.5" /></button>
                             <form method="POST" action="{{ route('note-folders.destroy', $currentFolder) }}" class="inline"
                                   data-confirm="¿Eliminar la carpeta «{{ $currentFolder->name }}»? Sus notas y subcarpetas pasarán a la raíz.">
                                 @csrf @method('DELETE')
-                                <button type="submit" class="btn-ghost text-xs text-rose-600 dark:text-rose-400" title="Eliminar carpeta" aria-label="Eliminar carpeta">🗑</button>
+                                <button type="submit" class="btn-ghost text-xs text-rose-600 dark:text-rose-400" title="Eliminar carpeta" aria-label="Eliminar carpeta"><x-icon name="trash" class="w-3.5 h-3.5" /></button>
                             </form>
                         @endif
                         <button type="button" class="btn text-xs" data-modal-open="#note-new">+ Nota</button>
@@ -110,7 +110,7 @@
                                 <button type="submit"
                                         class="px-2 py-1.5 {{ $n->pinned ? 'text-amber-500' : 'text-faint hover:text-amber-500' }}"
                                         title="{{ $n->pinned ? 'Desfijar' : 'Fijar' }}"
-                                        aria-label="{{ $n->pinned ? 'Desfijar nota' : 'Fijar nota' }}">★</button>
+                                        aria-label="{{ $n->pinned ? 'Desfijar nota' : 'Fijar nota' }}"><x-icon name="star" class="w-3.5 h-3.5" /></button>
                             </form>
                         </div>
                     @empty
@@ -240,7 +240,7 @@
             @elseif ($isTrash)
                 <div class="flex-1 flex items-center justify-center text-center text-muted">
                     <div>
-                        <p class="text-base">🗑 Papelera</p>
+                        <p class="text-base inline-flex items-center gap-1.5"><x-icon name="trash" class="w-4 h-4" />Papelera</p>
                         <p class="text-sm mt-1">Notas eliminadas. Restaura una para volver a editarla.</p>
                     </div>
                 </div>

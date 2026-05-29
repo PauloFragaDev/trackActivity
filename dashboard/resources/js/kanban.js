@@ -25,6 +25,14 @@ const writeJson = (key, value) => {
     try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* ignore */ }
 };
 
+// SVG inline para las badges que se reconstruyen aqui (subtareas, comentarios).
+// Mismos paths que el componente Blade <x-icon> — la card mezclaba emoji
+// (☑/💬) con el set SVG del resto de la UI; esto las unifica.
+const ICON = {
+    check: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor" class="w-3 h-3" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>',
+    chat:  '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-3 h-3" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.76c0 1.6 1.123 2.994 2.707 3.227 1.068.157 2.148.279 3.238.364.466.037.893.281 1.153.671L12 21l2.652-3.978c.26-.39.687-.634 1.153-.67 1.09-.086 2.17-.208 3.238-.365 1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z"/></svg>',
+};
+
 export function initKanban() {
     const board     = document.querySelector('[data-task-board]');
     if (! board) return;
@@ -84,15 +92,15 @@ export function initKanban() {
         const chipRow = edit.card.querySelector('.flex.flex-wrap.items-center');
         if (items.length === 0) { badge?.remove(); return; }
         const done = items.filter((c) => c.checked).length;
-        const text = `☑ ${done}/${items.length}`;
+        const html = `${ICON.check}${done}/${items.length}`;
         const cls  = `chip ${done === items.length ? 'text-emerald-600 dark:text-emerald-400' : ''}`;
-        if (badge) { badge.textContent = text; badge.className = cls; }
+        if (badge) { badge.innerHTML = html; badge.className = cls; }
         else if (chipRow) {
             const span = document.createElement('span');
             span.setAttribute('data-card-subtasks-badge', '');
             span.title = 'Subtareas';
             span.className = cls;
-            span.textContent = text;
+            span.innerHTML = html;
             chipRow.appendChild(span);
         }
     };
@@ -145,14 +153,14 @@ export function initKanban() {
         const badge = edit.card.querySelector('[data-card-comments-badge]');
         const chipRow = edit.card.querySelector('.flex.flex-wrap.items-center');
         if (edit.comments.length === 0) { badge?.remove(); return; }
-        const text = `💬 ${edit.comments.length}`;
-        if (badge) badge.textContent = text;
+        const html = `${ICON.chat}${edit.comments.length}`;
+        if (badge) badge.innerHTML = html;
         else if (chipRow) {
             const span = document.createElement('span');
             span.setAttribute('data-card-comments-badge', '');
             span.title = 'Comentarios';
             span.className = 'chip';
-            span.textContent = text;
+            span.innerHTML = html;
             chipRow.appendChild(span);
         }
     };

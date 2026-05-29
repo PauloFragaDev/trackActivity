@@ -191,7 +191,7 @@
                                                     data-cwd="{{ $cwdHint }}"
                                                     data-cmd="{{ $cmdHint }}"
                                                     data-project-id="{{ $event->project_id }}"
-                                                    title="Editar evento" aria-label="Editar evento">✎</button>
+                                                    title="Editar evento" aria-label="Editar evento"><x-icon name="edit" class="w-3.5 h-3.5" /></button>
                                         </li>
                                     @endforeach
                                     @if ($session['evidence']->count() > 30)

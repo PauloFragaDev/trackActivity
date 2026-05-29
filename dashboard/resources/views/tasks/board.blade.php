@@ -85,7 +85,7 @@
                 <header class="task-column__header flex items-center justify-between gap-1 p-3 border-b divider cursor-pointer select-none"
                         data-task-column-toggle title="Plegar columna">
                     <span class="task-column__title text-sm font-medium flex items-center gap-1.5">
-                        <span class="text-faint text-xs task-column__chevron" aria-hidden="true">▾</span>
+                        <x-icon name="chevron-down" class="task-column__chevron text-faint w-3 h-3" />
                         {{ $col->label() }}
                         <span class="text-faint" data-column-count>{{ $colTasks->count() }}</span>
                     </span>
