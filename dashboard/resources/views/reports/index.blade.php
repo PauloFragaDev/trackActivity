@@ -75,7 +75,7 @@
                                 <span class="text-faint shrink-0 ml-2 font-mono text-xs">{{ $fmt($r['minutes']) }}</span>
                             </div>
                             <div class="h-2 bg-ink-100 dark:bg-ink-800 rounded-full overflow-hidden">
-                                <div class="h-full rounded-full transition-all"
+                                <div class="h-full rounded-full"
                                      style="width: {{ ($r['minutes'] / $maxProjectMinutes) * 100 }}%; background-color: {{ $r['color'] }}"></div>
                             </div>
                         </div>
