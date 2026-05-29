@@ -10,7 +10,7 @@
     $comments     = $task->comments;
     $hasChips     = $task->project || $task->priority || $task->due_date || $logged > 0 || $checkboxAll > 0 || $comments->isNotEmpty();
 @endphp
-<div class="task-card card p-2.5 cursor-grab active:cursor-grabbing transition hover:shadow-md
+<div class="task-card card p-2.5 cursor-grab active:cursor-grabbing
             {{ $task->status === \App\Enums\TaskStatus::Done ? 'opacity-70' : '' }}"
      @if ($task->project) style="--project-color: {{ $task->project->color }}" @endif
      data-task-id="{{ $task->id }}"
