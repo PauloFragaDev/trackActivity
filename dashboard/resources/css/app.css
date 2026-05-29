@@ -10,6 +10,7 @@
 @import '@fontsource/inter/latin-ext-500.css';
 @import '@fontsource/inter/latin-ext-600.css';
 @import '@fontsource/inter/latin-ext-700.css';
+@import '@fontsource/jetbrains-mono/latin-300.css';
 @import '@fontsource/jetbrains-mono/latin-400.css';
 @import '@fontsource/jetbrains-mono/latin-500.css';
 /* CSS oficial de Choices.js (combobox sobre todos los <select>).
@@ -797,10 +798,13 @@ html.dark [data-note-editor] .milkdown blockquote {
 [data-phase="awaiting_break"] .pomodoro-phase__dot { background: rgb(245 158 11); animation: pomodoro-pulse 1.4s infinite; }
 [data-phase="awaiting_focus"] .pomodoro-phase__dot { background: rgb(16 185 129); animation: pomodoro-pulse 1.4s infinite; }
 
-.pomodoro-display      { font-size: clamp(4rem, 14vw, 7rem); font-weight: 200;
+.pomodoro-display      { font-size: clamp(4rem, 14vw, 7rem); font-weight: 300;
                          font-variant-numeric: tabular-nums; line-height: 1;
                          letter-spacing: -0.04em; margin: 0.25rem 0 0.5rem;
-                         font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+                         /* JetBrains Mono (peso 300 self-hosted): el reloj es
+                            el momento icónico de la pantalla, lleva la fuente
+                            de la app, no la mono del sistema. */
+                         font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace; }
 .pomodoro-cycles       { margin-bottom: 1.5rem; }
 .pomodoro-controls     { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; }
 .pomodoro-btn-primary  { min-width: 9rem; }

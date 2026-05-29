@@ -36,21 +36,21 @@
     <div class="grid gap-3 md:grid-cols-4 mb-6">
         <div class="card p-4">
             <div class="text-xs text-muted uppercase tracking-wider">Total trackeado</div>
-            <div class="text-2xl font-semibold mt-1">{{ $fmt($totalMinutes) }}</div>
+            <div class="text-2xl font-medium mt-1 font-mono tabular-nums">{{ $fmt($totalMinutes) }}</div>
         </div>
         <div class="card p-4">
             <div class="text-xs text-muted uppercase tracking-wider">Proyectos activos</div>
-            <div class="text-2xl font-semibold mt-1">{{ $projectCount }}</div>
+            <div class="text-2xl font-medium mt-1 font-mono tabular-nums">{{ $projectCount }}</div>
         </div>
         <div class="card p-4">
             <div class="text-xs text-muted uppercase tracking-wider">Días con actividad</div>
-            <div class="text-2xl font-semibold mt-1">
+            <div class="text-2xl font-medium mt-1 font-mono tabular-nums">
                 {{ $daysActive }}<span class="text-sm font-normal text-muted"> / {{ count($byDay) }}</span>
             </div>
         </div>
         <div class="card p-4">
             <div class="text-xs text-muted uppercase tracking-wider">Media diaria</div>
-            <div class="text-2xl font-semibold mt-1">{{ $fmt($avgDaily) }}</div>
+            <div class="text-2xl font-medium mt-1 font-mono tabular-nums">{{ $fmt($avgDaily) }}</div>
         </div>
     </div>
 
