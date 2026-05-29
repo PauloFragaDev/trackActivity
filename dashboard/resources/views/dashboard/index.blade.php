@@ -63,7 +63,7 @@
                    class="card p-3 text-center transition hover:border-emerald-400/60
                           {{ $d['is_today'] ? 'ring-2 ring-emerald-400' : '' }}">
                     <div class="text-[11px] uppercase tracking-wide text-muted">{{ $d['date']->locale('es')->isoFormat('ddd') }}</div>
-                    <div class="text-lg font-semibold leading-tight">{{ $d['date']->format('j') }}</div>
+                    <div class="text-lg font-medium leading-tight font-mono tabular-nums">{{ $d['date']->format('j') }}</div>
                     <div class="text-xs mt-0.5 {{ $d['minutes'] > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-faint' }}">
                         {{ $fmt($d['minutes']) }}
                     </div>
