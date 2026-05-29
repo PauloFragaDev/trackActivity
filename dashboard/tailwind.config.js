@@ -3,6 +3,11 @@ import defaultTheme from 'tailwindcss/defaultTheme';
 /** @type {import('tailwindcss').Config} */
 export default {
     darkMode: 'class',
+    // Todos los `hover:` compilan dentro de @media (hover: hover): en
+    // pantallas tactiles un tap ya no deja el estado hover pegado.
+    future: {
+        hoverOnlyWhenSupported: true,
+    },
     content: [
         './vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php',
         './storage/framework/views/*.php',

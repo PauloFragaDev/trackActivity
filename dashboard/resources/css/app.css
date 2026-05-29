@@ -413,6 +413,27 @@
         width: min(40rem, calc(100vw - 2rem));
         max-height: calc(100vh - 4rem);
         overflow-y: auto;
+        /* Estado cerrado para la transición. El <dialog> nativo no anima
+           el cierre con `animation`; con transition + allow-discrete
+           (display/overlay) la salida también se reproduce. El origin es
+           center: el modal no se ancla a un trigger, aparece centrado. */
+        opacity: 0;
+        transform: translateY(6px) scale(0.97);
+        transform-origin: center;
+        transition: opacity   var(--dur-modal) var(--ease-out),
+                    transform var(--dur-modal) var(--ease-out),
+                    overlay   var(--dur-modal) var(--ease-out) allow-discrete,
+                    display   var(--dur-modal) var(--ease-out) allow-discrete;
+    }
+    .modal[open] {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    @starting-style {
+        .modal[open] {
+            opacity: 0;
+            transform: translateY(6px) scale(0.97);
+        }
     }
     /* Variante ancha para forms densos (task-edit con subtareas/comentarios,
        proyectos con mucha config, etc.). */
@@ -420,8 +441,22 @@
         width: min(52rem, calc(100vw - 2rem));
     }
     .modal::backdrop {
+        background-color: rgb(15 23 42 / 0);
+        backdrop-filter: blur(0);
+        transition: background-color var(--dur-modal) var(--ease-out),
+                    backdrop-filter  var(--dur-modal) var(--ease-out),
+                    overlay          var(--dur-modal) var(--ease-out) allow-discrete,
+                    display          var(--dur-modal) var(--ease-out) allow-discrete;
+    }
+    .modal[open]::backdrop {
         background-color: rgb(15 23 42 / 0.55);
         backdrop-filter: blur(2px);
+    }
+    @starting-style {
+        .modal[open]::backdrop {
+            background-color: rgb(15 23 42 / 0);
+            backdrop-filter: blur(0);
+        }
     }
     /* Header del modal: ancho completo + divider inferior. */
     .modal-header {
@@ -490,14 +525,17 @@
         background-size: 1rem;
         padding-right: 2rem;
     }
-    .modal[open] {
-        animation: modal-pop var(--dur-modal) var(--ease-out);
-        transform-origin: center; /* modal centrado — el origin sigue siendo center, no se ancla a trigger */
-    }
     /* El command palette (Ctrl+K) se invoca varias veces al día desde el
        teclado. Para acciones tan frecuentes la animación se siente como
-       lag: la quitamos por completo. */
-    .modal#quick-switcher[open] { animation: none; }
+       lag: aparece al instante, sin transición de entrada ni de salida. */
+    .modal#quick-switcher,
+    .modal#quick-switcher::backdrop {
+        transition: none;
+    }
+    .modal#quick-switcher {
+        opacity: 1;
+        transform: none;
+    }
 
     /* Toast de feedback (Toastify-js) */
     .toastify.app-toast {
@@ -596,14 +634,6 @@
     .app-swal .swal2-actions .btn-ghost {
         margin: 0;
     }
-}
-
-@keyframes modal-pop {
-    /* Scale inicial alto (0.97) — Emil: "nothing in the real world
-       appears from nothing", no partimos de 0. translateY pequeño
-       (6px) para que la entrada se sienta firme, no rebotona. */
-    from { opacity: 0; transform: translateY(6px) scale(0.97); }
-    to   { opacity: 1; transform: translateY(0)   scale(1);    }
 }
 
 /* Sidebar plegable.
