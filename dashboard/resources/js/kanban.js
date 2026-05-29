@@ -277,8 +277,12 @@ export function initKanban() {
     };
     document.querySelectorAll('[data-task-list]').forEach((list) => {
         new Sortable(list, {
-            group: 'kanban',
-            animation: 150,
+            group:     'kanban',
+            animation: 200,
+            // SortableJS easing por defecto es lineal — la misma curva
+            // fuerte (`--ease-out`) que el resto de UI hace que las
+            // tarjetas reordenándose se sientan parte del sistema.
+            easing:    'cubic-bezier(0.23, 1, 0.32, 1)',
             draggable: '.task-card',
             ghostClass: 'is-dragging-ghost',
             onMove: (evt) => {

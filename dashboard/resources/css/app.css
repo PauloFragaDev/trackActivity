@@ -207,6 +207,34 @@
         --accent-soft:  rgb(229 229 229 / 0.12);
     }
 
+    /* ── Motion: easings y duraciones ────────────────────────────────
+       Los easings nativos del CSS (ease, ease-out…) son demasiado
+       débiles para que las animaciones se sientan intencionales —
+       definimos curves más fuertes una sola vez y las consumimos por
+       toda la app. Ref: animations.dev (Emil Kowalski).
+
+       Estas variables son ortogonales al tema activo: comparten todos
+       los temas (paper / notion / mono / default) porque la curva de
+       movimiento es identidad de la app, no de la paleta.
+
+       --ease-out      → entradas y feedback (UI snap, dropdowns).
+       --ease-in-out   → movimiento on-screen (drawers que vienen y van).
+       --ease-drawer   → curva iOS, para sidebars y paneles deslizantes.
+
+       Duraciones: regla bajo 300ms para todo lo de UI. Lo que se
+       pulsa mucho (botones) por debajo de 200ms. */
+    :root {
+        --ease-out:    cubic-bezier(0.23, 1, 0.32, 1);
+        --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+        --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+
+        --dur-press:   120ms;  /* :active feedback                     */
+        --dur-fast:    160ms;  /* hover/colors                         */
+        --dur-base:    200ms;  /* dropdowns, popovers, dock             */
+        --dur-modal:   220ms;  /* dialog entry                          */
+        --dur-drawer:  280ms;  /* sidebar, theme crossfade              */
+    }
+
     /* Crossfade al togglear el tema. JS añade .theme-transition a <html>
        justo antes del toggle y la quita al cabo de la duración. Sin la
        clase no hay transiciones globales — la animación es opt-in y
@@ -215,20 +243,12 @@
     html.theme-transition *,
     html.theme-transition *::before,
     html.theme-transition *::after {
-        transition: background-color 0.35s ease,
-                    color            0.35s ease,
-                    border-color     0.35s ease,
-                    box-shadow       0.35s ease,
-                    fill             0.35s ease,
-                    stroke           0.35s ease !important;
-    }
-    @media (prefers-reduced-motion: reduce) {
-        html.theme-transition,
-        html.theme-transition *,
-        html.theme-transition *::before,
-        html.theme-transition *::after {
-            transition: none !important;
-        }
+        transition: background-color var(--dur-drawer) var(--ease-out),
+                    color            var(--dur-drawer) var(--ease-out),
+                    border-color     var(--dur-drawer) var(--ease-out),
+                    box-shadow       var(--dur-drawer) var(--ease-out),
+                    fill             var(--dur-drawer) var(--ease-out),
+                    stroke           var(--dur-drawer) var(--ease-out) !important;
     }
 }
 
@@ -261,31 +281,59 @@
         @apply dark:text-ink-400;
     }
 
-    /* Controles */
+    /* Controles.
+       Sustituimos el `@apply transition` (que expande a `transition: all
+       150ms`, una mala práctica porque dispara render de propiedades no
+       deseadas) por una lista explícita con la curva fuerte de la app.
+       Añadimos `:active scale(0.97)` para que el botón "se sienta
+       apretado" — feedback táctil que falta cuando solo cambia el color
+       al hover. */
+    .btn,
+    .btn-ghost,
+    .btn-danger,
+    .icon-btn {
+        transition: background-color var(--dur-fast)  var(--ease-out),
+                    color            var(--dur-fast)  var(--ease-out),
+                    border-color     var(--dur-fast)  var(--ease-out),
+                    box-shadow       var(--dur-fast)  var(--ease-out),
+                    transform        var(--dur-press) var(--ease-out);
+        will-change: transform;
+    }
+    .btn:not(:disabled):active,
+    .btn-ghost:not(:disabled):active,
+    .btn-danger:not(:disabled):active,
+    .icon-btn:not(:disabled):active {
+        transform: scale(0.97);
+    }
+
     .btn {
-        @apply inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition;
+        @apply inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium;
         @apply bg-ink-900 text-white hover:bg-ink-700;
         @apply dark:bg-ink-700 dark:text-ink-50 dark:hover:bg-ink-600;
     }
     .btn-ghost {
-        @apply inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-sm transition;
+        @apply inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-sm;
         @apply text-ink-600 hover:bg-ink-100 hover:text-ink-900;
         @apply dark:text-ink-300 dark:hover:bg-ink-800 dark:hover:text-ink-50;
     }
     .btn-danger {
-        @apply inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition;
+        @apply inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium;
         @apply bg-rose-600 text-white hover:bg-rose-500;
     }
     /* Botón solo-icono: cuadrado, discreto, ideal para filas y barras. */
     .icon-btn {
-        @apply inline-flex items-center justify-center rounded-md w-7 h-7 text-sm transition;
+        @apply inline-flex items-center justify-center rounded-md w-7 h-7 text-sm;
         @apply text-ink-500 hover:bg-ink-100 hover:text-ink-900;
         @apply dark:text-ink-400 dark:hover:bg-ink-800 dark:hover:text-ink-50;
     }
-    /* Sutil "lift" al pasar el ratón sobre los botones primarios. */
-    .btn:not(:disabled):hover,
-    .btn-danger:not(:disabled):hover {
-        @apply shadow-md;
+    /* Sutil "lift" al pasar el ratón sobre los botones primarios.
+       Hover solo en input fino (cursor real): los toques en móvil
+       dispararían un :hover persistente tras el tap. */
+    @media (hover: hover) and (pointer: fine) {
+        .btn:not(:disabled):hover,
+        .btn-danger:not(:disabled):hover {
+            @apply shadow-md;
+        }
     }
     .chip {
         @apply inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-mono;
@@ -439,8 +487,13 @@
         padding-right: 2rem;
     }
     .modal[open] {
-        animation: modal-pop 0.18s ease-out;
+        animation: modal-pop var(--dur-modal) var(--ease-out);
+        transform-origin: center; /* modal centrado — el origin sigue siendo center, no se ancla a trigger */
     }
+    /* El command palette (Ctrl+K) se invoca varias veces al día desde el
+       teclado. Para acciones tan frecuentes la animación se siente como
+       lag: la quitamos por completo. */
+    .modal#quick-switcher[open] { animation: none; }
 
     /* Toast de feedback (Toastify-js) */
     .toastify.app-toast {
@@ -473,7 +526,23 @@
         outline-offset: -4px;
         border-radius: 0.5rem;
     }
-    /* Card "ghost" durante el drag (clase asignada por SortableJS). */
+    /* task-card: motion explícita. Antes se usaba `transition: all` de
+       Tailwind que dispara transición sobre cualquier property (incluido
+       padding/border que SortableJS toca durante el drag → jitter). */
+    .task-card {
+        transition: box-shadow var(--dur-base)  var(--ease-out),
+                    transform  var(--dur-press) var(--ease-out),
+                    opacity    var(--dur-base)  var(--ease-out);
+    }
+    @media (hover: hover) and (pointer: fine) {
+        .task-card:hover { @apply shadow-md; }
+    }
+    .task-card:active { cursor: grabbing; transform: scale(0.985); }
+
+    /* Card "ghost" durante el drag (clase asignada por SortableJS).
+       SortableJS quita la transición de transform mientras arrastra
+       para no interferir con el seguimiento del cursor; nuestra
+       transition de opacity sí ayuda al fade-in/out. */
     .task-card.is-dragging-ghost {
         opacity: 0.4;
         background: rgb(16 185 129 / 0.06);
@@ -523,13 +592,19 @@
 }
 
 @keyframes modal-pop {
-    from { opacity: 0; transform: translateY(10px) scale(0.985); }
-    to   { opacity: 1; transform: translateY(0) scale(1); }
+    /* Scale inicial alto (0.97) — Emil: "nothing in the real world
+       appears from nothing", no partimos de 0. translateY pequeño
+       (6px) para que la entrada se sienta firme, no rebotona. */
+    from { opacity: 0; transform: translateY(6px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0)   scale(1);    }
 }
 
-/* Sidebar plegable */
+/* Sidebar plegable.
+   Drawer curve (iOS-style) en lugar de `ease`: la animación llega a su
+   destino sin sensación de freno tardío. */
 #sidebar {
-    transition: width 0.16s ease, transform 0.2s ease-out;
+    transition: width var(--dur-drawer) var(--ease-drawer),
+                transform var(--dur-drawer) var(--ease-drawer);
 }
 html.sidebar-collapsed #sidebar {
     width: 3rem;
@@ -571,8 +646,9 @@ html.sidebar-collapsed [data-icon-expand]   { display: inline-flex; }
     main { padding-top: 2.75rem; }
 }
 
-/* Notas · panel de la lista de notas, plegable */
-#notes-list { transition: width 0.15s ease; }
+/* Notas · panel de la lista de notas, plegable. Misma curva que el
+   sidebar global — drawer iOS-style, sin freno tardío. */
+#notes-list { transition: width var(--dur-drawer) var(--ease-drawer); }
 html.notes-list-collapsed #notes-list { width: 2.5rem; }
 html.notes-list-collapsed #notes-list .panel-full { display: none; }
 [data-pc-expand] { display: none; }
@@ -650,7 +726,13 @@ html.dark [data-note-editor] .milkdown blockquote {
 
 /* Tareas · chip-toggle de etiquetas en el modal: tenue cuando no está
    seleccionada, con fondo tintado del color de la etiqueta cuando lo está. */
-.task-label-chip { opacity: 0.45; transition: opacity 0.12s, background-color 0.12s; }
+.task-label-chip {
+    opacity: 0.45;
+    transition: opacity var(--dur-fast) var(--ease-out),
+                background-color var(--dur-fast) var(--ease-out),
+                transform var(--dur-press) var(--ease-out);
+}
+.task-label-chip:active { transform: scale(0.96); }
 .task-label-chip:hover { opacity: 0.8; }
 .task-label-chip:has(input:checked) {
     opacity: 1;
@@ -670,7 +752,8 @@ html.dark [data-note-editor] .milkdown blockquote {
                          font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.1em;
                          color: var(--text-muted, #64748b); margin-bottom: 1rem; }
 .pomodoro-phase__dot   { width: 0.5rem; height: 0.5rem; border-radius: 999px;
-                         background: rgb(148 163 184 / 0.6); transition: background-color .2s; }
+                         background: rgb(148 163 184 / 0.6);
+                         transition: background-color var(--dur-base) var(--ease-out); }
 [data-phase="focus"]          .pomodoro-phase__dot { background: rgb(16 185 129); }
 [data-phase="short"]          .pomodoro-phase__dot { background: rgb(245 158 11); }
 [data-phase="long"]           .pomodoro-phase__dot { background: rgb(56 189 248); }
@@ -709,10 +792,19 @@ html.dark [data-note-editor] .milkdown blockquote {
     box-shadow: 0 10px 25px rgb(0 0 0 / 0.08), 0 4px 10px rgb(0 0 0 / 0.04);
     text-decoration: none;
     font-size: 0.8125rem;
-    transition: opacity .2s, transform .2s;
+    transition: opacity   var(--dur-base) var(--ease-out),
+                transform var(--dur-press) var(--ease-out),
+                box-shadow var(--dur-fast) var(--ease-out);
 }
 .pomodoro-dock--visible { display: inline-flex; }
-.pomodoro-dock:hover    { transform: translateY(-1px); }
+/* Hover lift solo en input fino: en touch causaría doble-feedback */
+@media (hover: hover) and (pointer: fine) {
+    .pomodoro-dock:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 14px 30px rgb(0 0 0 / 0.10), 0 6px 12px rgb(0 0 0 / 0.05);
+    }
+}
+.pomodoro-dock:active { transform: scale(0.97); }
 
 .pomodoro-dock__dot     { width: 0.5rem; height: 0.5rem; border-radius: 999px;
                           background: rgb(148 163 184 / 0.6); }
@@ -807,7 +899,8 @@ html.dark [data-task-inline-add] input:focus { background-color: rgb(30 41 59 / 
     min-height: 2.375rem;
     padding: 0.45rem 0.75rem;
     font-size: 0.875rem;
-    transition: border-color 0.15s, box-shadow 0.15s;
+    transition: border-color var(--dur-fast) var(--ease-out),
+                box-shadow   var(--dur-fast) var(--ease-out);
 }
 .choices__inner:hover { border-color: rgb(156 163 175); }       /* ink-300 */
 .choices.is-focused .choices__inner,
@@ -889,7 +982,8 @@ html.dark .choices__list--single .choices__item { color: rgb(241 245 249); }
     min-height: 2.375rem;
     padding: 0.45rem 0.75rem;
     font-size: 0.875rem;
-    transition: border-color 0.15s, box-shadow 0.15s;
+    transition: border-color var(--dur-fast) var(--ease-out),
+                box-shadow   var(--dur-fast) var(--ease-out);
 }
 .choices__inner:hover { border-color: rgb(156 163 175); }       /* ink-300 */
 .choices.is-focused .choices__inner,
@@ -957,7 +1051,10 @@ html.dark .choices__list--single .choices__item { color: rgb(241 245 249); }
 .wikilink {
     color: var(--accent, #10b981);
     text-decoration: none;
-    transition: background-color .15s, color .15s, border-color .15s;
+    transition: background-color var(--dur-fast) var(--ease-out),
+                color            var(--dur-fast) var(--ease-out),
+                border-color     var(--dur-fast) var(--ease-out),
+                opacity          var(--dur-fast) var(--ease-out);
 }
 .wikilink:hover { color: var(--accent, #059669); }
 .wikilink--missing {
@@ -990,9 +1087,19 @@ html.dark .choices__list--single .choices__item { color: rgb(241 245 249); }
     border-radius: 0.625rem;
     background: var(--paper, #fff);
     cursor: pointer;
-    transition: border-color .15s, transform .15s, box-shadow .15s;
+    /* Properties explícitas con la curva del sistema — la card es un
+       botón grande, no merece un `transition: all`. */
+    transition: border-color var(--dur-fast)  var(--ease-out),
+                transform    var(--dur-press) var(--ease-out),
+                box-shadow   var(--dur-fast)  var(--ease-out);
 }
-.theme-card:hover { border-color: var(--ink-ghost, #94a3b8); transform: translateY(-1px); }
+@media (hover: hover) and (pointer: fine) {
+    .theme-card:hover {
+        border-color: var(--ink-ghost, #94a3b8);
+        transform: translateY(-1px);
+    }
+}
+.theme-card:active { transform: scale(0.985); }
 .theme-card--active {
     border-color: var(--accent, #10b981);
     box-shadow: 0 0 0 2px var(--accent-soft, rgb(16 185 129 / 0.18));
@@ -1036,7 +1143,8 @@ html.dark .theme-card {
     border-radius: 999px;
     border: 1.5px solid var(--ink-ghost, #94a3b8);
     margin-left: auto;
-    transition: background-color .15s, border-color .15s;
+    transition: background-color var(--dur-fast) var(--ease-out),
+                border-color     var(--dur-fast) var(--ease-out);
 }
 .theme-card--active .theme-card__radio {
     background: var(--accent, #10b981);
@@ -1044,4 +1152,16 @@ html.dark .theme-card {
     box-shadow: inset 0 0 0 2px var(--paper, #fff);
 }
 
-
+/* ─────────────────── prefers-reduced-motion ───────────────────
+   Reglas globales — fuera de @layer para que ningún componente las
+   sobrescriba. No quitamos transiciones de color (ayudan a la
+   comprensión), solo neutralizamos durations de animation y motion
+   para usuarios con preferencia activa. */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration:        0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration:       0.01ms !important;
+        scroll-behavior:           auto !important;
+    }
+}
