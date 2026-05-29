@@ -26,11 +26,12 @@ export function initThemePicker() {
         const id   = card.dataset.themeId;
         const root = document.documentElement;
 
-        // 1) Aplicar al instante con crossfade.
+        // 1) Aplicar al instante con crossfade. El timeout encaja con
+        //    la duración del CSS (--dur-drawer = 280ms) + margen.
         root.classList.add('theme-transition');
         root.setAttribute('data-theme', id);
         localStorage.setItem('themeId', id);
-        window.setTimeout(() => root.classList.remove('theme-transition'), 400);
+        window.setTimeout(() => root.classList.remove('theme-transition'), 320);
 
         // 2) Marcar la card activa.
         grid.querySelectorAll('[data-theme-id]').forEach((c) => {

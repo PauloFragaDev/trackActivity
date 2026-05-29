@@ -297,7 +297,6 @@
                     border-color     var(--dur-fast)  var(--ease-out),
                     box-shadow       var(--dur-fast)  var(--ease-out),
                     transform        var(--dur-press) var(--ease-out);
-        will-change: transform;
     }
     .btn:not(:disabled):active,
     .btn-ghost:not(:disabled):active,
@@ -351,7 +350,12 @@
        acorde con cards/botones. Hover sutil para descubribilidad. Focus
        con ring emerald más visible que antes (opacity 0.4 → 0.5). */
     .input, .select, .textarea {
-        @apply w-full rounded-md px-3 py-2 text-sm transition;
+        @apply w-full rounded-md px-3 py-2 text-sm;
+        /* Curva fuerte de la app en vez del default débil de Tailwind
+           (cubic-bezier(.4,0,.2,1) a 150ms). Coherente con los botones. */
+        transition: background-color var(--dur-fast) var(--ease-out),
+                    border-color     var(--dur-fast) var(--ease-out),
+                    box-shadow       var(--dur-fast) var(--ease-out);
         @apply bg-white border border-ink-200 text-ink-900 placeholder:text-ink-400;
         @apply hover:border-ink-300;
         @apply focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500;
@@ -516,7 +520,10 @@
         @apply h-1 rounded-full bg-ink-100 dark:bg-ink-800 overflow-hidden mt-2;
     }
     .subtask-bar > span {
-        @apply block h-full bg-emerald-500 transition-all duration-200;
+        @apply block h-full bg-emerald-500;
+        /* Solo width (no `all`). scaleX distorsionaría los extremos
+           rounded-full de una barra de 4px; mantenemos width con la curva. */
+        transition: width var(--dur-base) var(--ease-out);
     }
 
     /* Drop zone visible en columnas Kanban cuando se arrastra encima. */
