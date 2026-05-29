@@ -70,7 +70,7 @@
 
     {{-- Botón hamburguesa (solo móvil) + overlay del drawer. --}}
     <button id="mobile-menu-btn" type="button"
-            class="icon-btn bg-white dark:bg-ink-900 border divider shadow"
+            class="icon-btn bg-[var(--paper)] dark:bg-ink-900 border divider shadow"
             aria-label="Abrir menú">
         <x-icon name="bars" class="w-5 h-5" />
     </button>
@@ -80,7 +80,7 @@
         {{-- ─────────────── Sidebar ─────────────── --}}
         <aside id="sidebar"
                class="w-56 shrink-0 flex flex-col sticky top-0 h-screen overflow-hidden
-                      bg-white dark:bg-ink-900 border-r divider">
+                      bg-[var(--paper)] dark:bg-ink-900 border-r divider">
             {{-- Cabecera: plegar/desplegar + marca --}}
             <div class="flex items-center gap-2 p-2 border-b divider">
                 <button id="sidebar-toggle" type="button" class="btn-ghost shrink-0"
