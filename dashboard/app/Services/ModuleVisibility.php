@@ -32,6 +32,11 @@ class ModuleVisibility
             'description' => 'Tablero, etiquetas, subtareas y sincronización con code-kanban.',
             'icon'        => 'kanban',
         ],
+        'clients' => [
+            'label'       => 'Clientes',
+            'description' => 'Ficha de cliente y tiempo agregado sobre sus proyectos.',
+            'icon'        => 'users',
+        ],
         'pomodoro' => [
             'label'       => 'Pomodoro',
             'description' => 'Temporizador focus/pausa y meta diaria. La sección "Pomodoro" en ajustes desaparece si lo desactivas.',
