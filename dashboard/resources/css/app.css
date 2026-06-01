@@ -234,6 +234,14 @@
         --dur-base:    200ms;  /* dropdowns, popovers, dock             */
         --dur-modal:   220ms;  /* dialog entry                          */
         --dur-drawer:  280ms;  /* sidebar, theme crossfade              */
+
+        /* Tokens semanticos derivados (pulido visual v2). Se declaran una
+           sola vez: var() los resuelve contra el --accent/--paper/--paper-warm
+           del tema activo, asi siguen al tema sin repetir por bloque. */
+        --surface:      var(--paper);
+        --surface-rail: var(--paper-warm);
+        --ring:         var(--accent);
+        --selected:     var(--accent-soft);
     }
 
     /* Crossfade al togglear el tema. JS añade .theme-transition a <html>
@@ -366,9 +374,14 @@
         background-color: var(--paper);
         @apply border border-ink-200 text-ink-900 placeholder:text-ink-400;
         @apply hover:border-ink-300;
-        @apply focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500;
+        @apply focus:outline-none;
         @apply dark:bg-ink-800 dark:border-ink-700 dark:text-ink-100 dark:placeholder:text-ink-500;
-        @apply dark:hover:border-ink-600 dark:focus:border-emerald-400 dark:focus:ring-emerald-400/40;
+        @apply dark:hover:border-ink-600;
+    }
+    /* Foco: anillo con el acento del tema (antes emerald hardcodeado). */
+    .input:focus, .select:focus, .textarea:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 45%, transparent);
     }
     /* Estado inválido. */
     .input.is-invalid, .select.is-invalid, .textarea.is-invalid {
@@ -553,7 +566,7 @@
         @apply dark:border-ink-800 dark:bg-ink-900 dark:text-ink-100;
         /* Toastify trae un degradado azul por defecto: lo anulamos. */
         background-image: none;
-        border-left: 3px solid #10b981;
+        border-left: 3px solid var(--accent);
         font-size: 0.8rem;
         font-weight: 500;
         padding: 0.62rem 1rem;
