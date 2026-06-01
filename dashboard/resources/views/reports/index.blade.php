@@ -25,40 +25,42 @@
         <div class="flex items-center gap-1">
             @foreach ($periodLabels as $key => $label)
                 <a href="{{ route('reports.index', ['period' => $key]) }}"
-                   class="btn-ghost text-sm {{ $period === $key ? 'bg-ink-100 dark:bg-ink-800 text-ink-900 dark:text-ink-50 font-medium' : '' }}">
+                   class="btn-ghost text-sm {{ $period === $key ? 'bg-[var(--selected)] text-ink-900 dark:text-ink-50 font-medium' : '' }}">
                     {{ $label }}
                 </a>
             @endforeach
         </div>
     </div>
 
-    {{-- Tarjetas resumen --}}
-    <div class="grid gap-3 md:grid-cols-4 mb-6">
-        <div class="card p-4">
+    {{-- Resumen: el total es el heroe; el resto, secundario y compacto. --}}
+    <div class="grid gap-3 md:grid-cols-3 mb-6">
+        <div class="card p-5 flex flex-col justify-center">
             <div class="text-xs text-muted uppercase tracking-wider">Total trackeado</div>
-            <div class="text-2xl font-medium mt-1 font-mono tabular-nums">{{ $fmt($totalMinutes) }}</div>
+            <div class="text-4xl font-medium mt-1 font-mono tabular-nums">{{ $fmt($totalMinutes) }}</div>
         </div>
-        <div class="card p-4">
-            <div class="text-xs text-muted uppercase tracking-wider">Proyectos activos</div>
-            <div class="text-2xl font-medium mt-1 font-mono tabular-nums">{{ $projectCount }}</div>
-        </div>
-        <div class="card p-4">
-            <div class="text-xs text-muted uppercase tracking-wider">Días con actividad</div>
-            <div class="text-2xl font-medium mt-1 font-mono tabular-nums">
-                {{ $daysActive }}<span class="text-sm font-normal text-muted"> / {{ count($byDay) }}</span>
+        <div class="md:col-span-2 grid gap-3 sm:grid-cols-3">
+            <div class="card p-4">
+                <div class="text-[11px] text-muted uppercase tracking-wider">Proyectos</div>
+                <div class="text-xl font-medium mt-1 font-mono tabular-nums">{{ $projectCount }}</div>
             </div>
-        </div>
-        <div class="card p-4">
-            <div class="text-xs text-muted uppercase tracking-wider">Media diaria</div>
-            <div class="text-2xl font-medium mt-1 font-mono tabular-nums">{{ $fmt($avgDaily) }}</div>
+            <div class="card p-4">
+                <div class="text-[11px] text-muted uppercase tracking-wider">Días activos</div>
+                <div class="text-xl font-medium mt-1 font-mono tabular-nums">
+                    {{ $daysActive }}<span class="text-sm font-normal text-muted"> / {{ count($byDay) }}</span>
+                </div>
+            </div>
+            <div class="card p-4">
+                <div class="text-[11px] text-muted uppercase tracking-wider">Media diaria</div>
+                <div class="text-xl font-medium mt-1 font-mono tabular-nums">{{ $fmt($avgDaily) }}</div>
+            </div>
         </div>
     </div>
 
     @if ($totalMinutes === 0)
         <x-empty-state
             icon="clock"
-            title="Sin datos para este periodo"
-            text="Asegúrate de que el tracker está en marcha o cambia de periodo." />
+            title="Nada que medir todavía"
+            text="Cuando el tracker registre actividad en este periodo, aquí verás el desglose. ¿Está en marcha?" />
     @else
         <div class="grid gap-4 md:grid-cols-2 mb-6">
             {{-- Por proyecto (CSS bars) --}}

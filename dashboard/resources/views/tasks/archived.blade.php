@@ -14,8 +14,8 @@
     @if ($tasks->isEmpty())
         <x-empty-state
             icon="trash"
-            title="Sin tareas archivadas"
-            text="Cuando archives una tarea aparecerá aquí." />
+            title="No has archivado nada"
+            text="Las tareas que archives desde el tablero aparecerán aquí, listas para restaurar o borrar." />
 
     @else
         <div class="card divide-y divider overflow-hidden">

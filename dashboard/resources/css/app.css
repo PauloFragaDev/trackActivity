@@ -36,6 +36,19 @@
         @apply dark:bg-ink-950 dark:text-ink-100;
     }
 
+    /* Textura de papel sutil, solo en el tema "paper". data-URI SVG con
+       feTurbulence; opacidad bajisima y fixed para que no haga bandas al
+       hacer scroll. No afecta a otros temas. */
+    html[data-theme="paper"] body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+        opacity: 0.5;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+    }
+
     /* ── Paleta semántica "papel / tinta" ─────────────────────────────
        Cada tema redefine este conjunto de variables — el toggle ☀/🌙
        sigue siendo ortogonal (alterna .dark dentro del mismo tema). Por
@@ -234,6 +247,14 @@
         --dur-base:    200ms;  /* dropdowns, popovers, dock             */
         --dur-modal:   220ms;  /* dialog entry                          */
         --dur-drawer:  280ms;  /* sidebar, theme crossfade              */
+
+        /* Tokens semanticos derivados (pulido visual v2). Se declaran una
+           sola vez: var() los resuelve contra el --accent/--paper/--paper-warm
+           del tema activo, asi siguen al tema sin repetir por bloque. */
+        --surface:      var(--paper);
+        --surface-rail: var(--paper-warm);
+        --ring:         var(--accent);
+        --selected:     var(--accent-soft);
     }
 
     /* Crossfade al togglear el tema. JS añade .theme-transition a <html>
@@ -366,9 +387,14 @@
         background-color: var(--paper);
         @apply border border-ink-200 text-ink-900 placeholder:text-ink-400;
         @apply hover:border-ink-300;
-        @apply focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500;
+        @apply focus:outline-none;
         @apply dark:bg-ink-800 dark:border-ink-700 dark:text-ink-100 dark:placeholder:text-ink-500;
-        @apply dark:hover:border-ink-600 dark:focus:border-emerald-400 dark:focus:ring-emerald-400/40;
+        @apply dark:hover:border-ink-600;
+    }
+    /* Foco: anillo con el acento del tema (antes emerald hardcodeado). */
+    .input:focus, .select:focus, .textarea:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 45%, transparent);
     }
     /* Estado inválido. */
     .input.is-invalid, .select.is-invalid, .textarea.is-invalid {
@@ -553,7 +579,7 @@
         @apply dark:border-ink-800 dark:bg-ink-900 dark:text-ink-100;
         /* Toastify trae un degradado azul por defecto: lo anulamos. */
         background-image: none;
-        border-left: 3px solid #10b981;
+        border-left: 3px solid var(--accent);
         font-size: 0.8rem;
         font-weight: 500;
         padding: 0.62rem 1rem;
@@ -794,7 +820,17 @@ html.dark [data-note-editor] .milkdown blockquote {
 
 .pomodoro-shell        { max-width: 36rem; margin: 0 auto; }
 .pomodoro-header       { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 1.25rem; }
-.pomodoro-card         { padding: 2rem 1.5rem; text-align: center; }
+.pomodoro-card         { padding: 2rem 1.5rem; text-align: center;
+                         transition: box-shadow var(--dur-drawer) var(--ease-out),
+                                     background-color var(--dur-drawer) var(--ease-out); }
+/* Atmosfera por fase: glow ambiental suave alrededor del timer. Solo
+   color/sombra (sin layout, sin movimiento) — ok con prefers-reduced-motion,
+   que ademas neutraliza la duracion. */
+.pomodoro-shell[data-phase="focus"]          .pomodoro-card,
+.pomodoro-shell[data-phase="awaiting_focus"] .pomodoro-card { box-shadow: 0 0 90px -24px rgb(16 185 129 / 0.20); }
+.pomodoro-shell[data-phase="short"]          .pomodoro-card,
+.pomodoro-shell[data-phase="awaiting_break"] .pomodoro-card { box-shadow: 0 0 90px -24px rgb(245 158 11 / 0.24); }
+.pomodoro-shell[data-phase="long"]           .pomodoro-card { box-shadow: 0 0 90px -24px rgb(56 189 248 / 0.22); }
 
 .pomodoro-phase        { display: inline-flex; align-items: center; gap: 0.5rem;
                          font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.1em;

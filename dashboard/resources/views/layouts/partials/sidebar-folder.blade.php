@@ -11,7 +11,7 @@
 <a href="{{ route('notes.index', ['folder' => $folder->id]) }}"
    class="block px-2 py-1.5 rounded text-sm truncate
           {{ $active
-                ? 'bg-ink-100 dark:bg-ink-800 text-ink-900 dark:text-ink-50 font-medium'
+                ? 'bg-[var(--selected)] text-ink-900 dark:text-ink-50 font-medium'
                 : 'text-ink-600 dark:text-ink-300 hover:bg-ink-100 dark:hover:bg-ink-800' }}"
    style="padding-left: {{ 0.5 + $depth * 0.85 }}rem"
    title="{{ $folder->name }}">

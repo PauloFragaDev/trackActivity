@@ -11,9 +11,9 @@
     <link rel="alternate icon" href="{{ url('/favicon.ico') }}">
     <link rel="apple-touch-icon" sizes="180x180" href="{{ url('/apple-touch-icon.png') }}">
     <link rel="manifest" href="{{ url('/manifest.json') }}">
-    {{-- Color del chrome del navegador: emerald acento en claro, slate en oscuro. --}}
-    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#10b981">
-    <meta name="theme-color" media="(prefers-color-scheme: dark)"  content="#0f172a">
+    {{-- Color del chrome del navegador: lo fija theme-color.js con el
+         acento del tema activo (ver resources/js/theme-color.js). --}}
+    <meta name="theme-color" content="#10b981">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="trackActivity">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -54,7 +54,7 @@
     @php
         // Clases de un ítem de navegación según si su ruta está activa.
         $navItem = fn (array $routes) => request()->routeIs(...$routes)
-            ? 'bg-ink-100 dark:bg-ink-800 text-ink-900 dark:text-ink-50 font-medium'
+            ? 'bg-[var(--selected)] text-ink-900 dark:text-ink-50 font-medium'
             : 'text-ink-600 dark:text-ink-300 hover:bg-ink-100 dark:hover:bg-ink-800';
 
         // Árbol de carpetas y notas favoritas (fijadas) para el menú lateral.
@@ -80,7 +80,7 @@
         {{-- ─────────────── Sidebar ─────────────── --}}
         <aside id="sidebar"
                class="w-56 shrink-0 flex flex-col sticky top-0 h-screen overflow-hidden
-                      bg-[var(--paper)] dark:bg-ink-900 border-r divider">
+                      bg-[var(--surface-rail)] border-r divider">
             {{-- Cabecera: plegar/desplegar + marca --}}
             <div class="flex items-center gap-2 p-2 border-b divider">
                 <button id="sidebar-toggle" type="button" class="btn-ghost shrink-0"
@@ -162,7 +162,7 @@
                         @foreach ($sidebarPinned as $fav)
                             <a href="{{ route('notes.index', ['note' => $fav->id]) }}"
                                class="block px-2 py-1.5 rounded text-sm truncate
-                                      {{ (int) request()->query('note') === $fav->id ? 'bg-ink-100 dark:bg-ink-800 text-ink-900 dark:text-ink-50 font-medium' : 'text-ink-600 dark:text-ink-300 hover:bg-ink-100 dark:hover:bg-ink-800' }}"
+                                      {{ (int) request()->query('note') === $fav->id ? 'bg-[var(--selected)] text-ink-900 dark:text-ink-50 font-medium' : 'text-ink-600 dark:text-ink-300 hover:bg-ink-100 dark:hover:bg-ink-800' }}"
                                title="{{ $fav->title }}">
                                 <x-icon name="star" class="w-3.5 h-3.5 inline-block align-text-bottom text-amber-500" /> {{ $fav->title }}
                             </a>
