@@ -40,6 +40,16 @@
             </label>
         </div>
 
+        <label class="label">
+            <span>Cliente</span>
+            <select name="client_id" class="select mt-1">
+                <option value="">— Sin cliente —</option>
+                @foreach (($clients ?? []) as $cl)
+                    <option value="{{ $cl->id }}" @selected((int) old('client_id', $project->client_id) === $cl->id)>{{ $cl->name }}</option>
+                @endforeach
+            </select>
+        </label>
+
         <div class="grid grid-cols-2 gap-4 items-end">
             <label class="label">
                 <span>Color (hex #RRGGBB)</span>

@@ -73,4 +73,16 @@ class ClientControllerTest extends TestCase
         Setting::set('modules.clients', false);
         $this->get('/')->assertOk()->assertDontSee('>Clientes<', false);
     }
+
+    public function test_project_can_be_assigned_to_client(): void
+    {
+        $c = Client::create(['name' => 'Acme']);
+        $p = Project::create(['code' => 'ACME1', 'name' => 'Web']);
+
+        $this->patch("/projects/{$p->id}", [
+            'code' => 'ACME1', 'name' => 'Web', 'client_id' => $c->id,
+        ])->assertRedirect();
+
+        $this->assertSame($c->id, $p->fresh()->client_id);
+    }
 }

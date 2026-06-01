@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Client;
 use App\Models\Project;
 use App\Models\ProjectMapping;
 use Illuminate\Http\RedirectResponse;
@@ -30,6 +31,7 @@ class ProjectController extends Controller
         return view('projects.edit', [
             'project'  => $project,
             'mappings' => collect(),
+            'clients'  => Client::orderBy('name')->get(),
             'isNew'    => true,
         ]);
     }
@@ -51,6 +53,7 @@ class ProjectController extends Controller
         return view('projects.edit', [
             'project'  => $project,
             'mappings' => $project->mappings,
+            'clients'  => Client::orderBy('name')->get(),
             'isNew'    => false,
         ]);
     }
@@ -132,6 +135,7 @@ class ProjectController extends Controller
             'name'        => ['required', 'string', 'max:128'],
             'color'       => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'description' => ['nullable', 'string', 'max:1000'],
+            'client_id'   => ['nullable', 'integer', 'exists:clients,id'],
         ], [
             'code.regex' => 'El code debe ser MAYUSCULAS, numeros, guion o subrayado.',
             'color.regex' => 'El color debe ser hex tipo #RRGGBB.',
