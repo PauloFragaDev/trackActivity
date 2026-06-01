@@ -21,7 +21,7 @@ No duplica la lógica del daemon: usa los comandos artisan
 
 ## Configuración
 
-- Puerto del dashboard: `8000` (constante `PORT` en `src-tauri/src/lib.rs`).
+- Puerto del dashboard: `8100` (constante `PORT` en `src-tauri/src/lib.rs`).
 - Ruta del dashboard: variable de entorno **`TRACKACTIVITY_DASHBOARD`**
   (por defecto `/var/www/html/trackActivity/dashboard`).
 
@@ -47,7 +47,7 @@ La cáscara nativa (ventana/bandeja) no tiene tests automatizados. Verificar a m
 - [ ] **Abrir** la app → arrancan serve, daemon y scheduler; el dashboard aparece
       solo cuando el servidor responde.
 - [ ] **Cerrar la ventana** (botón X) → la ventana desaparece pero el dashboard
-      sigue respondiendo en `localhost:8000` y el daemon sigue activo (badge del
+      sigue respondiendo en `localhost:8100` y el daemon sigue activo (badge del
       sidebar en "Tracker activo").
 - [ ] **Bandeja → Mostrar / Ocultar** → alterna la visibilidad de la ventana.
 - [ ] **Bandeja → Pausar / Reanudar tracker** → el badge del dashboard pasa a
@@ -57,6 +57,6 @@ La cáscara nativa (ventana/bandeja) no tiene tests automatizados. Verificar a m
 - [ ] **Bandeja → Salir** → tracker, scheduler y serve quedan parados
       (comprobar con `php artisan tracker:doctor` o `ps aux | grep -E "serve|tracker"`).
 - [ ] **Reabrir** → la ventana recuerda tamaño y posición.
-- [ ] **Puerto 8000 ocupado** por otro proceso al abrir → el dashboard que carga
+- [ ] **Puerto 8100 ocupado** por otro proceso al abrir → el dashboard que carga
       la ventana no es trackActivity (limitación conocida del MVP: el puerto es
       fijo; documentado).
