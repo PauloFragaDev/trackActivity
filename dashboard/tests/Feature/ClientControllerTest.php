@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Client;
 use App\Models\Project;
+use App\Models\Setting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -60,5 +61,16 @@ class ClientControllerTest extends TestCase
         $this->delete("/clients/{$c->id}")->assertRedirect();
         $this->assertSoftDeleted('clients', ['id' => $c->id]);
         $this->assertNull($p->fresh()->client_id);
+    }
+
+    public function test_nav_shows_clients_by_default(): void
+    {
+        $this->get('/')->assertOk()->assertSee('>Clientes<', false);
+    }
+
+    public function test_nav_hidden_when_module_disabled(): void
+    {
+        Setting::set('modules.clients', false);
+        $this->get('/')->assertOk()->assertDontSee('>Clientes<', false);
     }
 }

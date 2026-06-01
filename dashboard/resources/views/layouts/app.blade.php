@@ -194,6 +194,12 @@
                        class="block px-2 py-1.5 rounded {{ $navItem(['tasks.*']) }}">Tareas</a>
                 @endif
 
+                {{-- Clientes (CRM) --}}
+                @if ($modules['clients']['enabled'] ?? true)
+                    <a href="{{ route('clients.index') }}"
+                       class="block px-2 py-1.5 rounded {{ $navItem(['clients.*']) }}">Clientes</a>
+                @endif
+
                 {{-- Pomodoro: timer independiente, una sola página. --}}
                 @if ($modules['pomodoro']['enabled'] ?? true)
                     <a href="{{ route('pomodoro.index') }}"
