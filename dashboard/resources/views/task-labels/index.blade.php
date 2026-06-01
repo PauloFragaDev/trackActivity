@@ -53,12 +53,17 @@
                     <span class="inline-block w-3 h-3 rounded-full shrink-0"
                           style="background-color: {{ $label->color }}"></span>
                     <input type="text" name="title" value="{{ $label->title }}" required maxlength="60"
-                           class="input flex-1 text-sm">
-                    <select name="color" class="select text-sm" style="width:auto">
-                        @foreach ($colors as $c)
-                            <option value="{{ $c['hex'] }}" @selected($c['hex'] === $label->color)>{{ $c['name'] }}</option>
-                        @endforeach
-                    </select>
+                           class="input flex-1 min-w-[10rem] text-sm">
+                    {{-- Wrapper de ancho fijo: Choices.js ignora el width inline
+                         del <select> y se ensancha; sin acotarlo, aplastaba el
+                         input del título a 0 (el nombre desaparecía). --}}
+                    <div class="w-44 shrink-0">
+                        <select name="color" class="select text-sm">
+                            @foreach ($colors as $c)
+                                <option value="{{ $c['hex'] }}" @selected($c['hex'] === $label->color)>{{ $c['name'] }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                     <button type="submit" class="btn-ghost text-sm">Guardar</button>
                     <button type="submit" form="del-{{ $label->id }}" class="btn-ghost text-sm text-rose-600 dark:text-rose-400">Eliminar</button>
                 </form>
