@@ -4,6 +4,7 @@ import 'sweetalert2/dist/sweetalert2.min.css';
 import Toastify from 'toastify-js';
 import 'toastify-js/src/toastify.css';
 import { initQuickSwitcher } from './quick-switcher.js';
+import { syncThemeColor } from './theme-color.js';
 
 // ──────────────────────────────────────────────
 // Theme toggle (claro/oscuro) con persistencia.
@@ -34,12 +35,14 @@ window.addEventListener('DOMContentLoaded', () => {
         const isDark = root.classList.toggle('dark');
         localStorage.setItem('theme', isDark ? 'dark' : 'light');
         sync();
+        syncThemeColor();
         // Algo más de la duración del CSS (--dur-drawer = 280ms) para
         // que ningún property quede a medias cuando quitamos la clase.
         window.setTimeout(() => root.classList.remove('theme-transition'), 320);
     });
 
     sync();
+    syncThemeColor();
 });
 
 // ──────────────────────────────────────────────

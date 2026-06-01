@@ -12,6 +12,8 @@
  * claro/oscuro: así el cambio de paleta también lleva crossfade suave.
  */
 
+import { syncThemeColor } from './theme-color.js';
+
 const csrf = () => document.querySelector('meta[name="csrf-token"]')?.content ?? '';
 
 export function initThemePicker() {
@@ -31,6 +33,7 @@ export function initThemePicker() {
         root.classList.add('theme-transition');
         root.setAttribute('data-theme', id);
         localStorage.setItem('themeId', id);
+        syncThemeColor();
         window.setTimeout(() => root.classList.remove('theme-transition'), 320);
 
         // 2) Marcar la card activa.

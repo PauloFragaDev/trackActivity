@@ -25,7 +25,7 @@
         <div class="flex items-center gap-1">
             @foreach ($periodLabels as $key => $label)
                 <a href="{{ route('reports.index', ['period' => $key]) }}"
-                   class="btn-ghost text-sm {{ $period === $key ? 'bg-ink-100 dark:bg-ink-800 text-ink-900 dark:text-ink-50 font-medium' : '' }}">
+                   class="btn-ghost text-sm {{ $period === $key ? 'bg-[var(--selected)] text-ink-900 dark:text-ink-50 font-medium' : '' }}">
                     {{ $label }}
                 </a>
             @endforeach
