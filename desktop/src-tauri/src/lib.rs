@@ -14,7 +14,10 @@ use tauri::menu::{MenuBuilder, MenuItemBuilder};
 use tauri::tray::TrayIconBuilder;
 use tauri::{AppHandle, Manager, WindowEvent};
 
-const PORT: u16 = 8000;
+// Puerto poco concurrido a propósito: 8000-8010 los usa el usuario para apps
+// de trabajo. Si se cambia, actualizar también la window url de tauri.conf.json
+// y APP_URL del dashboard.
+const PORT: u16 = 8100;
 
 /// Estado de la app: el proceso `serve` que poseemos y si el tracker está activo.
 struct Stack {
