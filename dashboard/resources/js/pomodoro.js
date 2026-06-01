@@ -422,10 +422,16 @@ function bindDockDrag(dock) {
     let dragging = false, moved = false;
     let startX = 0, startY = 0, baseLeft = 0, baseTop = 0;
 
+    // El dock es un <a>: los enlaces son arrastrables de forma nativa y el
+    // drag del navegador roba el puntero (dispara pointercancel) cortando
+    // nuestro arrastre al instante. Lo anulamos.
+    dock.addEventListener('dragstart', (e) => e.preventDefault());
+
     dock.addEventListener('pointerdown', (e) => {
         if (e.button !== 0) return;
         // No arrastrar desde el boton de pausa/reanudar.
         if (e.target.closest('[data-pomodoro-dock-pause]')) return;
+        e.preventDefault(); // evita seleccion de texto / arrastre nativo del enlace
         const rect = dock.getBoundingClientRect();
         baseLeft = rect.left; baseTop = rect.top;
         startX = e.clientX; startY = e.clientY;

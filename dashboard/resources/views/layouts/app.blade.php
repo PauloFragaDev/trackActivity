@@ -295,6 +295,7 @@
         <a href="{{ route('pomodoro.index') }}"
            id="pomodoro-dock"
            class="pomodoro-dock"
+           draggable="false"
            data-focus-min="{{ $pomCfg['pomodoro_focus_min'] }}"
            data-short-break-min="{{ $pomCfg['pomodoro_short_break_min'] }}"
            data-long-break-min="{{ $pomCfg['pomodoro_long_break_min'] }}"
