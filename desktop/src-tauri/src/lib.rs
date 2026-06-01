@@ -59,15 +59,29 @@ fn wait_for_port(port: u16, tries: u32) -> bool {
     false
 }
 
+/// ¿Hay algo escuchando ya en el puerto? (para no servir encima de otro proceso).
+fn port_in_use(port: u16) -> bool {
+    use std::net::TcpStream;
+    use std::time::Duration;
+    match format!("127.0.0.1:{port}").parse() {
+        Ok(sock) => TcpStream::connect_timeout(&sock, Duration::from_millis(200)).is_ok(),
+        Err(_) => false,
+    }
+}
+
 /// Arranca el stack: serve (hijo propio) + tracker + scheduler.
 fn start_stack(app: &AppHandle) {
-    if let Ok(child) = Command::new("php")
-        .args(["artisan", "serve", "--port", &PORT.to_string()])
-        .current_dir(dashboard_dir())
-        .spawn()
-    {
-        let state = app.state::<Stack>();
-        *state.serve.lock().unwrap() = Some(child);
+    // Solo levantamos serve si el puerto está libre; si está ocupado, no
+    // servimos encima (el aviso se muestra en setup).
+    if !port_in_use(PORT) {
+        if let Ok(child) = Command::new("php")
+            .args(["artisan", "serve", "--port", &PORT.to_string()])
+            .current_dir(dashboard_dir())
+            .spawn()
+        {
+            let state = app.state::<Stack>();
+            *state.serve.lock().unwrap() = Some(child);
+        }
     }
     artisan(&["tracker:start"]);
     artisan(&["scheduler:start"]);
@@ -150,12 +164,30 @@ pub fn run() {
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
             None,
         ))
+        .plugin(tauri_plugin_dialog::init())
         .manage(Stack {
             serve: Mutex::new(None),
             tracker_on: AtomicBool::new(false),
         })
         .setup(|app| {
             let handle = app.handle().clone();
+
+            // Si el puerto ya está ocupado por otro proceso, avisar en vez de
+            // servir/cargar a ciegas encima de él.
+            if port_in_use(PORT) {
+                use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
+                handle
+                    .dialog()
+                    .message(format!(
+                        "El puerto {PORT} ya está en uso por otro proceso. Cierra ese \
+                         servidor y vuelve a abrir trackActivity para que la app gestione \
+                         su propio servidor."
+                    ))
+                    .kind(MessageDialogKind::Warning)
+                    .title("trackActivity")
+                    .show(|_| {});
+            }
+
             start_stack(&handle);
 
             // Espera al puerto en un hilo aparte y muestra la ventana cuando responde.
