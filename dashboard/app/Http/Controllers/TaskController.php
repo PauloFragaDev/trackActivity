@@ -7,9 +7,6 @@ use App\Enums\TaskStatus;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\TaskLabel;
-use App\Services\GitHub\ProjectClient;
-use App\Services\GitHub\TaskSyncService;
-use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,7 +18,7 @@ use Illuminate\View\View;
  */
 class TaskController extends Controller
 {
-    public function index(Request $request, ProjectClient $github): View
+    public function index(Request $request): View
     {
         $projectId = $request->integer('project') ?: null;
         $priority  = $request->input('priority') ?: null;
@@ -33,8 +30,6 @@ class TaskController extends Controller
             ->get()
             ->groupBy(fn (Task $t) => $t->status->value);
 
-        $lastSync = Task::max('github_synced_at');
-
         return view('tasks.board', [
             'columns'    => TaskStatus::cases(),
             'priorities' => TaskPriority::cases(),
@@ -43,27 +38,7 @@ class TaskController extends Controller
             'labels'     => TaskLabel::orderBy('position')->orderBy('title')->get(),
             'projectId'  => $projectId,
             'priority'   => $priority,
-            'githubSync' => $github->isConfigured(),
-            'lastSync'   => $lastSync ? CarbonImmutable::parse($lastSync) : null,
         ]);
-    }
-
-    /** Sincroniza el tablero con el GitHub Project (botón "Sincronizar"). */
-    public function sync(ProjectClient $github, TaskSyncService $service): RedirectResponse
-    {
-        if (! $github->isConfigured()) {
-            return back()->with('status', 'La sincronización con GitHub no está configurada.');
-        }
-
-        try {
-            $r = $service->sync();
-        } catch (\Throwable $e) {
-            return back()->with('status', 'No se pudo sincronizar: ' . $e->getMessage());
-        }
-
-        return back()->with('status', "Sincronizado con GitHub — subidas: {$r['pushed']}, "
-            . "creadas: {$r['created']}, actualizadas: {$r['updated']}, "
-            . "eliminadas: {$r['removed']}, conflictos: {$r['conflicts']}.");
     }
 
     public function store(Request $request): RedirectResponse
@@ -85,7 +60,7 @@ class TaskController extends Controller
         $labelIds = $data['label_ids'] ?? [];
         unset($data['label_ids']);
 
-        $task->update([...$data, 'github_dirty' => true]);
+        $task->update($data);
         $task->labels()->sync($labelIds);
 
         return redirect()->route('tasks.index')->with('status', 'Tarea actualizada.');
@@ -175,7 +150,6 @@ class TaskController extends Controller
         $oldStatus = $task->status->value;
 
         $task->status = TaskStatus::from($data['status']);
-        $task->github_dirty = true;
         $task->save();   // el hook saving sincroniza completed_at
 
         $this->reindex($data['status'], $task->id, (int) $data['position']);

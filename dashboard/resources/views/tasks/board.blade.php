@@ -12,17 +12,6 @@
             </a>
         </div>
         <div class="flex items-center gap-3 flex-wrap">
-            @if ($githubSync)
-                <span class="text-xs text-faint">
-                    {{ $lastSync ? 'Sincronizado ' . $lastSync->locale('es')->diffForHumans() : 'Sin sincronizar' }}
-                </span>
-                <form method="POST" action="{{ route('tasks.sync') }}" data-loading-form>
-                    @csrf
-                    <button type="submit" class="btn-ghost text-sm" data-loading-label="Sincronizando…">
-                        <x-icon name="refresh" class="w-3.5 h-3.5" /> Sincronizar
-                    </button>
-                </form>
-            @endif
             {{-- Filtros del board. Ancho fijo en wrappers para que Choices.js
                  NO ajuste el control al texto seleccionado (provocaría que el
                  layout salte cada vez que cambias de filtro). --}}

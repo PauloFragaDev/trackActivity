@@ -29,7 +29,7 @@ class ModuleVisibility
         ],
         'tasks' => [
             'label'       => 'Tareas (Kanban)',
-            'description' => 'Tablero, etiquetas, subtareas y sincronización con GitHub Projects / code-kanban.',
+            'description' => 'Tablero, etiquetas, subtareas y sincronización con code-kanban.',
             'icon'        => 'kanban',
         ],
         'pomodoro' => [

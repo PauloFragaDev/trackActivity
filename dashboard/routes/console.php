@@ -34,8 +34,3 @@ Schedule::command('tracker:prune-events --older-than="90 days"')
 Schedule::command('backup:snapshot')
     ->dailyAt('04:00')
     ->withoutOverlapping();
-
-// Sincronizacion del tablero Kanban con GitHub (no-op si no esta configurada).
-Schedule::command('tasks:sync')
-    ->everyTenMinutes()
-    ->withoutOverlapping();

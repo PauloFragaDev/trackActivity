@@ -82,7 +82,7 @@ class TaskController extends Controller
         $labels = $data['label_ids'] ?? null;
         unset($data['label_ids']);
 
-        $task->update([...$data, 'github_dirty' => true]);
+        $task->update($data);
         if (is_array($labels)) {
             $task->labels()->sync($labels);
         }

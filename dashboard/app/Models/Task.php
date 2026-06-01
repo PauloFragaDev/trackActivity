@@ -20,15 +20,13 @@ class Task extends Model
     protected $fillable = [
         'project_id', 'title', 'description', 'status', 'priority',
         'due_date', 'position', 'completed_at',
-        'github_item_id', 'github_synced_at', 'github_dirty',
         'kanban_card_id', 'kanban_synced_at',
     ];
 
     /** Defaults en memoria (coinciden con los de la migración). */
     protected $attributes = [
-        'status'       => 'todo',
-        'position'     => 0,
-        'github_dirty' => false,
+        'status'   => 'todo',
+        'position' => 0,
     ];
 
     protected $casts = [
@@ -38,8 +36,6 @@ class Task extends Model
         'due_date'     => 'date',
         'position'         => 'integer',
         'completed_at'     => 'datetime',
-        'github_synced_at' => 'datetime',
-        'github_dirty'     => 'boolean',
         'kanban_synced_at' => 'datetime',
     ];
 
