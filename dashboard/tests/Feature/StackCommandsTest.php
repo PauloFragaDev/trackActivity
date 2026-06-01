@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Services\SchedulerManager;
 use App\Services\TrackerManager;
 use Tests\TestCase;
 
@@ -40,5 +41,31 @@ class StackCommandsTest extends TestCase
         $mock->shouldReceive('stop')->once();
 
         $this->artisan('tracker:stop')->assertExitCode(0);
+    }
+
+    public function test_scheduler_start_invokes_manager(): void
+    {
+        $mock = $this->mock(SchedulerManager::class);
+        $mock->shouldReceive('status')->andReturn(['running' => false]);
+        $mock->shouldReceive('start')->once();
+
+        $this->artisan('scheduler:start')->assertExitCode(0);
+    }
+
+    public function test_scheduler_start_is_noop_when_already_running(): void
+    {
+        $mock = $this->mock(SchedulerManager::class);
+        $mock->shouldReceive('status')->andReturn(['running' => true]);
+        $mock->shouldNotReceive('start');
+
+        $this->artisan('scheduler:start')->assertExitCode(0);
+    }
+
+    public function test_scheduler_stop_invokes_manager(): void
+    {
+        $mock = $this->mock(SchedulerManager::class);
+        $mock->shouldReceive('stop')->once();
+
+        $this->artisan('scheduler:stop')->assertExitCode(0);
     }
 }
