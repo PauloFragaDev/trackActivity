@@ -879,9 +879,18 @@ html.dark [data-note-editor] .milkdown blockquote {
     box-shadow: 0 10px 25px rgb(0 0 0 / 0.08), 0 4px 10px rgb(0 0 0 / 0.04);
     text-decoration: none;
     font-size: 0.8125rem;
+    cursor: grab;
+    touch-action: none; /* el arrastre del dock no debe hacer scroll en touch */
     transition: opacity   var(--dur-base) var(--ease-out),
                 transform var(--dur-press) var(--ease-out),
                 box-shadow var(--dur-fast) var(--ease-out);
+}
+/* Mientras se arrastra: sin transicion ni scale de :active, cursor agarrando. */
+.pomodoro-dock--dragging {
+    cursor: grabbing;
+    transition: none;
+    transform: none !important;
+    user-select: none;
 }
 .pomodoro-dock--visible { display: inline-flex; }
 /* Hover lift solo en input fino: en touch causaría doble-feedback */
@@ -905,6 +914,16 @@ html.dark [data-note-editor] .milkdown blockquote {
 .pomodoro-dock__phase   { color: var(--text-muted, #64748b); }
 .pomodoro-dock__pause   { padding: 0 0.5rem; }
 .pomodoro-dock__pause[disabled] { opacity: 0.3; cursor: default; }
+
+/* Pill del temporizador minimizado en el sidebar. Oculto salvo cuando
+   JS añade --visible (el dock flotante está minimizado). */
+.pomodoro-sidebar { display: none; }
+.pomodoro-sidebar--visible { display: flex; }
+.pomodoro-sidebar[data-phase="focus"]          .pomodoro-dock__dot,
+.pomodoro-sidebar[data-phase="awaiting_focus"] .pomodoro-dock__dot { background: rgb(16 185 129); }
+.pomodoro-sidebar[data-phase="short"]          .pomodoro-dock__dot,
+.pomodoro-sidebar[data-phase="awaiting_break"] .pomodoro-dock__dot { background: rgb(245 158 11); }
+.pomodoro-sidebar[data-phase="long"]           .pomodoro-dock__dot { background: rgb(56 189 248); }
 
 html.dark .pomodoro-dock {
     background: rgb(30 41 59);

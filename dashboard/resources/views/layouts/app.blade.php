@@ -214,6 +214,17 @@
 
 
             <div class="sidebar-full p-2 border-t divider">
+                {{-- Temporizador minimizado: aparece aquí cuando se minimiza el
+                     dock flotante; al clicar, vuelve a flotante. Lo gobierna
+                     pomodoro.js (clase .pomodoro-sidebar--visible). --}}
+                <button type="button" id="pomodoro-sidebar" data-pomodoro-sidebar
+                        class="pomodoro-sidebar w-full items-center gap-2 px-2 py-1.5 rounded mb-1 text-sm hover:bg-ink-100 dark:hover:bg-ink-800"
+                        aria-label="Volver a mostrar el temporizador flotante"
+                        title="Volver a mostrar el temporizador">
+                    <span class="pomodoro-dock__dot" aria-hidden="true"></span>
+                    <span class="text-[11px] uppercase tracking-wider text-muted" data-pomodoro-sidebar-phase>Foco</span>
+                    <span class="font-mono tabular-nums ml-auto" data-pomodoro-sidebar-time>00:00</span>
+                </button>
                 <button id="theme-toggle" type="button"
                         class="btn-ghost w-full justify-start"
                         aria-label="Cambiar tema" title="Cambiar tema">
@@ -295,6 +306,7 @@
         <a href="{{ route('pomodoro.index') }}"
            id="pomodoro-dock"
            class="pomodoro-dock"
+           draggable="false"
            data-focus-min="{{ $pomCfg['pomodoro_focus_min'] }}"
            data-short-break-min="{{ $pomCfg['pomodoro_short_break_min'] }}"
            data-long-break-min="{{ $pomCfg['pomodoro_long_break_min'] }}"
@@ -303,6 +315,10 @@
             <span class="pomodoro-dock__dot" aria-hidden="true"></span>
             <span class="pomodoro-dock__phase text-[11px] uppercase tracking-wider" data-pomodoro-dock-phase>Foco</span>
             <span class="pomodoro-dock__time font-mono tabular-nums" data-pomodoro-dock-time>00:00</span>
+            <button type="button" class="pomodoro-dock__min icon-btn"
+                    data-pomodoro-dock-min aria-label="Minimizar al menú" title="Minimizar al menú">
+                <x-icon name="minus" class="w-3.5 h-3.5" />
+            </button>
             <button type="button" class="pomodoro-dock__pause icon-btn"
                     data-pomodoro-dock-pause aria-label="Pausar / reanudar">·</button>
         </a>
