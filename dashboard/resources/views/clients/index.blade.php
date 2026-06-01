@@ -3,7 +3,7 @@
 @section('content')
     <div class="mb-5 flex items-center justify-between gap-3">
         <h1 class="text-xl font-semibold tracking-tight">Clientes</h1>
-        <a href="{{ route('clients.create') }}" class="btn"><x-icon name="plus" class="w-4 h-4" /> Nuevo cliente</a>
+        <button type="button" class="btn" data-modal-open="#client-new"><x-icon name="plus" class="w-4 h-4" /> Nuevo cliente</button>
     </div>
 
     @forelse ($clients as $c)
@@ -21,7 +21,20 @@
     @empty
         <x-empty-state icon="users" title="Aún no tienes clientes"
             text="Crea un cliente y asígnale proyectos para ver su tiempo y actividad reunidos.">
-            <a href="{{ route('clients.create') }}" class="btn"><x-icon name="plus" class="w-4 h-4" /> Nuevo cliente</a>
+            <button type="button" class="btn" data-modal-open="#client-new"><x-icon name="plus" class="w-4 h-4" /> Nuevo cliente</button>
         </x-empty-state>
     @endforelse
+
+    {{-- Alta de cliente en modal (patrón <dialog class="modal"> + data-modal-open). --}}
+    <dialog id="client-new" class="modal">
+        <form method="POST" action="{{ route('clients.store') }}" class="space-y-3">
+            @csrf
+            @include('layouts.partials.modal-header', ['title' => 'Nuevo cliente'])
+            @include('clients.partials.form-fields', ['client' => new \App\Models\Client()])
+            <div class="modal-footer flex justify-end gap-2">
+                <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
+                <button type="submit" class="btn">Crear</button>
+            </div>
+        </form>
+    </dialog>
 @endsection
