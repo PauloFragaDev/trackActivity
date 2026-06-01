@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ActivityEventController;
 use App\Http\Controllers\CalendarController;
+use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DataController;
 use App\Http\Controllers\ExportController;
@@ -63,6 +64,15 @@ Route::get('/data/backup/{name}',  [DataController::class, 'downloadBackup'])->n
 Route::post('/data/restore',       [DataController::class, 'restore'])->name('data.restore');
 Route::get('/data/export/notes',   [DataController::class, 'exportNotes'])->name('data.export.notes');
 Route::get('/data/export/data',    [DataController::class, 'exportData'])->name('data.export.data');
+
+// ─────────────────── Clientes (CRM) ───────────────────
+Route::get('/clients',                 [ClientController::class, 'index'])->name('clients.index');
+Route::get('/clients/create',          [ClientController::class, 'create'])->name('clients.create');
+Route::post('/clients',                [ClientController::class, 'store'])->name('clients.store');
+Route::get('/clients/{client}',        [ClientController::class, 'show'])->name('clients.show');
+Route::get('/clients/{client}/edit',   [ClientController::class, 'edit'])->name('clients.edit');
+Route::patch('/clients/{client}',      [ClientController::class, 'update'])->name('clients.update');
+Route::delete('/clients/{client}',     [ClientController::class, 'destroy'])->name('clients.destroy');
 
 // ─────────────────── Proyectos (CRUD) ───────────────────
 Route::get('/projects',                [ProjectController::class, 'index'])->name('projects.index');
