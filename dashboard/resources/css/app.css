@@ -879,9 +879,18 @@ html.dark [data-note-editor] .milkdown blockquote {
     box-shadow: 0 10px 25px rgb(0 0 0 / 0.08), 0 4px 10px rgb(0 0 0 / 0.04);
     text-decoration: none;
     font-size: 0.8125rem;
+    cursor: grab;
+    touch-action: none; /* el arrastre del dock no debe hacer scroll en touch */
     transition: opacity   var(--dur-base) var(--ease-out),
                 transform var(--dur-press) var(--ease-out),
                 box-shadow var(--dur-fast) var(--ease-out);
+}
+/* Mientras se arrastra: sin transicion ni scale de :active, cursor agarrando. */
+.pomodoro-dock--dragging {
+    cursor: grabbing;
+    transition: none;
+    transform: none !important;
+    user-select: none;
 }
 .pomodoro-dock--visible { display: inline-flex; }
 /* Hover lift solo en input fino: en touch causaría doble-feedback */
