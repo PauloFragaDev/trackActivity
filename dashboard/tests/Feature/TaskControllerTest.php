@@ -164,7 +164,7 @@ class TaskControllerTest extends TestCase
 
     public function test_archived_page_renders_when_empty(): void
     {
-        $this->get('/tasks/archived')->assertOk()->assertSee('Sin tareas archivadas');
+        $this->get('/tasks/archived')->assertOk()->assertSee('No has archivado nada');
     }
 
     public function test_board_renders_the_six_fixed_columns(): void

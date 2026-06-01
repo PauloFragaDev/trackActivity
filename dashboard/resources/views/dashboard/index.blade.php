@@ -104,6 +104,15 @@
                 @endforeach
             </div>
         </div>
+        <div class="flex items-center justify-end gap-1.5 mt-2 text-[11px] text-faint">
+            <span>menos</span>
+            <span class="w-2.5 h-2.5 rounded-sm {{ $heatClass[0] }}"></span>
+            <span class="w-2.5 h-2.5 rounded-sm {{ $heatClass[1] }}"></span>
+            <span class="w-2.5 h-2.5 rounded-sm {{ $heatClass[2] }}"></span>
+            <span class="w-2.5 h-2.5 rounded-sm {{ $heatClass[3] }}"></span>
+            <span class="w-2.5 h-2.5 rounded-sm {{ $heatClass[4] }}"></span>
+            <span>más</span>
+        </div>
     </section>
 
     {{-- Últimas notas + Tareas en curso --}}
@@ -119,7 +128,7 @@
                         <x-timestamp :at="$n->updated_at" class="shrink-0 text-xs" />
                     </a>
                 @empty
-                    <p class="text-sm text-muted">Aún no hay notas.</p>
+                    <p class="text-sm text-muted">Tus notas recientes aparecerán aquí. Crea la primera desde Notas.</p>
                 @endforelse
             </div>
         </section>
@@ -139,7 +148,7 @@
                         @endif
                     </a>
                 @empty
-                    <p class="text-sm text-muted">No hay tareas en curso.</p>
+                    <p class="text-sm text-muted">Nada en curso ahora mismo. Mueve una tarea a “En curso” en el tablero.</p>
                 @endforelse
             </div>
         </section>
