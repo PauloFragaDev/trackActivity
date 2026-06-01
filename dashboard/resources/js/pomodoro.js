@@ -48,6 +48,10 @@ const ICON = {
 };
 
 const LS_DOCK_POS = 'pomodoro.dock.pos';
+const LS_DOCK_MIN = 'pomodoro.dock.min'; // '1' = minimizado al sidebar
+
+function isMinimized() { return localStorage.getItem(LS_DOCK_MIN) === '1'; }
+function setMinimized(v) { try { localStorage.setItem(LS_DOCK_MIN, v ? '1' : '0'); } catch {} }
 
 /* ── Estado en localStorage ─────────────────────────────────────────── */
 
@@ -297,28 +301,46 @@ function renderMain(state, config) {
 
 function renderDock(state, config) {
     const dock = document.getElementById('pomodoro-dock');
-    if (! dock) return;
+    const side = document.getElementById('pomodoro-sidebar');
 
-    // Visible solo si hay algo que enseñar (cualquier cosa salvo idle).
-    const visible = state.phase !== PHASE.IDLE;
-    dock.classList.toggle('pomodoro-dock--visible', visible);
-    if (! visible) return;
+    // Hay algo que enseñar en cualquier fase salvo idle. Minimizado decide
+    // si se muestra el dock flotante o el pill del sidebar.
+    const active    = state.phase !== PHASE.IDLE;
+    const minimized = isMinimized();
+    const showDock  = active && ! minimized;
+    const showSide  = active && minimized;
 
-    dock.dataset.phase  = state.phase;
-    dock.dataset.paused = state.pausedAt ? '1' : '0';
+    if (dock) {
+        dock.classList.toggle('pomodoro-dock--visible', showDock);
+        if (showDock) {
+            dock.dataset.phase  = state.phase;
+            dock.dataset.paused = state.pausedAt ? '1' : '0';
 
-    const phaseEl = dock.querySelector('[data-pomodoro-dock-phase]');
-    if (phaseEl) phaseEl.textContent = PHASE_LABEL[state.phase];
+            const phaseEl = dock.querySelector('[data-pomodoro-dock-phase]');
+            if (phaseEl) phaseEl.textContent = PHASE_LABEL[state.phase];
 
-    const tEl = dock.querySelector('[data-pomodoro-dock-time]');
-    if (tEl) tEl.textContent = buildDisplay(state, config);
+            const tEl = dock.querySelector('[data-pomodoro-dock-time]');
+            if (tEl) tEl.textContent = buildDisplay(state, config);
 
-    const pauseBtn = dock.querySelector('[data-pomodoro-dock-pause]');
-    if (pauseBtn) {
-        const isRunning = RUNNING.has(state.phase) && ! state.pausedAt;
-        pauseBtn.innerHTML = isRunning ? ICON.pause : ICON.play;
-        pauseBtn.disabled = ! RUNNING.has(state.phase);
-        pauseBtn.title = isRunning ? 'Pausar' : (state.pausedAt ? 'Reanudar' : '');
+            const pauseBtn = dock.querySelector('[data-pomodoro-dock-pause]');
+            if (pauseBtn) {
+                const isRunning = RUNNING.has(state.phase) && ! state.pausedAt;
+                pauseBtn.innerHTML = isRunning ? ICON.pause : ICON.play;
+                pauseBtn.disabled = ! RUNNING.has(state.phase);
+                pauseBtn.title = isRunning ? 'Pausar' : (state.pausedAt ? 'Reanudar' : '');
+            }
+        }
+    }
+
+    if (side) {
+        side.classList.toggle('pomodoro-sidebar--visible', showSide);
+        if (showSide) {
+            side.dataset.phase = state.phase;
+            const p = side.querySelector('[data-pomodoro-sidebar-phase]');
+            if (p) p.textContent = PHASE_LABEL[state.phase];
+            const t = side.querySelector('[data-pomodoro-sidebar-time]');
+            if (t) t.textContent = buildDisplay(state, config);
+        }
     }
 }
 
@@ -368,6 +390,13 @@ function bindMainActions() {
 }
 
 function bindDockActions() {
+    // Pill del sidebar (restaurar a flotante). Existe aunque no haya dock.
+    document.getElementById('pomodoro-sidebar')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        setMinimized(false);
+        renderAll();
+    });
+
     const dock = document.getElementById('pomodoro-dock');
     if (! dock) return;
 
@@ -377,6 +406,13 @@ function bindDockActions() {
         const s = readState();
         if (! RUNNING.has(s.phase)) return;
         if (s.pausedAt) resume(); else pause();
+        renderAll();
+    });
+
+    dock.querySelector('[data-pomodoro-dock-min]')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setMinimized(true);
         renderAll();
     });
 }
@@ -429,8 +465,8 @@ function bindDockDrag(dock) {
 
     dock.addEventListener('pointerdown', (e) => {
         if (e.button !== 0) return;
-        // No arrastrar desde el boton de pausa/reanudar.
-        if (e.target.closest('[data-pomodoro-dock-pause]')) return;
+        // No arrastrar desde los botones de pausa/reanudar ni de minimizar.
+        if (e.target.closest('[data-pomodoro-dock-pause], [data-pomodoro-dock-min]')) return;
         e.preventDefault(); // evita seleccion de texto / arrastre nativo del enlace
         const rect = dock.getBoundingClientRect();
         baseLeft = rect.left; baseTop = rect.top;
