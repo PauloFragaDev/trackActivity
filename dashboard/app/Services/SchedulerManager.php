@@ -6,8 +6,8 @@ use RuntimeException;
 
 /**
  * Controla el scheduler de Laravel (`php artisan schedule:work`), el proceso
- * que dispara `tracker:rebuild-blocks`, `tracker:generate-summaries`,
- * `backup:snapshot` y `tasks:sync` a sus cadencias.
+ * que dispara `tracker:rebuild-blocks`, `tracker:generate-summaries` y
+ * `backup:snapshot` a sus cadencias.
  *
  * Mismo patrón que {@see TrackerManager}: spawn con nohup, PID file en
  * storage/, detección de instancias huérfanas vía /proc.

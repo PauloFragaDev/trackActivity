@@ -120,14 +120,6 @@ class ApiTaskTest extends TestCase
             ->assertJsonPath('data.status', 'standby');
     }
 
-    public function test_update_marks_github_dirty(): void
-    {
-        $task = Task::create(['title' => 'T', 'status' => 'todo', 'github_synced_at' => now()]);
-        $this->withHeaders($this->auth())
-            ->patchJson("/api/tasks/{$task->id}", ['title' => 'T2'])->assertOk();
-        $this->assertTrue((bool) $task->fresh()->github_dirty);
-    }
-
     public function test_destroy_archives_task_with_204(): void
     {
         $task = Task::create(['title' => 'T', 'status' => 'todo']);
