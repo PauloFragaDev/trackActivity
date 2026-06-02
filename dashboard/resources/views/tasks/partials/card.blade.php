@@ -26,13 +26,6 @@
     <div class="flex items-start justify-between gap-2">
         <p class="text-sm font-medium leading-snug {{ $task->status === \App\Enums\TaskStatus::Done ? 'line-through text-muted' : '' }}">{{ $task->title }}</p>
         <div class="flex items-center gap-0.5 shrink-0 -mr-1 -mt-1">
-            @if ($task->status !== \App\Enums\TaskStatus::Done)
-                <button type="button" data-timer-start data-task-id="{{ $task->id }}"
-                        class="icon-btn text-emerald-600 dark:text-emerald-400"
-                        title="Empezar a trabajar" aria-label="Empezar a trabajar en esta tarea">
-                    <x-icon name="play" class="w-3 h-3" />
-                </button>
-            @endif
             <button type="button" data-task-edit class="icon-btn"
                     title="Editar tarea" aria-label="Editar tarea">
                 <x-icon name="edit" class="w-3.5 h-3.5" />
