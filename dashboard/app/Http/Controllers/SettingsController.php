@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Setting;
 use App\Services\AppearanceService;
 use App\Services\ModuleVisibility;
 use App\Services\PomodoroService;
@@ -91,5 +92,23 @@ class SettingsController extends Controller
         return redirect()
             ->route('settings.pomodoro')
             ->with('status', 'Pomodoro actualizado.');
+    }
+
+    public function sync(): View
+    {
+        return view('settings.sync', [
+            'crm'       => (bool) Setting::get('sync.crm', false),
+            'extension' => (bool) Setting::get('sync.extension', true),
+        ]);
+    }
+
+    public function saveSync(Request $request): RedirectResponse
+    {
+        Setting::set('sync.crm', $request->boolean('crm'));
+        Setting::set('sync.extension', $request->boolean('extension'));
+
+        return redirect()
+            ->route('settings.sync')
+            ->with('status', 'Ajustes de sincronización guardados.');
     }
 }

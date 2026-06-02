@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Setting;
 use App\Models\Task;
 use App\Services\CodeKanban\KanbanSyncService;
 use Illuminate\Http\Request;
@@ -44,6 +45,12 @@ class KanbanStreamController extends Controller
 
     public function stream(Request $request): StreamedResponse
     {
+        abort_if(
+            ! Setting::get('sync.extension', true),
+            403,
+            'La sincronización con la extensión está desactivada en Configuración.'
+        );
+
         $data = $request->validate([
             'workspace_path' => ['required', 'string', 'max:1024'],
         ]);
