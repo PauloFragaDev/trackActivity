@@ -94,7 +94,7 @@
                     </span>
                 </header>
                 <div class="task-column__body flex-1 flex flex-col">
-                    <div class="task-list flex-1 p-2 space-y-2" data-task-list="{{ $col->value }}">
+                    <div class="task-list flex-1 p-2" data-task-list="{{ $col->value }}">
                         @foreach ($colTasks as $task)
                             @include('tasks.partials.card', ['task' => $task])
                         @endforeach

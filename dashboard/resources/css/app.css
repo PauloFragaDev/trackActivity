@@ -600,6 +600,21 @@
         transition: width var(--dur-base) var(--ease-out);
     }
 
+    /* La lista de tarjetas es una rejilla auto-adaptable: con columnas
+       estrechas (varias visibles) cae a 1 tarjeta por fila —como antes—; al
+       quedar una columna ancha (resto colapsado) reparte varias por fila sin
+       estirarlas. min(13rem,100%): en columnas estrechas la pista baja de
+       13rem en vez de desbordar. align-items:start mantiene la altura natural
+       de cada tarjeta. El drag&drop sigue funcionando (SortableJS autodetecta
+       dirección y el orden se guarda lineal). */
+    .task-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(min(13rem, 100%), 1fr));
+        gap: 0.5rem;
+        align-content: start;
+        align-items: start;
+    }
+
     /* Drop zone visible en columnas Kanban cuando se arrastra encima. */
     .task-list.is-drop-target {
         background-color: rgb(16 185 129 / 0.08);
