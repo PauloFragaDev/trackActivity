@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Setting;
 use App\Services\CodeKanban\KanbanSyncService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
@@ -22,6 +23,10 @@ class KanbanSyncController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        if (! Setting::get('sync.extension', true)) {
+            return response()->json(['error' => 'La sincronización con la extensión está desactivada en Configuración.'], 403);
+        }
+
         $data = $request->validate([
             'workspace_path'      => ['required', 'string', 'max:1024'],
             'client_updated_at'   => ['required', 'date'],

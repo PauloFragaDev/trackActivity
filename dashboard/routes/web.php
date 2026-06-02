@@ -136,6 +136,8 @@ Route::get('/settings/appearance',  [\App\Http\Controllers\SettingsController::c
 Route::post('/settings/appearance', [\App\Http\Controllers\SettingsController::class, 'saveAppearance'])->name('settings.appearance.save');
 Route::get('/settings/pomodoro',    [\App\Http\Controllers\SettingsController::class, 'pomodoro'])->name('settings.pomodoro');
 Route::post('/settings/pomodoro',   [\App\Http\Controllers\SettingsController::class, 'savePomodoro'])->name('settings.pomodoro.save');
+Route::get('/settings/sync',        [\App\Http\Controllers\SettingsController::class, 'sync'])->name('settings.sync');
+Route::post('/settings/sync',       [\App\Http\Controllers\SettingsController::class, 'saveSync'])->name('settings.sync.save');
 
 // ─────────────────── Ayuda ───────────────────
 Route::get('/help', [HelpController::class, 'index'])->name('help');
