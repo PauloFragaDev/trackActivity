@@ -956,7 +956,8 @@ html.dark .pomodoro-dock {
     gap: 0.5rem;
     border-bottom: none;
 }
-.task-column--collapsed .task-column__title { flex-direction: column; gap: 0.3rem; }
+/* En colapsado NO partimos el título en columna: que el contador siga en la
+   misma línea que el nombre (el header ya es vertical por writing-mode). */
 .task-column--collapsed .task-column__sort { display: none; }
 .task-column--collapsed .task-column__header [data-modal-open] { display: none; }
 
