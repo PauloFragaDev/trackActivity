@@ -139,6 +139,39 @@ class TaskController extends Controller
         return redirect()->route('tasks.archived')->with('status', 'Tarea borrada para siempre.');
     }
 
+    /** Restaura en lote las tareas archivadas seleccionadas. */
+    public function bulkRestore(Request $request): RedirectResponse
+    {
+        $ids = $this->validatedTaskIds($request);
+
+        $n = Task::onlyTrashed()->whereIn('id', $ids)->restore();
+
+        return redirect()->route('tasks.archived')
+            ->with('status', $n === 1 ? 'Tarea restaurada.' : "{$n} tareas restauradas.");
+    }
+
+    /** Borra definitivamente en lote las tareas archivadas seleccionadas. */
+    public function bulkForceDestroy(Request $request): RedirectResponse
+    {
+        $ids = $this->validatedTaskIds($request);
+
+        // forceDelete() sobre la query no respeta SoftDeletes scope salvo
+        // que partamos de onlyTrashed(); así solo tocamos archivadas.
+        $n = Task::onlyTrashed()->whereIn('id', $ids)->forceDelete();
+
+        return redirect()->route('tasks.archived')
+            ->with('status', $n === 1 ? 'Tarea borrada para siempre.' : "{$n} tareas borradas para siempre.");
+    }
+
+    /** Valida el array `ids[]` de los endpoints en lote y lo devuelve. */
+    private function validatedTaskIds(Request $request): array
+    {
+        return $request->validate([
+            'ids'   => ['required', 'array', 'min:1'],
+            'ids.*' => ['integer'],
+        ])['ids'];
+    }
+
     /** Mueve una tarea de columna / posición (endpoint AJAX del drag & drop). */
     public function move(Request $request, Task $task): JsonResponse
     {

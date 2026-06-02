@@ -162,6 +162,56 @@ class TaskControllerTest extends TestCase
         $this->assertDatabaseHas('tasks', ['id' => $task->id, 'deleted_at' => null]);
     }
 
+    public function test_bulk_restore_brings_back_several_tasks(): void
+    {
+        $a = Task::create(['title' => 'A', 'status' => 'todo']);
+        $b = Task::create(['title' => 'B', 'status' => 'todo']);
+        $c = Task::create(['title' => 'C', 'status' => 'todo']);
+        $a->delete();
+        $b->delete();
+        $c->delete();
+
+        $this->post('/tasks/bulk-restore', ['ids' => [$a->id, $b->id]])
+            ->assertRedirect('/tasks/archived');
+
+        $this->assertNotSoftDeleted('tasks', ['id' => $a->id]);
+        $this->assertNotSoftDeleted('tasks', ['id' => $b->id]);
+        $this->assertSoftDeleted('tasks', ['id' => $c->id]);   // no seleccionada
+    }
+
+    public function test_bulk_force_destroy_removes_several_tasks(): void
+    {
+        $a = Task::create(['title' => 'A', 'status' => 'todo']);
+        $b = Task::create(['title' => 'B', 'status' => 'todo']);
+        $a->delete();
+        $b->delete();
+
+        $this->delete('/tasks/bulk-force', ['ids' => [$a->id, $b->id]])
+            ->assertRedirect('/tasks/archived');
+
+        $this->assertDatabaseMissing('tasks', ['id' => $a->id]);
+        $this->assertDatabaseMissing('tasks', ['id' => $b->id]);
+    }
+
+    public function test_bulk_force_destroy_ignores_non_archived_tasks(): void
+    {
+        $archived = Task::create(['title' => 'Archivada', 'status' => 'todo']);
+        $archived->delete();
+        $alive = Task::create(['title' => 'Viva', 'status' => 'todo']);
+
+        $this->delete('/tasks/bulk-force', ['ids' => [$archived->id, $alive->id]])
+            ->assertRedirect('/tasks/archived');
+
+        $this->assertDatabaseMissing('tasks', ['id' => $archived->id]);
+        $this->assertDatabaseHas('tasks', ['id' => $alive->id, 'deleted_at' => null]);
+    }
+
+    public function test_bulk_endpoints_require_ids(): void
+    {
+        $this->post('/tasks/bulk-restore', ['ids' => []])->assertSessionHasErrors('ids');
+        $this->delete('/tasks/bulk-force', [])->assertSessionHasErrors('ids');
+    }
+
     public function test_archived_page_renders_when_empty(): void
     {
         $this->get('/tasks/archived')->assertOk()->assertSee('No has archivado nada');

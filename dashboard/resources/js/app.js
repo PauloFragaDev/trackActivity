@@ -174,6 +174,15 @@ window.addEventListener('DOMContentLoaded', () => {
         form.addEventListener('submit', (e) => {
             if (form.dataset.confirmed === '1') return;   // ya confirmado: deja pasar
             e.preventDefault();
+            // Si el form vive dentro de un <dialog> abierto (p. ej. "Archivar"
+            // desde el modal de edición), lo cerramos ANTES del confirm. Un
+            // <dialog> abierto vive en el top-layer y `.modal[open]` lleva un
+            // `transform` (≠ none) → se vuelve bloque contenedor: el
+            // .swal2-container (position:fixed) targeteado al dialog se ancla
+            // al modal y su backdrop se recorta a la altura del modal en vez
+            // de cubrir el viewport. Cerrándolo, SweetAlert se monta en <body>
+            // y el backdrop cubre toda la pantalla.
+            form.closest('dialog[open]')?.close();
             Swal.fire({
                 ...swalConfig(),
                 title: form.dataset.confirmTitle || '¿Eliminar?',
@@ -301,6 +310,11 @@ window.addEventListener('DOMContentLoaded', () => {
     // Theme picker: solo en /settings/appearance.
     if (document.querySelector('[data-theme-grid]')) {
         import('./theme-picker.js').then((m) => m.initThemePicker());
+    }
+
+    // Selección en lote de tareas archivadas: solo en /tasks/archived.
+    if (document.querySelector('[data-archived]')) {
+        import('./archived.js').then((m) => m.initArchived());
     }
 
     // Choices.js sobre todos los <select> para uniformidad visual + búsqueda.
