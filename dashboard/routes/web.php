@@ -96,6 +96,10 @@ Route::get('/tasks',                [TaskController::class, 'index'])->name('tas
 Route::get('/tasks/peek',           [TaskController::class, 'peek'])->name('tasks.peek');
 Route::get('/tasks/archived',       [TaskController::class, 'archived'])->name('tasks.archived');
 Route::post('/tasks',               [TaskController::class, 'store'])->name('tasks.store');
+// Endpoints en lote ANTES de los parametrizados: si no, "/tasks/bulk-force"
+// lo capturaría "/tasks/{task}" con task="bulk-force".
+Route::post('/tasks/bulk-restore',  [TaskController::class, 'bulkRestore'])->name('tasks.bulk-restore');
+Route::delete('/tasks/bulk-force',  [TaskController::class, 'bulkForceDestroy'])->name('tasks.bulk-force-destroy');
 Route::patch('/tasks/{task}',       [TaskController::class, 'update'])->name('tasks.update');
 Route::patch('/tasks/{task}/move',  [TaskController::class, 'move'])->name('tasks.move');
 Route::delete('/tasks/{task}',      [TaskController::class, 'destroy'])->name('tasks.destroy');

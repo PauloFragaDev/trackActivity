@@ -22,6 +22,13 @@ function applyTo(select) {
     if (! (select instanceof HTMLSelectElement)) return;
     if (select.multiple) return;
     if (select.hasAttribute('data-no-search')) return;
+    // SweetAlert2 inyecta en su plantilla un <select.swal2-select> oculto
+    // (lo usa sólo con `input: 'select'`). El MutationObserver lo capturaría
+    // y Choices lo sacaría de su display:none → aparece un combobox vacío
+    // dentro de cada confirm. Lo ignoramos, junto con cualquier select que
+    // viva dentro del popup de SweetAlert.
+    if (select.classList.contains('swal2-select')) return;
+    if (select.closest('.swal2-popup, .swal2-container')) return;
     if (INSTANCES.has(select)) return;
     // Choices marca el <select> con .choices__input cuando ya lo ha
     // procesado; nos saltamos también ese caso (defensa extra).
