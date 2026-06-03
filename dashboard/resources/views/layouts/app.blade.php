@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    {{-- Identidad del usuario de esta instalación: el token (estable) permite al
+         front distinguir los comentarios propios; el nombre es el visible. --}}
+    <meta name="user-token" content="{{ \App\Services\UserIdentity::token() }}">
+    <meta name="user-name" content="{{ \App\Services\UserIdentity::name() }}">
     <title>@yield('title', 'trackActivity')</title>
 
     {{-- Identidad de la app · favicon SVG, fallback ICO, apple-touch, manifest --}}

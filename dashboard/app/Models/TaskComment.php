@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class TaskComment extends Model
 {
-    protected $fillable = ['task_id', 'body'];
+    protected $fillable = ['task_id', 'body', 'author_name', 'author_token'];
 
     protected $casts = [
         'task_id' => 'integer',

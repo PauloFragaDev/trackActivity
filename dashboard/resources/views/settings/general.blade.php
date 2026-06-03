@@ -16,7 +16,20 @@
           class="card p-5 max-w-2xl space-y-4" data-loading-form>
         @csrf
 
-        <div class="space-y-3">
+        <div class="space-y-2">
+            <div>
+                <h2 class="text-sm font-semibold">Tu nombre</h2>
+                <p class="text-xs text-faint mt-0.5">
+                    Aparece como autor de los comentarios de las tareas. Solo el
+                    nombre; el sistema te identifica internamente de forma automática.
+                </p>
+            </div>
+            <input type="text" name="user_name" maxlength="80"
+                   value="{{ $userName }}" placeholder="Cómo quieres que aparezcas"
+                   class="input text-sm max-w-xs">
+        </div>
+
+        <div class="space-y-3 pt-4 border-t divider">
             <div>
                 <h2 class="text-sm font-semibold">Módulos visibles</h2>
                 <p class="text-xs text-faint mt-0.5">
