@@ -6,6 +6,8 @@ use App\Enums\TaskStatus;
 use App\Models\ActivityEvent;
 use App\Models\Note;
 use App\Models\Task;
+use App\Services\InsightsService;
+use App\Services\ModuleVisibility;
 use App\Services\SessionBuilder;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
@@ -19,7 +21,7 @@ class DashboardController extends Controller
 {
     public function __construct(private readonly SessionBuilder $sessions) {}
 
-    public function index(): View
+    public function index(InsightsService $insights): View
     {
         $tz     = config('tracker.display_timezone', 'UTC');
         $today  = CarbonImmutable::now($tz)->startOfDay();
@@ -46,8 +48,14 @@ class DashboardController extends Controller
             $trackerStaleSince = $latestEvent->occurred_at;
         }
 
+        // Digest de insights del día (solo si el módulo está activo).
+        $insightsDigest = ModuleVisibility::enabled('insights')
+            ? $insights->forDay($today)
+            : null;
+
         return view('dashboard.index', [
             'week'              => $week,
+            'insightsDigest'    => $insightsDigest,
             'heatmap'           => $this->heatmap($today),
             'latestEvent'       => $latestEvent,
             'recentNotes'       => Note::orderByDesc('updated_at')->limit(8)->get(),

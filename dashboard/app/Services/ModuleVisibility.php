@@ -47,6 +47,11 @@ class ModuleVisibility
             'description' => 'Resúmenes por proyecto y rangos personalizados.',
             'icon'        => 'chart',
         ],
+        'insights' => [
+            'label'       => 'Insights',
+            'description' => 'Resumen automático del día/semana, foco vs fragmentación, inactividad y tendencias por proyecto.',
+            'icon'        => 'sparkles',
+        ],
     ];
 
     /**

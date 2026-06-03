@@ -131,7 +131,7 @@
 
                 {{-- Tracking. Hoy/Semana son núcleo; Mes/Informes respetan
                      la visibilidad configurada en /settings/general. --}}
-                <details class="group" @if (request()->routeIs('timeline.*', 'calendar.*', 'reports.*')) open @endif>
+                <details class="group" @if (request()->routeIs('timeline.*', 'calendar.*', 'reports.*', 'insights.*')) open @endif>
                     <summary class="flex items-center gap-1.5 px-2 py-1.5 rounded cursor-pointer select-none list-none
                                     text-[11px] uppercase tracking-wider text-muted hover:bg-ink-100 dark:hover:bg-ink-800">
                         <span class="transition-transform group-open:rotate-90 inline-flex" aria-hidden="true"><x-icon name="chevron-right" class="w-2.5 h-2.5" /></span>
@@ -149,6 +149,10 @@
                         @if ($modules['reports']['enabled'] ?? true)
                             <a href="{{ route('reports.index') }}"
                                class="block px-2 py-1.5 rounded {{ $navItem(['reports.*']) }}">Informes</a>
+                        @endif
+                        @if ($modules['insights']['enabled'] ?? true)
+                            <a href="{{ route('insights.index') }}"
+                               class="block px-2 py-1.5 rounded {{ $navItem(['insights.*']) }}">Insights</a>
                         @endif
                     </div>
                 </details>

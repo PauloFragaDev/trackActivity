@@ -301,6 +301,11 @@ window.addEventListener('DOMContentLoaded', () => {
         import('./reports.js').then((m) => m.initReports());
     }
 
+    // Vista de insights: gráfica de tendencias (Chart.js), solo en /insights.
+    if (document.getElementById('insights-data')) {
+        import('./insights.js').then((m) => m.initInsights());
+    }
+
     // Pomodoro: timer client-side. Lo necesitamos en cualquier página que
     // tenga la sección principal (/pomodoro) o el dock flotante global.
     if (document.getElementById('pomodoro-app') || document.getElementById('pomodoro-dock')) {

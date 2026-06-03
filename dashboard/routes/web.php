@@ -39,6 +39,7 @@ Route::get('/week/{week}',  [TimelineController::class, 'week'])
 
 Route::get('/calendar',       [CalendarController::class, 'current'])->name('calendar.current');
 Route::get('/reports',        [ReportsController::class, 'index'])->name('reports.index');
+Route::get('/insights',       [\App\Http\Controllers\InsightsController::class, 'index'])->name('insights.index');
 Route::get('/calendar/{ym}',  [CalendarController::class, 'month'])
     ->where('ym', '\d{4}-\d{2}')
     ->name('calendar.month');
