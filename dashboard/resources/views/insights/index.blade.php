@@ -84,7 +84,9 @@
         <div class="card p-4">
             <h2 class="text-sm font-semibold mb-3">Tendencia por proyecto · 8 semanas</h2>
             @if (count($trend['series']) > 0)
-                <canvas id="insights-trend" height="200" aria-label="Tendencia por proyecto"></canvas>
+                <div class="relative h-64">
+                    <canvas id="insights-trend" aria-label="Tendencia por proyecto"></canvas>
+                </div>
                 <script id="insights-data" type="application/json">@json($trend)</script>
             @else
                 <p class="text-sm text-faint">Aún no hay suficientes datos para una tendencia.</p>
