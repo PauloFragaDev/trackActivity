@@ -218,4 +218,78 @@ class TimeBlockControllerTest extends TestCase
 
         $this->assertSame(BlockStatus::Idle, $idle->fresh()->status);
     }
+
+    // ── Bucle de aprendizaje: crear reglas al corregir ──────────────
+
+    public function test_update_creates_mappings_from_correction(): void
+    {
+        $b   = $this->block('2026-05-19 10:00:00', $this->project('TRACK')->id, BlockStatus::Auto);
+        $gdr = $this->project('GDR');
+
+        $this->patch('/blocks', [
+            'block_ids'       => [$b->id],
+            'project_id'      => $gdr->id,
+            'date'            => '2026-05-19',
+            'create_mappings' => ['repository:balearic-boats-admin', 'folder:day'],
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('project_mappings', [
+            'project_id'   => $gdr->id,
+            'type'         => 'repository',
+            'pattern'      => 'balearic-boats-admin',
+            'weight_bonus' => 5,
+            'origin'       => 'block_correction',
+            'enabled'      => 1,
+            'is_regex'     => 0,
+        ]);
+        $this->assertDatabaseHas('project_mappings', [
+            'project_id' => $gdr->id, 'type' => 'folder', 'pattern' => 'day',
+        ]);
+    }
+
+    public function test_update_ignores_mappings_without_project(): void
+    {
+        $b = $this->block('2026-05-19 10:00:00', $this->project('TRACK')->id, BlockStatus::Auto);
+
+        $this->patch('/blocks', [
+            'block_ids'       => [$b->id],
+            'project_id'      => null,
+            'date'            => '2026-05-19',
+            'create_mappings' => ['repository:foo'],
+        ])->assertRedirect();
+
+        $this->assertDatabaseCount('project_mappings', 0);
+    }
+
+    public function test_update_ignores_unknown_type_and_empty_pattern(): void
+    {
+        $gdr = $this->project('GDR');
+        $b   = $this->block('2026-05-19 10:00:00', null, BlockStatus::Auto);
+
+        $this->patch('/blocks', [
+            'block_ids'       => [$b->id],
+            'project_id'      => $gdr->id,
+            'date'            => '2026-05-19',
+            'create_mappings' => ['bogus:x', 'repository:'],
+        ])->assertRedirect();
+
+        $this->assertDatabaseCount('project_mappings', 0);
+    }
+
+    public function test_update_with_reprocess_triggers_rebuild(): void
+    {
+        $gdr = $this->project('GDR');
+        $b   = $this->block('2026-05-19 10:00:00', null, BlockStatus::Auto);
+
+        $mock = $this->mock(\App\Services\Aggregator::class);
+        $mock->shouldReceive('rebuildRange')->once();
+
+        $this->patch('/blocks', [
+            'block_ids'       => [$b->id],
+            'project_id'      => $gdr->id,
+            'date'            => '2026-05-19',
+            'create_mappings' => ['repository:foo'],
+            'reprocess_days'  => 7,
+        ])->assertRedirect();
+    }
 }

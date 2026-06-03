@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class ProjectMapping extends Model
 {
     protected $fillable = [
-        'project_id', 'type', 'pattern', 'is_regex', 'weight_bonus', 'enabled',
+        'project_id', 'type', 'pattern', 'is_regex', 'weight_bonus', 'enabled', 'origin',
     ];
 
     protected $casts = [
