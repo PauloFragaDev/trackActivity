@@ -228,6 +228,35 @@
                                             </select>
                                         </label>
 
+                                        @if (! empty($session['rule_candidates']))
+                                            <details class="text-sm">
+                                                <summary class="cursor-pointer text-xs text-muted select-none">
+                                                    Crear regla para que no se repita
+                                                </summary>
+                                                <div class="mt-2 space-y-1.5 pl-1">
+                                                    <p class="text-[11px] text-faint">
+                                                        Marca qué señal debe ir siempre al proyecto elegido.
+                                                    </p>
+                                                    @foreach ($session['rule_candidates'] as $cand)
+                                                        <label class="flex items-center gap-2">
+                                                            <input type="checkbox" name="create_mappings[]"
+                                                                   value="{{ $cand['type'] }}:{{ $cand['pattern'] }}"
+                                                                   class="accent-emerald-500">
+                                                            <span>{{ $cand['label'] }}</span>
+                                                        </label>
+                                                    @endforeach
+                                                    <label class="flex items-center gap-2 mt-1">
+                                                        <span class="text-xs text-muted">Reprocesar bloques automáticos de</span>
+                                                        <select name="reprocess_days" class="select text-xs" data-no-search>
+                                                            <option value="0">no reprocesar</option>
+                                                            <option value="7">últimos 7 días</option>
+                                                            <option value="30">últimos 30 días</option>
+                                                        </select>
+                                                    </label>
+                                                </div>
+                                            </details>
+                                        @endif
+
                                         <label class="label">
                                             <span>Resumen (opcional, sobrescribe el generado)</span>
                                             <textarea name="summary_text" rows="2" maxlength="500"

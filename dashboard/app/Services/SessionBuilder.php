@@ -147,6 +147,8 @@ class SessionBuilder
             'block_ids'         => $blocks->pluck('id')->all(),
             'evidence'          => $evidence,
             'summary'           => $summary,
+            // Patrones candidatos para "aprender" si el usuario reasigna la sesión.
+            'rule_candidates'   => $current['is_idle'] ? [] : BlockRuleSuggester::suggest($evidence),
         ];
     }
 
