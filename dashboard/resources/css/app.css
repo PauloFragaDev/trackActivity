@@ -1235,6 +1235,7 @@ html.dark .theme-card {
 }
 
 .theme-card__preview {
+    width: 100%;
     position: relative;
     height: 5rem;
     border-radius: 0.5rem;
