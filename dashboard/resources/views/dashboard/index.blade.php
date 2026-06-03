@@ -54,6 +54,25 @@
         </div>
     @endif
 
+    {{-- Digest de insights del día (si el módulo está activo) --}}
+    @if (! empty($insightsDigest))
+        <a href="{{ route('insights.index') }}"
+           class="card p-4 mb-5 block hover:bg-ink-50 dark:hover:bg-ink-800/40 transition">
+            <div class="flex items-center justify-between gap-2 mb-1">
+                <h2 class="text-sm font-semibold flex items-center gap-1.5">
+                    <x-icon name="sparkles" class="w-3.5 h-3.5 text-emerald-500" /> Resumen de hoy
+                </h2>
+                <span class="text-xs text-faint shrink-0">Ver insights →</span>
+            </div>
+            <p class="text-sm leading-relaxed">{{ $insightsDigest['narrative'] }}</p>
+            <div class="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-muted">
+                <span>Activo <span class="font-medium text-ink-700 dark:text-ink-200">{{ $fmt($insightsDigest['active_minutes']) }}</span></span>
+                <span>Racha de foco <span class="font-medium text-ink-700 dark:text-ink-200">{{ $fmt($insightsDigest['longest_focus_minutes']) }}</span></span>
+                <span>Inactivo <span class="font-medium text-ink-700 dark:text-ink-200">{{ $fmt($insightsDigest['idle_minutes']) }}</span></span>
+            </div>
+        </a>
+    @endif
+
     {{-- Semana actual --}}
     <section class="mb-6">
         <h2 class="text-xs font-medium uppercase tracking-wider text-muted mb-2">Esta semana</h2>
