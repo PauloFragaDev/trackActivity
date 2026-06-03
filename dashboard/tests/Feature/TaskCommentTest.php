@@ -23,6 +23,31 @@ class TaskCommentTest extends TestCase
         $this->assertNotNull($response->json('created_at'));
     }
 
+    public function test_store_stamps_author_from_settings(): void
+    {
+        \App\Services\UserIdentity::setName('Paulo');
+        $token = \App\Services\UserIdentity::token();
+        $task  = Task::create(['title' => 'T', 'status' => 'todo']);
+
+        $res = $this->post("/tasks/{$task->id}/comments", ['body' => 'Hola'])->assertOk();
+
+        $res->assertJson(['author_name' => 'Paulo', 'author_token' => $token]);
+        $c = TaskComment::firstOrFail();
+        $this->assertSame('Paulo', $c->author_name);
+        $this->assertSame($token, $c->author_token);
+    }
+
+    public function test_store_without_name_leaves_author_name_null(): void
+    {
+        $task = Task::create(['title' => 'T', 'status' => 'todo']);
+
+        $this->post("/tasks/{$task->id}/comments", ['body' => 'Hola'])->assertOk();
+
+        $c = TaskComment::firstOrFail();
+        $this->assertNull($c->author_name);
+        $this->assertNotEmpty($c->author_token);   // el token siempre se sella
+    }
+
     public function test_body_is_required(): void
     {
         $task = Task::create(['title' => 'T', 'status' => 'todo']);

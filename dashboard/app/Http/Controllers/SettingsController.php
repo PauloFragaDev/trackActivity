@@ -6,6 +6,7 @@ use App\Models\Setting;
 use App\Services\AppearanceService;
 use App\Services\ModuleVisibility;
 use App\Services\PomodoroService;
+use App\Services\UserIdentity;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -35,12 +36,18 @@ class SettingsController extends Controller
         // `$modules` ya está compartido por AppServiceProvider via View::share,
         // pero pasarlo explícito documenta la dependencia del controller.
         return view('settings.general', [
-            'modules' => ModuleVisibility::all(),
+            'modules'  => ModuleVisibility::all(),
+            'userName' => UserIdentity::name(),
         ]);
     }
 
     public function saveGeneral(Request $request): RedirectResponse
     {
+        $request->validate([
+            'user_name' => ['nullable', 'string', 'max:80'],
+        ]);
+        UserIdentity::setName((string) $request->input('user_name', ''));
+
         // Los checkboxes desmarcados no envían valor: el service interpreta
         // "clave ausente" = desactivado, así que no validamos cada uno.
         $submitted = $request->input('modules', []);

@@ -10,6 +10,14 @@ class SettingsTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_save_general_persists_user_name(): void
+    {
+        $this->post('/settings/general', ['user_name' => 'Paulo'])
+            ->assertRedirect('/settings/general');
+
+        $this->assertSame('Paulo', Setting::get('user.name'));
+    }
+
     public function test_pomodoro_page_renders_with_defaults(): void
     {
         $this->get('/settings/pomodoro')

@@ -128,23 +128,32 @@ export function initKanban() {
         await send(`/tasks/${edit.taskId}/checkboxes/${id}`, 'DELETE');
     };
 
-    // ─── Comentarios ──────────────────────────────────────────
+    // ─── Comentarios (panel lateral tipo chat) ─────────────────
+    // Token de esta instalación: los comentarios cuyo author_token coincide
+    // son "míos" y se alinean a la derecha.
+    const MY_TOKEN = document.querySelector('meta[name="user-token"]')?.content || '';
     const renderComments = () => {
         if (! edit || ! editModal) return;
         const list = editModal.querySelector('[data-comments-list]');
         if (! list) return;
         list.innerHTML = edit.comments.map((c) => {
             const when = c.created_at ? new Date(c.created_at).toLocaleString('es') : '';
+            const mine = c.author_token && c.author_token === MY_TOKEN;
+            const who  = escape(c.author_name || 'Sin nombre');
             return `
-                <li class="card p-2 group">
-                    <div class="flex items-start justify-between gap-2">
-                        <p class="whitespace-pre-wrap leading-relaxed flex-1">${escape(c.body)}</p>
-                        <button type="button" class="btn-ghost text-xs text-rose-500 opacity-0 group-hover:opacity-100"
-                                data-comment-delete data-id="${c.id}" aria-label="Borrar comentario">×</button>
+                <li class="task-chat__msg ${mine ? 'task-chat__msg--mine' : ''} group">
+                    <div class="task-chat__bubble">
+                        <div class="task-chat__head">
+                            <span class="task-chat__who">${who}</span>
+                            <span class="task-chat__when">${escape(when)}</span>
+                            <button type="button" class="task-chat__del opacity-0 group-hover:opacity-100"
+                                    data-comment-delete data-id="${c.id}" aria-label="Borrar comentario">×</button>
+                        </div>
+                        <p class="task-chat__text">${escape(c.body)}</p>
                     </div>
-                    <div class="text-xs text-faint mt-1">${escape(when)}</div>
                 </li>`;
         }).join('');
+        list.scrollTop = list.scrollHeight;
         syncCommentsBadge();
     };
     const syncCommentsBadge = () => {
@@ -212,6 +221,13 @@ export function initKanban() {
             if (! body) return;
             addComment(body);
             ta.value = '';
+        });
+        // Enter envía (como un chat); Shift+Enter inserta salto de línea.
+        addComment_?.querySelector('textarea[name="body"]')?.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && ! e.shiftKey) {
+                e.preventDefault();
+                addComment_.requestSubmit();
+            }
         });
     }
 

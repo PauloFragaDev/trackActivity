@@ -146,47 +146,55 @@
             @method('DELETE')
         </form>
 
-        {{-- Form 2: principal. Submit con el botón "Guardar" del footer. --}}
-        <form method="POST" id="task-edit-main-form" data-task-edit-form class="space-y-4">
-            @csrf
-            @method('PATCH')
-            @include('tasks.partials.form-fields')
-        </form>
+        {{-- Dos columnas: izquierda = formulario + subtareas; derecha = panel
+             de comentarios tipo chat. En pantallas estrechas se apilan. --}}
+        <div class="task-edit-grid">
+            <div class="task-edit-main min-w-0">
+                {{-- Form 2: principal. Submit con el botón "Guardar" del footer. --}}
+                <form method="POST" id="task-edit-main-form" data-task-edit-form class="space-y-4">
+                    @csrf
+                    @method('PATCH')
+                    @include('tasks.partials.form-fields')
+                </form>
 
-        {{-- Subtareas: form aparte, gestionado por AJAX desde kanban.js. --}}
-        <section data-task-subtasks class="pt-4 mt-4 border-t divider">
-            <div class="flex items-center justify-between mb-2">
-                <h4 class="text-sm font-semibold flex items-center gap-1.5">
-                    <x-icon name="check" class="w-3.5 h-3.5 text-emerald-500" /> Subtareas
-                </h4>
-                <span class="text-xs text-faint font-mono" data-subtasks-progress></span>
+                {{-- Subtareas: form aparte, gestionado por AJAX desde kanban.js. --}}
+                <section data-task-subtasks class="pt-4 mt-4 border-t divider">
+                    <div class="flex items-center justify-between mb-2">
+                        <h4 class="text-sm font-semibold flex items-center gap-1.5">
+                            <x-icon name="check" class="w-3.5 h-3.5 text-emerald-500" /> Subtareas
+                        </h4>
+                        <span class="text-xs text-faint font-mono" data-subtasks-progress></span>
+                    </div>
+                    <ul data-subtasks-list class="space-y-1 text-sm mb-2"></ul>
+                    <form data-subtasks-add class="input-group">
+                        <input type="text" name="title" required maxlength="200"
+                               class="input text-sm" placeholder="Nueva subtarea — Enter para añadir">
+                        <span class="input-group__suffix">
+                            <button type="submit" class="icon-btn" aria-label="Añadir subtarea" title="Añadir">
+                                <x-icon name="plus" class="w-3.5 h-3.5" />
+                            </button>
+                        </span>
+                    </form>
+                </section>
             </div>
-            <ul data-subtasks-list class="space-y-1 text-sm mb-2"></ul>
-            <form data-subtasks-add class="input-group">
-                <input type="text" name="title" required maxlength="200"
-                       class="input text-sm" placeholder="Nueva subtarea — Enter para añadir">
-                <span class="input-group__suffix">
-                    <button type="submit" class="icon-btn" aria-label="Añadir subtarea" title="Añadir">
-                        <x-icon name="plus" class="w-3.5 h-3.5" />
-                    </button>
-                </span>
-            </form>
-        </section>
 
-        {{-- Comentarios: form aparte, gestionado por AJAX. --}}
-        <section data-task-comments class="pt-4 mt-4 border-t divider">
-            <h4 class="text-sm font-semibold mb-2 flex items-center gap-1.5">
-                <x-icon name="chat" class="w-3.5 h-3.5 text-sky-500" /> Comentarios
-            </h4>
-            <ul data-comments-list class="space-y-2 text-sm mb-2"></ul>
-            <form data-comments-add class="space-y-2">
-                <textarea name="body" required maxlength="5000" rows="3"
-                          class="textarea text-sm w-full" placeholder="Añadir un comentario…"></textarea>
-                <div class="flex justify-end">
-                    <button type="submit" class="btn">Publicar</button>
-                </div>
-            </form>
-        </section>
+            {{-- Comentarios: panel lateral tipo chat. Lista con scroll propio +
+                 compositor fijado abajo. Gestionado por AJAX desde kanban.js. --}}
+            <aside data-task-comments class="task-edit-chat">
+                <h4 class="text-sm font-semibold mb-2 flex items-center gap-1.5 shrink-0">
+                    <x-icon name="chat" class="w-3.5 h-3.5 text-sky-500" /> Comentarios
+                </h4>
+                <ul data-comments-list class="task-chat__list"></ul>
+                <form data-comments-add class="task-chat__compose">
+                    <textarea name="body" required maxlength="5000" rows="1"
+                              class="textarea text-sm w-full" placeholder="Escribe un comentario…"></textarea>
+                    <button type="submit" class="icon-btn task-chat__send"
+                            aria-label="Publicar comentario" title="Publicar">
+                        <x-icon name="chevron-right" class="w-4 h-4" />
+                    </button>
+                </form>
+            </aside>
+        </div>
 
         {{-- Footer: los botones submit usan `form="ID"` para apuntar a sus forms
              aunque vivan fuera de ellos. Esto es HTML estándar (HTML5 form attr). --}}

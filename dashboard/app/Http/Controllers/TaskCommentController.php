@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Task;
 use App\Models\TaskComment;
+use App\Services\UserIdentity;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -19,12 +20,20 @@ class TaskCommentController extends Controller
             'body' => ['required', 'string', 'max:5000'],
         ]);
 
-        $comment = $task->comments()->create($data);
+        // El autor lo sella el servidor desde la identidad de esta instalación;
+        // no se confía de lo que mande el cliente.
+        $comment = $task->comments()->create([
+            'body'         => $data['body'],
+            'author_name'  => UserIdentity::name() ?: null,
+            'author_token' => UserIdentity::token(),
+        ]);
 
         return response()->json([
-            'id'         => $comment->id,
-            'body'       => $comment->body,
-            'created_at' => $comment->created_at?->toIso8601String(),
+            'id'           => $comment->id,
+            'body'         => $comment->body,
+            'created_at'   => $comment->created_at?->toIso8601String(),
+            'author_name'  => $comment->author_name,
+            'author_token' => $comment->author_token,
         ]);
     }
 
