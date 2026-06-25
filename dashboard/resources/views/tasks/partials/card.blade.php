@@ -75,27 +75,11 @@
         </div>
     @endif
 
-    @php
-        $hasAssignee  = isset($task->assignee) && $task->assignee;
-        $hasCreatedBy = isset($task->createdBy) && $task->createdBy
-                        && (! $hasAssignee || $task->created_by_id !== $task->assignee_id);
-    @endphp
-    @if($hasCreatedBy || $hasAssignee)
-    <div class="flex items-center justify-between mt-2 pt-1.5 border-t border-ink-100 dark:border-ink-700/60">
-        @if($hasCreatedBy)
-        <div class="flex items-center gap-1.5 min-w-0">
-            <span class="w-5 h-5 shrink-0 rounded-full flex items-center justify-center text-[9px] font-bold text-white select-none"
-                  style="background-color: {{ $task->createdBy->color }}">{{ $task->createdBy->initials() }}</span>
-            <span class="text-xs text-faint truncate">{{ $task->createdBy->name }}</span>
-        </div>
-        @else
-        <span></span>
-        @endif
-        @if($hasAssignee)
-        <span class="w-6 h-6 shrink-0 rounded-full flex items-center justify-center text-[10px] font-bold text-white select-none ml-2"
+    @if(isset($task->assignee) && $task->assignee)
+    <div class="flex justify-end mt-2">
+        <span class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white select-none"
               style="background-color: {{ $task->assignee->color }}"
               title="{{ $task->assignee->name }}">{{ $task->assignee->initials() }}</span>
-        @endif
     </div>
     @endif
 </div>
