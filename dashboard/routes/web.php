@@ -18,6 +18,7 @@ use App\Http\Controllers\TaskLabelController;
 use App\Http\Controllers\TeamIdentityController;
 use App\Http\Controllers\TeamMemberController;
 use App\Http\Controllers\TeamTaskController;
+use App\Http\Controllers\TeamTaskCommentController;
 use App\Http\Middleware\EnsureTeamEnabled;
 use App\Http\Controllers\TimeBlockController;
 use App\Http\Controllers\TrackerController;
@@ -176,4 +177,7 @@ Route::middleware(EnsureTeamEnabled::class)->group(function () {
 
     Route::post('/team/identity',   [TeamIdentityController::class, 'store'])->name('team.identity.store');
     Route::delete('/team/identity', [TeamIdentityController::class, 'destroy'])->name('team.identity.destroy');
+
+    Route::post('/team/tasks/{teamTask}/comments',            [TeamTaskCommentController::class, 'store'])->name('team.tasks.comments.store');
+    Route::delete('/team/tasks/{teamTask}/comments/{comment}', [TeamTaskCommentController::class, 'destroy'])->name('team.tasks.comments.destroy');
 });
