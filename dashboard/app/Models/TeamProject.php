@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class TeamProject extends TeamModel
 {
+    protected $table    = 'projects';
     protected $fillable = ['code', 'name', 'color', 'description'];
 
     public function tasks(): HasMany

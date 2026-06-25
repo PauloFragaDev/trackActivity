@@ -40,6 +40,12 @@ class TeamTask extends TeamModel
         });
     }
 
+    /** Team tasks have no time-tracking entries; always returns 0. */
+    public function loggedMinutes(): int
+    {
+        return 0;
+    }
+
     public function project(): BelongsTo
     {
         return $this->belongsTo(TeamProject::class, 'project_id');
