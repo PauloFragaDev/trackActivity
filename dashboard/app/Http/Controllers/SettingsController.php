@@ -111,6 +111,7 @@ class SettingsController extends Controller
             'base44Url'    => Setting::get('base44.url', ''),
             'base44Token'  => Setting::get('base44.token', '') ? '••••••••' : '',
             'members'      => $members,
+            'teamEnabled'  => (bool) Setting::get('team.enabled', true),
         ]);
     }
 
@@ -119,6 +120,7 @@ class SettingsController extends Controller
         $data = $request->validate([
             'base44_url'   => ['nullable', 'url', 'max:255'],
             'base44_token' => ['nullable', 'string', 'max:500'],
+            'team_enabled' => ['sometimes', 'boolean'],
         ]);
 
         if ($data['base44_url'] !== null) {
@@ -128,6 +130,7 @@ class SettingsController extends Controller
         if ($data['base44_token'] && $data['base44_token'] !== '••••••••') {
             Setting::set('base44.token', $data['base44_token']);
         }
+        Setting::set('team.enabled', $request->boolean('team_enabled', true));
 
         return redirect()->route('settings.integrations')->with('status', 'Ajustes de integración guardados.');
     }

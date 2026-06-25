@@ -18,6 +18,7 @@ use App\Http\Controllers\TaskLabelController;
 use App\Http\Controllers\TeamIdentityController;
 use App\Http\Controllers\TeamMemberController;
 use App\Http\Controllers\TeamTaskController;
+use App\Http\Middleware\EnsureTeamEnabled;
 use App\Http\Controllers\TimeBlockController;
 use App\Http\Controllers\TrackerController;
 use App\Http\Controllers\TimelineController;
@@ -160,17 +161,19 @@ Route::get('/settings/integrations',  [\App\Http\Controllers\SettingsController:
 Route::post('/settings/integrations', [\App\Http\Controllers\SettingsController::class, 'saveIntegrations'])->name('settings.integrations.save');
 
 // ─────────────────── Equipo (Kanban compartido, Supabase) ───────────────────
-Route::get('/team/tasks',                [TeamTaskController::class, 'index'])->name('team.tasks.index');
-Route::get('/team/tasks/peek',           [TeamTaskController::class, 'peek'])->name('team.tasks.peek');
-Route::post('/team/tasks',               [TeamTaskController::class, 'store'])->name('team.tasks.store');
-Route::patch('/team/tasks/{task}',       [TeamTaskController::class, 'update'])->name('team.tasks.update');
-Route::patch('/team/tasks/{task}/move',  [TeamTaskController::class, 'move'])->name('team.tasks.move');
-Route::delete('/team/tasks/{task}',      [TeamTaskController::class, 'destroy'])->name('team.tasks.destroy');
+Route::middleware(EnsureTeamEnabled::class)->group(function () {
+    Route::get('/team/tasks',                [TeamTaskController::class, 'index'])->name('team.tasks.index');
+    Route::get('/team/tasks/peek',           [TeamTaskController::class, 'peek'])->name('team.tasks.peek');
+    Route::post('/team/tasks',               [TeamTaskController::class, 'store'])->name('team.tasks.store');
+    Route::patch('/team/tasks/{task}',       [TeamTaskController::class, 'update'])->name('team.tasks.update');
+    Route::patch('/team/tasks/{task}/move',  [TeamTaskController::class, 'move'])->name('team.tasks.move');
+    Route::delete('/team/tasks/{task}',      [TeamTaskController::class, 'destroy'])->name('team.tasks.destroy');
 
-Route::get('/team/members',                  [TeamMemberController::class, 'index'])->name('team.members.index');
-Route::post('/team/members',                 [TeamMemberController::class, 'store'])->name('team.members.store');
-Route::patch('/team/members/{teamMember}',   [TeamMemberController::class, 'update'])->name('team.members.update');
-Route::delete('/team/members/{teamMember}',  [TeamMemberController::class, 'destroy'])->name('team.members.destroy');
+    Route::get('/team/members',                  [TeamMemberController::class, 'index'])->name('team.members.index');
+    Route::post('/team/members',                 [TeamMemberController::class, 'store'])->name('team.members.store');
+    Route::patch('/team/members/{teamMember}',   [TeamMemberController::class, 'update'])->name('team.members.update');
+    Route::delete('/team/members/{teamMember}',  [TeamMemberController::class, 'destroy'])->name('team.members.destroy');
 
-Route::post('/team/identity',   [TeamIdentityController::class, 'store'])->name('team.identity.store');
-Route::delete('/team/identity', [TeamIdentityController::class, 'destroy'])->name('team.identity.destroy');
+    Route::post('/team/identity',   [TeamIdentityController::class, 'store'])->name('team.identity.store');
+    Route::delete('/team/identity', [TeamIdentityController::class, 'destroy'])->name('team.identity.destroy');
+});
