@@ -82,4 +82,12 @@
         {{ $task->assignee->initials() }}
     </div>
     @endif
+
+    @if(isset($task->createdBy) && $task->createdBy && (!$task->assignee || $task->created_by_id !== $task->assignee_id))
+    <div class="absolute bottom-2 left-2 w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold text-white select-none opacity-70"
+         style="background-color: {{ $task->createdBy->color }}"
+         title="Creada por {{ $task->createdBy->name }}">
+        {{ $task->createdBy->initials() }}
+    </div>
+    @endif
 </div>

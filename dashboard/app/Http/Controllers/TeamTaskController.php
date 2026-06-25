@@ -22,7 +22,7 @@ class TeamTaskController extends Controller
         $projectId  = $request->integer('project') ?: null;
         $assigneeId = $request->integer('assignee') ?: null;
 
-        $tasks = TeamTask::with(['project', 'labels', 'checkboxes', 'comments', 'assignee'])
+        $tasks = TeamTask::with(['project', 'labels', 'checkboxes', 'comments', 'assignee', 'createdBy'])
             ->when($projectId,  fn ($q) => $q->where('project_id', $projectId))
             ->when($assigneeId, fn ($q) => $q->where('assignee_id', $assigneeId))
             ->orderBy('position')
@@ -49,6 +49,10 @@ class TeamTaskController extends Controller
         $labelIds = $data['label_ids'] ?? [];
         unset($data['label_ids']);
         $data['position'] = (TeamTask::where('status', $data['status'])->max('position') ?? -1) + 1;
+
+        if (session('team_member_id')) {
+            $data['created_by_id'] = (int) session('team_member_id');
+        }
 
         $task = TeamTask::create($data);
         $task->labels()->sync($labelIds);

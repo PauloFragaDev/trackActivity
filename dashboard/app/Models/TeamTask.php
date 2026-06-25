@@ -15,18 +15,19 @@ class TeamTask extends TeamModel
 
     protected $table    = 'tasks';
     protected $fillable = [
-        'project_id', 'assignee_id', 'title', 'description',
+        'project_id', 'assignee_id', 'created_by_id', 'title', 'description',
         'status', 'priority', 'due_date', 'position', 'completed_at',
     ];
     protected $attributes = ['status' => 'todo', 'position' => 0];
     protected $casts = [
-        'project_id'   => 'integer',
-        'assignee_id'  => 'integer',
-        'status'       => TaskStatus::class,
-        'priority'     => TaskPriority::class,
-        'due_date'     => 'date',
-        'position'     => 'integer',
-        'completed_at' => 'datetime',
+        'project_id'     => 'integer',
+        'assignee_id'    => 'integer',
+        'created_by_id'  => 'integer',
+        'status'         => TaskStatus::class,
+        'priority'       => TaskPriority::class,
+        'due_date'       => 'date',
+        'position'       => 'integer',
+        'completed_at'   => 'datetime',
     ];
 
     protected static function booted(): void
@@ -54,6 +55,11 @@ class TeamTask extends TeamModel
     public function assignee(): BelongsTo
     {
         return $this->belongsTo(TeamMember::class, 'assignee_id');
+    }
+
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(TeamMember::class, 'created_by_id');
     }
 
     public function labels(): BelongsToMany
