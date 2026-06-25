@@ -635,6 +635,8 @@ function initIdentity() {
     // Override MY_TOKEN with team member ID in team mode
     if (window.KANBAN_MODE === 'team' && window.TEAM_MEMBER_ID) {
         MY_TOKEN = String(window.TEAM_MEMBER_ID);
+    } else if (window.KANBAN_MODE === 'team' && !window.TEAM_MEMBER_ID) {
+        modal.showModal();
     }
 
     const identityStore = (window.KANBAN_ROUTES && window.KANBAN_ROUTES.identityStore) || '/team/identity';
@@ -664,7 +666,7 @@ function initIdentity() {
         });
         localStorage.removeItem('team_member_id');
         localStorage.removeItem('team_member_name');
-        modal.setAttribute('open', '');
+        modal.showModal();
     });
 }
 

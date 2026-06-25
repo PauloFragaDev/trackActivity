@@ -10,7 +10,7 @@
             <a href="{{ route('tasks.archived') }}" class="text-xs text-faint hover:underline">
                 Archivadas
             </a>
-            @if(config('team.db_host') && env('APP_MODE') !== 'team_only' && \App\Models\Setting::get('team.enabled', true))
+            @if(config('team.db_host') && env('APP_MODE') !== 'team_only' && \App\Services\ModuleVisibility::enabled('team'))
             <div class="flex items-center gap-1 bg-surface-2 rounded-lg p-0.5 text-sm">
                 <a href="{{ route('tasks.index') }}"
                    class="px-3 py-1 rounded-md transition-colors {{ $mode === 'personal' ? 'bg-surface-1 shadow-sm font-medium' : 'text-faint hover:text-default' }}">
@@ -240,7 +240,7 @@
                         class="btn-ghost text-rose-600 dark:text-rose-400 text-sm inline-flex items-center gap-1">
                     <x-icon name="trash" class="w-3.5 h-3.5" /> Archivar
                 </button>
-                @if($mode === 'personal' && config('team.db_host') && \App\Models\Setting::get('team.enabled', true))
+                @if($mode === 'personal' && config('team.db_host') && \App\Services\ModuleVisibility::enabled('team'))
                 <button type="button" id="btn-transfer-to-team"
                         class="btn-ghost text-blue-600 dark:text-blue-400"
                         data-task-id="">
@@ -257,7 +257,7 @@
 
 @if($mode === 'team' && isset($members) && $members->isNotEmpty())
 @php $activeMemberId = session('team_member_id') ? (int) session('team_member_id') : null @endphp
-<dialog id="identity-modal" {{ !$activeMemberId ? 'open' : '' }} class="modal">
+<dialog id="identity-modal" class="modal">
     @include('layouts.partials.modal-header', ['title' => '¿Quién eres tú?', 'hint' => false])
     <p class="text-sm text-faint mb-4">Selecciona tu perfil para que el equipo sepa quién hace cada cosa.</p>
     <div class="space-y-1.5" id="identity-list">

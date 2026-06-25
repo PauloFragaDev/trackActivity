@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Project;
-use App\Models\Setting;
+use App\Services\ModuleVisibility;
 use App\Models\Task;
 use App\Models\TeamProject;
 use App\Models\TeamTask;
@@ -16,7 +16,7 @@ class TeamTransferController extends Controller
 {
     public function preview(Task $task): JsonResponse
     {
-        abort_unless(Setting::get('team.enabled', true), 403);
+        abort_unless(ModuleVisibility::enabled('team'), 403);
 
         if (!$task->project_id) {
             return response()->json(['project' => null]);
@@ -36,7 +36,7 @@ class TeamTransferController extends Controller
 
     public function transfer(Task $task): JsonResponse
     {
-        abort_unless(Setting::get('team.enabled', true), 403);
+        abort_unless(ModuleVisibility::enabled('team'), 403);
         abort_unless(config('team.db_host'), 503);
 
         // Load personal task with all relations

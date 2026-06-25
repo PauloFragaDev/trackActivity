@@ -26,25 +26,6 @@
                 con las variables <code class="chip">SUPABASE_DB_*</code>.
             </p>
 
-            <div class="flex items-center justify-between mb-6">
-                <div>
-                    <p class="text-sm font-medium">Integración de equipo activa</p>
-                    <p class="text-xs text-faint mt-0.5">Desactívala si no usas Supabase en esta instalación.</p>
-                </div>
-                <form method="POST" action="{{ route('settings.integrations.save') }}" id="team-enabled-form">
-                    @csrf
-                    <input type="hidden" name="team_enabled" value="0">
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" name="team_enabled" value="1"
-                               {{ $teamEnabled ? 'checked' : '' }}
-                               onchange="document.getElementById('team-enabled-form').submit()"
-                               class="sr-only peer">
-                        <div class="w-11 h-6 bg-ink-300 dark:bg-ink-600 rounded-full peer peer-checked:bg-primary transition-colors"></div>
-                        <div class="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform peer-checked:translate-x-5"></div>
-                    </label>
-                </form>
-            </div>
-
             <div class="flex items-center gap-2 mb-6">
                 @if($supConnected)
                     <span class="inline-flex items-center gap-1.5 text-sm text-emerald-600 dark:text-emerald-400 font-medium">

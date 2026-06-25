@@ -21,7 +21,7 @@ class TeamTransferControllerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        Setting::set('team.enabled', true);
+        Setting::set('modules.team', true);
         $this->artisan('migrate', ['--database' => 'supabase', '--path' => 'database/migrations/team']);
         $member = TeamMember::create(['name' => 'Ana', 'color' => '#000', 'position' => 0]);
         session(['team_member_id' => $member->id, 'team_member_name' => 'Ana']);
@@ -82,7 +82,7 @@ class TeamTransferControllerTest extends TestCase
 
     public function test_transfer_blocked_when_team_disabled(): void
     {
-        Setting::set('team.enabled', false);
+        Setting::set('modules.team', false);
         $task = Task::create(['title' => 'T', 'status' => 'todo', 'position' => 0]);
 
         $this->postJson("/tasks/{$task->id}/transfer-to-team")->assertStatus(403);

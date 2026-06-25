@@ -52,6 +52,11 @@ class ModuleVisibility
             'description' => 'Resumen automático del día/semana, foco vs fragmentación, inactividad y tendencias por proyecto.',
             'icon'        => 'sparkles',
         ],
+        'team' => [
+            'label'       => 'Kanban de equipo',
+            'description' => 'Tablero compartido vía Supabase para trabajar en equipo. Desactívalo si no usas Supabase en esta instalación.',
+            'icon'        => 'bars',
+        ],
     ];
 
     /**

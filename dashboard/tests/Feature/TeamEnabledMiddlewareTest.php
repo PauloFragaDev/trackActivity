@@ -18,14 +18,14 @@ class TeamEnabledMiddlewareTest extends TestCase
 
     public function test_team_routes_accessible_when_enabled(): void
     {
-        Setting::set('team.enabled', true);
+        Setting::set('modules.team', true);
 
         $this->get('/team/tasks')->assertStatus(200);
     }
 
     public function test_team_routes_redirect_when_disabled(): void
     {
-        Setting::set('team.enabled', false);
+        Setting::set('modules.team', false);
 
         $this->get('/team/tasks')->assertRedirect('/tasks');
     }
