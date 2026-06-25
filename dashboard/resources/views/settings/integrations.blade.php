@@ -62,45 +62,23 @@
 
             @if($supConnected)
                 <h3 class="text-sm font-semibold mb-3">Miembros del equipo</h3>
+                <p class="text-xs text-faint mb-3">Los miembros se gestionan directamente en Supabase (tabla <code class="chip">team_members</code>).</p>
 
                 @if($members->isEmpty())
-                    <p class="text-sm text-muted mb-3">No hay miembros. Añade el primero:</p>
+                    <p class="text-sm text-muted">No hay miembros todavía. Insértalos en el panel de Supabase.</p>
                 @else
-                    <ul class="space-y-2 mb-4">
+                    <ul class="space-y-2">
                         @foreach($members as $member)
                             <li class="flex items-center gap-3">
                                 <span class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white"
                                       style="background-color: {{ $member->color }}">
                                     {{ $member->initials() }}
                                 </span>
-                                <span class="flex-1 text-sm">{{ $member->name }}</span>
-                                <form method="POST" action="{{ route('team.members.destroy', $member) }}">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit"
-                                            class="text-xs text-rose-500 hover:text-rose-700 dark:hover:text-rose-400 transition">
-                                        Eliminar
-                                    </button>
-                                </form>
+                                <span class="text-sm">{{ $member->name }}</span>
                             </li>
                         @endforeach
                     </ul>
                 @endif
-
-                <form method="POST" action="{{ route('team.members.store') }}" class="flex items-end gap-3">
-                    @csrf
-                    <div class="flex-1">
-                        <label class="label" for="member-name">Nombre</label>
-                        <input type="text" id="member-name" name="name" required maxlength="80"
-                               class="input" placeholder="Ana García">
-                    </div>
-                    <div>
-                        <label class="label" for="member-color">Color</label>
-                        <input type="color" id="member-color" name="color" value="#6366f1"
-                               class="h-9 w-12 rounded border border-ink-300 dark:border-ink-600 cursor-pointer">
-                    </div>
-                    <button type="submit" class="btn">Añadir</button>
-                </form>
             @endif
         </section>
 

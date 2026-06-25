@@ -174,10 +174,6 @@ Route::middleware(EnsureTeamEnabled::class)->group(function () {
     Route::patch('/team/tasks/{task}/move',  [TeamTaskController::class, 'move'])->name('team.tasks.move');
     Route::delete('/team/tasks/{task}',      [TeamTaskController::class, 'destroy'])->name('team.tasks.destroy');
 
-    Route::get('/team/members',                  [TeamMemberController::class, 'index'])->name('team.members.index');
-    Route::post('/team/members',                 [TeamMemberController::class, 'store'])->name('team.members.store');
-    Route::patch('/team/members/{teamMember}',   [TeamMemberController::class, 'update'])->name('team.members.update');
-    Route::delete('/team/members/{teamMember}',  [TeamMemberController::class, 'destroy'])->name('team.members.destroy');
 
     Route::post('/team/identity',   [TeamIdentityController::class, 'store'])->name('team.identity.store');
     Route::delete('/team/identity', [TeamIdentityController::class, 'destroy'])->name('team.identity.destroy');
