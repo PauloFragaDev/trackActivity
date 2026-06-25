@@ -132,6 +132,10 @@ Route::delete('/tasks/{task}/checkboxes/{taskCheckbox}', [TaskCheckboxController
 Route::post('/tasks/{task}/comments',                  [TaskCommentController::class, 'store'])->name('task-comments.store');
 Route::delete('/tasks/{task}/comments/{taskComment}',  [TaskCommentController::class, 'destroy'])->name('task-comments.destroy');
 
+// Transferencia de tarea personal al tablero del equipo
+Route::get('/tasks/{task}/transfer-preview',  [\App\Http\Controllers\TeamTransferController::class, 'preview'])->name('tasks.transfer.preview');
+Route::post('/tasks/{task}/transfer-to-team', [\App\Http\Controllers\TeamTransferController::class, 'transfer'])->name('tasks.transfer.store');
+
 // ─────────────────── Control del tracker ───────────────────
 Route::post('/tracker/toggle', [TrackerController::class, 'toggle'])->name('tracker.toggle');
 

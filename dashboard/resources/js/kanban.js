@@ -298,6 +298,8 @@ function setupEditModalOpen() {
             const taskBase = (window.KANBAN_ROUTES && window.KANBAN_ROUTES.update) || '/tasks';
             editForm.action = `${taskBase}/${card.dataset.taskId}`;
             if (delForm) delForm.action = `${taskBase}/${card.dataset.taskId}`;
+            const transferBtn = document.getElementById('btn-transfer-to-team');
+            if (transferBtn) transferBtn.dataset.taskId = card.dataset.taskId;
 
             // Para <select> controlados por Choices.js, asignar .value
             // no actualiza la UI de la librería (sigue mostrando el
@@ -623,6 +625,7 @@ export function initKanban() {
     setupSort();
     initLivePolling();
     initIdentity();
+    initTransfer();
 }
 
 function initIdentity() {
@@ -662,5 +665,57 @@ function initIdentity() {
         localStorage.removeItem('team_member_id');
         localStorage.removeItem('team_member_name');
         modal.setAttribute('open', '');
+    });
+}
+
+function initTransfer() {
+    const btn = document.getElementById('btn-transfer-to-team');
+    if (!btn) return;
+
+    btn.addEventListener('click', async () => {
+        const taskId = btn.dataset.taskId;
+        if (!taskId) return;
+
+        const base = (window.KANBAN_ROUTES && window.KANBAN_ROUTES.transferPreview) || '/tasks';
+
+        // Fetch preview
+        let preview;
+        try {
+            const res = await fetch(`${base}/${taskId}/transfer-preview`, {
+                headers: { 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' },
+            });
+            preview = await res.json();
+        } catch {
+            Swal.fire('Error', 'No se pudo conectar con el equipo.', 'error');
+            return;
+        }
+
+        const projectLine = preview.project
+            ? `<p class="text-sm mt-2">Proyecto: <strong>${preview.project.code}</strong> — ${preview.project.exists ? '✓ ya existe en el equipo' : '⚠ se creará en el equipo'}</p>`
+            : '';
+
+        const { isConfirmed } = await Swal.fire({
+            title:             'Transferir al equipo',
+            html:              `<p class="text-sm">La tarea se copiará al board del equipo con subtareas, comentarios y etiquetas. La tarea personal quedará archivada.</p>${projectLine}`,
+            icon:              'question',
+            showCancelButton:  true,
+            confirmButtonText: 'Transferir',
+            cancelButtonText:  'Cancelar',
+        });
+
+        if (!isConfirmed) return;
+
+        const transferBase = (window.KANBAN_ROUTES && window.KANBAN_ROUTES.transfer) || '/tasks';
+        const res = await fetch(`${transferBase}/${taskId}/transfer-to-team`, {
+            method:  'POST',
+            headers: { 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' },
+        });
+
+        if (res.ok) {
+            window.__taskMutationAt = Date.now();
+            window.location.reload();
+        } else {
+            Swal.fire('Error', 'No se pudo transferir la tarea.', 'error');
+        }
     });
 }

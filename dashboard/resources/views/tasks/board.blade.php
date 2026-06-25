@@ -235,10 +235,19 @@
         {{-- Footer: los botones submit usan `form="ID"` para apuntar a sus forms
              aunque vivan fuera de ellos. Esto es HTML estándar (HTML5 form attr). --}}
         <div class="modal-footer flex items-center justify-between gap-2">
-            <button type="submit" form="task-delete-form"
-                    class="btn-ghost text-rose-600 dark:text-rose-400 text-sm inline-flex items-center gap-1">
-                <x-icon name="trash" class="w-3.5 h-3.5" /> Archivar
-            </button>
+            <div class="flex items-center gap-2">
+                <button type="submit" form="task-delete-form"
+                        class="btn-ghost text-rose-600 dark:text-rose-400 text-sm inline-flex items-center gap-1">
+                    <x-icon name="trash" class="w-3.5 h-3.5" /> Archivar
+                </button>
+                @if($mode === 'personal' && env('SUPABASE_DB_HOST') && \App\Models\Setting::get('team.enabled', true))
+                <button type="button" id="btn-transfer-to-team"
+                        class="btn-ghost text-blue-600 dark:text-blue-400"
+                        data-task-id="">
+                    Transferir al equipo
+                </button>
+                @endif
+            </div>
             <div class="flex gap-2">
                 <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
                 <button type="submit" form="task-edit-main-form" class="btn">Guardar</button>
@@ -275,8 +284,10 @@ window.KANBAN_ROUTES = {
     peek:          '{{ $mode === "team" ? route("team.tasks.peek")    : route("tasks.peek") }}',
     checkboxStore: '{{ $mode === "team" ? "/team/tasks" : "/tasks" }}',
     commentStore:  '{{ $mode === "team" ? "/team/tasks" : "/tasks" }}',
-    identityStore: '{{ route("team.identity.store") }}',
-    identityClear: '{{ route("team.identity.destroy") }}',
+    identityStore:   '{{ route("team.identity.store") }}',
+    identityClear:   '{{ route("team.identity.destroy") }}',
+    transferPreview: '/tasks',
+    transfer:        '/tasks',
 };
 @if($mode === 'team')
 window.SUPABASE_URL      = '{{ env("SUPABASE_URL") }}';
