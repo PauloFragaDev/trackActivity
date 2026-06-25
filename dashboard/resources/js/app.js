@@ -5,6 +5,7 @@ import Toastify from 'toastify-js';
 import 'toastify-js/src/toastify.css';
 import { initQuickSwitcher } from './quick-switcher.js';
 import { syncThemeColor } from './theme-color.js';
+import { initTeamRealtime } from './kanban-team-realtime.js';
 
 // ──────────────────────────────────────────────
 // Theme toggle (claro/oscuro) con persistencia.
@@ -290,6 +291,9 @@ window.addEventListener('DOMContentLoaded', () => {
     if (document.querySelector('[data-task-board]')) {
         import('./kanban.js').then((m) => m.initKanban());
     }
+
+    // Realtime del Kanban de equipo (Supabase): solo activo en modo 'team'.
+    initTeamRealtime();
 
     // Edición manual de un activity_event (modal del timeline).
     if (document.querySelector('[data-event-edit-modal]')) {
