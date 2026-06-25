@@ -51,6 +51,22 @@
     </label>
 </div>
 
+@if(isset($mode) && $mode === 'team' && isset($members) && $members->isNotEmpty())
+<div>
+    <label class="label" for="field-assignee">Asignado a</label>
+    <select name="assignee_id" id="field-assignee" class="select">
+        <option value="">Sin asignar</option>
+        @foreach($members as $member)
+            <option value="{{ $member->id }}"
+                @selected((isset($task) && $task->assignee_id === $member->id)
+                           || (old('assignee_id') == $member->id))>
+                {{ $member->name }}
+            </option>
+        @endforeach
+    </select>
+</div>
+@endif
+
 @if (! ($labels ?? collect())->isEmpty())
     <div class="label">
         <span>Etiquetas</span>

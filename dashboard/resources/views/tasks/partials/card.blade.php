@@ -10,7 +10,7 @@
     $comments     = $task->comments;
     $hasChips     = $task->project || $task->priority || $task->due_date || $logged > 0 || $checkboxAll > 0 || $comments->isNotEmpty();
 @endphp
-<div class="task-card card p-2.5 cursor-grab active:cursor-grabbing
+<div class="task-card card p-2.5 cursor-grab active:cursor-grabbing relative
             {{ $task->status === \App\Enums\TaskStatus::Done ? 'opacity-70' : '' }}"
      @if ($task->project) style="--project-color: {{ $task->project->color }}" @endif
      data-task-id="{{ $task->id }}"
@@ -73,5 +73,13 @@
                 <span class="chip" title="Comentarios" data-card-comments-badge><x-icon name="chat" class="w-3 h-3" />{{ $comments->count() }}</span>
             @endif
         </div>
+    @endif
+
+    @if(isset($task->assignee) && $task->assignee)
+    <div class="absolute bottom-2 right-2 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white select-none"
+         style="background-color: {{ $task->assignee->color }}"
+         title="{{ $task->assignee->name }}">
+        {{ $task->assignee->initials() }}
+    </div>
     @endif
 </div>

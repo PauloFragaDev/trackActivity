@@ -27,7 +27,7 @@
             {{-- Filtros del board. Ancho fijo en wrappers para que Choices.js
                  NO ajuste el control al texto seleccionado (provocaría que el
                  layout salte cada vez que cambias de filtro). --}}
-            <form method="GET" action="{{ route('tasks.index') }}" class="flex gap-2">
+            <form method="GET" action="{{ $mode === 'team' ? route('team.tasks.index') : route('tasks.index') }}" class="flex gap-2">
                 <div class="w-56">
                     <select name="project" class="select text-sm" onchange="this.form.submit()">
                         <option value="">Todos los proyectos</option>
@@ -44,6 +44,18 @@
                         @endforeach
                     </select>
                 </div>
+                @if(isset($mode) && $mode === 'team' && isset($members) && $members->isNotEmpty())
+                <div class="w-44">
+                    <select name="assignee" class="select text-sm" onchange="this.form.submit()">
+                        <option value="">Todo el equipo</option>
+                        @foreach($members as $member)
+                            <option value="{{ $member->id }}" @selected(isset($assigneeId) && $assigneeId === $member->id)>
+                                {{ $member->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                @endif
             </form>
         </div>
     </div>
