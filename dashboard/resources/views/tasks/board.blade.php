@@ -126,7 +126,7 @@
 
                     {{-- Inline-add al pie de la columna. Enter crea con el status de esta columna. --}}
                     <form data-task-inline-add data-status="{{ $col->value }}"
-                          method="POST" action="{{ route('tasks.store') }}"
+                          method="POST" action="{{ $mode === 'team' ? route('team.tasks.store') : route('tasks.store') }}"
                           class="p-2 pt-0">
                         @csrf
                         <input type="hidden" name="status" value="{{ $col->value }}">
@@ -142,7 +142,7 @@
     {{-- ─────────────── Modales ─────────────── --}}
     <dialog id="task-new" class="modal">
         @include('layouts.partials.modal-header', ['title' => 'Nueva tarea'])
-        <form method="POST" action="{{ route('tasks.store') }}" class="space-y-3">
+        <form method="POST" action="{{ $mode === 'team' ? route('team.tasks.store') : route('tasks.store') }}" class="space-y-3">
             @csrf
             @include('tasks.partials.form-fields')
             <div class="modal-footer flex justify-end gap-2">
