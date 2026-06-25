@@ -10,7 +10,7 @@
             <a href="{{ route('tasks.archived') }}" class="text-xs text-faint hover:underline">
                 Archivadas
             </a>
-            @if(env('SUPABASE_DB_HOST'))
+            @if(env('SUPABASE_DB_HOST') && env('APP_MODE') !== 'team_only')
             <div class="flex items-center gap-1 bg-surface-2 rounded-lg p-0.5 text-sm">
                 <a href="{{ route('tasks.index') }}"
                    class="px-3 py-1 rounded-md transition-colors {{ $mode === 'personal' ? 'bg-surface-1 shadow-sm font-medium' : 'text-faint hover:text-default' }}">

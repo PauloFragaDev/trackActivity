@@ -22,6 +22,11 @@ use App\Http\Controllers\TrackerController;
 use App\Http\Controllers\TimelineController;
 use Illuminate\Support\Facades\Route;
 
+// En Render (APP_MODE=team_only) redirigir la raíz del kanban al equipo
+if (env('APP_MODE') === 'team_only') {
+    Route::redirect('/tasks', '/team/tasks');
+}
+
 // ─────────────────── Inicio ───────────────────
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
