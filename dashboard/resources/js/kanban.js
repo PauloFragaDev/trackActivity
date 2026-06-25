@@ -231,6 +231,42 @@ function reorderColumnAlpha(col) {
 function setupModalForms() {
     if (! editModal) return;
 
+    const mainForm = editModal.querySelector('[data-task-edit-form]');
+    mainForm?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (! edit) return;
+        const saveBtn = document.getElementById('btn-modal-save');
+        if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Guardando…'; }
+
+        const params = new URLSearchParams({ _token: csrf, _method: 'PATCH' });
+        new FormData(mainForm).forEach((v, k) => params.append(k, v));
+
+        try {
+            const res  = await fetch(mainForm.action, {
+                method:  'POST',
+                headers: { Accept: 'application/json' },
+                body:    params,
+            });
+            const data = await res.json();
+            if (data.ok && data.html) {
+                const tmp = document.createElement('div');
+                tmp.innerHTML = data.html.trim();
+                const newCard = tmp.firstElementChild;
+                if (newCard) {
+                    const newStatus = newCard.dataset.status;
+                    edit.card.remove();
+                    insertCard(data.html, newStatus);
+                }
+            }
+            editModal.close();
+            window.toast?.('Tarea actualizada.');
+        } catch {
+            // fall through — native submit would have worked anyway
+        } finally {
+            if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Guardar'; }
+        }
+    });
+
     const list = editModal.querySelector('[data-subtasks-list]');
     list?.addEventListener('change', (e) => {
         if (e.target.matches('[data-subtask-toggle]')) toggleSubtask(e.target.dataset.id, e.target.checked);

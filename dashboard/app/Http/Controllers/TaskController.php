@@ -65,7 +65,7 @@ class TaskController extends Controller
         return redirect()->route('tasks.index')->with('status', 'Tarea creada.');
     }
 
-    public function update(Request $request, Task $task): RedirectResponse
+    public function update(Request $request, Task $task): JsonResponse|RedirectResponse
     {
         $data = $this->validateTask($request);
         $labelIds = $data['label_ids'] ?? [];
@@ -73,6 +73,14 @@ class TaskController extends Controller
 
         $task->update($data);
         $task->labels()->sync($labelIds);
+
+        if ($request->wantsJson()) {
+            $task->load(['labels', 'checkboxes', 'comments', 'project']);
+            return response()->json([
+                'ok'   => true,
+                'html' => view('tasks.partials.card', compact('task'))->render(),
+            ]);
+        }
 
         return redirect()->route('tasks.index')->with('status', 'Tarea actualizada.');
     }

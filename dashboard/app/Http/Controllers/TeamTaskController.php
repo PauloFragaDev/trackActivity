@@ -68,7 +68,7 @@ class TeamTaskController extends Controller
         return redirect()->route('team.tasks.index')->with('status', 'Tarea creada.');
     }
 
-    public function update(Request $request, TeamTask $task): RedirectResponse
+    public function update(Request $request, TeamTask $task): JsonResponse|RedirectResponse
     {
         $data     = $this->validateTask($request);
         $labelIds = $data['label_ids'] ?? [];
@@ -76,6 +76,14 @@ class TeamTaskController extends Controller
 
         $task->update($data);
         $task->labels()->sync($labelIds);
+
+        if ($request->wantsJson()) {
+            $task->load(['labels', 'checkboxes', 'comments', 'project', 'assignee', 'createdBy']);
+            return response()->json([
+                'ok'   => true,
+                'html' => view('tasks.partials.card', compact('task'))->render(),
+            ]);
+        }
 
         return redirect()->route('team.tasks.index')->with('status', 'Tarea actualizada.');
     }
