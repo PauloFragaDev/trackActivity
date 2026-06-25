@@ -15,6 +15,7 @@ use App\Http\Controllers\TaskCheckboxController;
 use App\Http\Controllers\TaskCommentController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TaskLabelController;
+use App\Http\Controllers\TeamIdentityController;
 use App\Http\Controllers\TeamMemberController;
 use App\Http\Controllers\TeamTaskController;
 use App\Http\Controllers\TimeBlockController;
@@ -170,3 +171,6 @@ Route::get('/team/members',                  [TeamMemberController::class, 'inde
 Route::post('/team/members',                 [TeamMemberController::class, 'store'])->name('team.members.store');
 Route::patch('/team/members/{teamMember}',   [TeamMemberController::class, 'update'])->name('team.members.update');
 Route::delete('/team/members/{teamMember}',  [TeamMemberController::class, 'destroy'])->name('team.members.destroy');
+
+Route::post('/team/identity',   [TeamIdentityController::class, 'store'])->name('team.identity.store');
+Route::delete('/team/identity', [TeamIdentityController::class, 'destroy'])->name('team.identity.destroy');

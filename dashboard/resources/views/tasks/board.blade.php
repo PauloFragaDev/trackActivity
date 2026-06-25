@@ -22,6 +22,18 @@
                 </a>
             </div>
             @endif
+            @if($mode === 'team' && session('team_member_id') && isset($members) && $members->isNotEmpty())
+                @php $activeIdentity = $members->firstWhere('id', session('team_member_id')) @endphp
+                @if($activeIdentity)
+                <div class="flex items-center gap-1.5 text-sm ml-2">
+                    <span class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white select-none"
+                          style="background-color: {{ $activeIdentity->color }}">{{ $activeIdentity->initials() }}</span>
+                    <span class="text-faint">{{ $activeIdentity->name }}</span>
+                    <button type="button" id="btn-change-identity"
+                            class="text-xs text-faint hover:underline">Cambiar</button>
+                </div>
+                @endif
+            @endif
         </div>
         <div class="flex items-center gap-3 flex-wrap">
             {{-- Filtros del board. Ancho fijo en wrappers para que Choices.js
@@ -234,19 +246,43 @@
         </div>
     </dialog>
 
+@if($mode === 'team' && isset($members) && $members->isNotEmpty())
+<dialog id="identity-modal" {{ !session('team_member_id') ? 'open' : '' }}
+        class="modal" style="max-width:380px">
+    @include('layouts.partials.modal-header', ['title' => '¿Quién eres tú?'])
+    <p class="text-sm text-faint mb-4">Selecciona tu perfil para que el equipo sepa quién hace cada cosa.</p>
+    <div class="space-y-2" id="identity-list">
+        @foreach($members as $member)
+        <button type="button"
+                class="identity-option w-full flex items-center gap-3 p-3 rounded-lg hover:bg-surface-2 transition-colors text-left"
+                data-member-id="{{ $member->id }}"
+                data-member-name="{{ $member->name }}">
+            <span class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-white flex-shrink-0"
+                  style="background-color: {{ $member->color }}">{{ $member->initials() }}</span>
+            <span class="font-medium">{{ $member->name }}</span>
+        </button>
+        @endforeach
+    </div>
+</dialog>
+@endif
+
 <script>
 window.KANBAN_MODE = '{{ $mode }}';
 window.KANBAN_ROUTES = {
-    store:  '{{ $mode === "team" ? route("team.tasks.store")   : route("tasks.store") }}',
-    move:   '{{ $mode === "team" ? "/team/tasks"               : "/tasks" }}',
-    update: '{{ $mode === "team" ? "/team/tasks"               : "/tasks" }}',
-    peek:   '{{ $mode === "team" ? route("team.tasks.peek")    : route("tasks.peek") }}',
+    store:         '{{ $mode === "team" ? route("team.tasks.store")   : route("tasks.store") }}',
+    move:          '{{ $mode === "team" ? "/team/tasks"               : "/tasks" }}',
+    update:        '{{ $mode === "team" ? "/team/tasks"               : "/tasks" }}',
+    peek:          '{{ $mode === "team" ? route("team.tasks.peek")    : route("tasks.peek") }}',
     checkboxStore: '{{ $mode === "team" ? "/team/tasks" : "/tasks" }}',
     commentStore:  '{{ $mode === "team" ? "/team/tasks" : "/tasks" }}',
+    identityStore: '{{ route("team.identity.store") }}',
+    identityClear: '{{ route("team.identity.destroy") }}',
 };
 @if($mode === 'team')
 window.SUPABASE_URL      = '{{ env("SUPABASE_URL") }}';
 window.SUPABASE_ANON_KEY = '{{ env("SUPABASE_ANON_KEY") }}';
+window.TEAM_MEMBER_ID   = '{{ session("team_member_id") ?? "" }}';
+window.TEAM_MEMBER_NAME = '{{ session("team_member_name") ?? "" }}';
 @endif
 </script>
 @endsection

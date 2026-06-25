@@ -622,4 +622,45 @@ export function initKanban() {
     setupCollapse();
     setupSort();
     initLivePolling();
+    initIdentity();
+}
+
+function initIdentity() {
+    const modal = document.getElementById('identity-modal');
+    if (!modal) return;
+
+    // Override MY_TOKEN with team member ID in team mode
+    if (window.KANBAN_MODE === 'team' && window.TEAM_MEMBER_ID) {
+        MY_TOKEN = String(window.TEAM_MEMBER_ID);
+    }
+
+    const identityStore = (window.KANBAN_ROUTES && window.KANBAN_ROUTES.identityStore) || '/team/identity';
+    const identityClear = (window.KANBAN_ROUTES && window.KANBAN_ROUTES.identityClear) || '/team/identity';
+
+    modal.querySelectorAll('.identity-option').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+            const memberId   = btn.dataset.memberId;
+            const memberName = btn.dataset.memberName;
+
+            await fetch(identityStore, {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf },
+                body:    JSON.stringify({ member_id: memberId }),
+            });
+
+            localStorage.setItem('team_member_id',   memberId);
+            localStorage.setItem('team_member_name', memberName);
+            window.location.reload();
+        });
+    });
+
+    document.getElementById('btn-change-identity')?.addEventListener('click', async () => {
+        await fetch(identityClear, {
+            method:  'DELETE',
+            headers: { 'X-CSRF-TOKEN': csrf },
+        });
+        localStorage.removeItem('team_member_id');
+        localStorage.removeItem('team_member_name');
+        modal.setAttribute('open', '');
+    });
 }
