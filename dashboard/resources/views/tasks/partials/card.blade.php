@@ -76,7 +76,7 @@
     @endif
 
     @if(isset($task->assignee) && $task->assignee)
-    <div class="flex justify-end mt-2">
+    <div class="flex justify-start mt-2">
         <span class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white select-none"
               style="background-color: {{ $task->assignee->color }}"
               title="{{ $task->assignee->name }}">{{ $task->assignee->initials() }}</span>
