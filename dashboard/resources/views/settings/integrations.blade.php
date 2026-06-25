@@ -39,7 +39,7 @@
                                {{ $teamEnabled ? 'checked' : '' }}
                                onchange="document.getElementById('team-enabled-form').submit()"
                                class="sr-only peer">
-                        <div class="w-11 h-6 bg-surface-3 rounded-full peer peer-checked:bg-primary transition-colors"></div>
+                        <div class="w-11 h-6 bg-ink-300 dark:bg-ink-600 rounded-full peer peer-checked:bg-primary transition-colors"></div>
                         <div class="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform peer-checked:translate-x-5"></div>
                     </label>
                 </form>
@@ -67,7 +67,7 @@
                 @if($members->isEmpty())
                     <p class="text-sm text-muted">No hay miembros todavía. Insértalos en el panel de Supabase.</p>
                 @else
-                    <ul class="space-y-2">
+                    <ul class="space-y-2 mb-5">
                         @foreach($members as $member)
                             <li class="flex items-center gap-3">
                                 <span class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white"
@@ -79,6 +79,31 @@
                         @endforeach
                     </ul>
                 @endif
+
+                {{-- Identidad activa en este dispositivo --}}
+                <div class="border-t divider pt-4">
+                    <h3 class="text-sm font-semibold mb-2">Tu identidad en este dispositivo</h3>
+                    @if(session('team_member_id') && $members->isNotEmpty())
+                        @php $myMember = $members->firstWhere('id', session('team_member_id')) @endphp
+                        @if($myMember)
+                        <div class="flex items-center gap-3">
+                            <span class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white"
+                                  style="background-color: {{ $myMember->color }}">{{ $myMember->initials() }}</span>
+                            <span class="text-sm font-medium">{{ $myMember->name }}</span>
+                            <form method="POST" action="{{ route('team.identity.destroy') }}" id="desvincular-form" class="ml-auto">
+                                @csrf @method('DELETE')
+                                <button type="button" id="btn-desvincular"
+                                        class="btn-ghost text-sm text-rose-600 dark:text-rose-400">
+                                    Desvincularme
+                                </button>
+                            </form>
+                        </div>
+                        <p class="text-xs text-faint mt-2">Útil si cambias de dispositivo o alguien más va a usar este ordenador.</p>
+                        @endif
+                    @else
+                        <p class="text-sm text-muted">Sin vincular en este dispositivo. Ve al <a href="{{ route('team.tasks.index') }}" class="underline">board del equipo</a> para seleccionar tu perfil.</p>
+                    @endif
+                </div>
             @endif
         </section>
 
@@ -119,4 +144,19 @@
         </section>
 
     </div>
+
+<script>
+// Si no hay sesión de equipo en este dispositivo, limpia también localStorage
+@if(!session('team_member_id'))
+localStorage.removeItem('team_member_id');
+localStorage.removeItem('team_member_name');
+@endif
+
+// El botón Desvincularme limpia localStorage y luego envía el formulario
+document.getElementById('btn-desvincular')?.addEventListener('click', () => {
+    localStorage.removeItem('team_member_id');
+    localStorage.removeItem('team_member_name');
+    document.getElementById('desvincular-form').submit();
+});
+</script>
 @endsection

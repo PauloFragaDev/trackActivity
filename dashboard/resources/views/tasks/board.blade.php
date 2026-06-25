@@ -256,19 +256,26 @@
     </dialog>
 
 @if($mode === 'team' && isset($members) && $members->isNotEmpty())
-<dialog id="identity-modal" {{ !session('team_member_id') ? 'open' : '' }}
-        class="modal" style="max-width:380px">
-    @include('layouts.partials.modal-header', ['title' => '¿Quién eres tú?'])
+@php $activeMemberId = session('team_member_id') ? (int) session('team_member_id') : null @endphp
+<dialog id="identity-modal" {{ !$activeMemberId ? 'open' : '' }} class="modal">
+    @include('layouts.partials.modal-header', ['title' => '¿Quién eres tú?', 'hint' => false])
     <p class="text-sm text-faint mb-4">Selecciona tu perfil para que el equipo sepa quién hace cada cosa.</p>
-    <div class="space-y-2" id="identity-list">
+    <div class="space-y-1.5" id="identity-list">
         @foreach($members as $member)
+        @php $isActive = $activeMemberId === $member->id @endphp
         <button type="button"
-                class="identity-option w-full flex items-center gap-3 p-3 rounded-lg hover:bg-surface-2 transition-colors text-left"
+                class="identity-option w-full flex items-center gap-3 p-3 rounded-lg transition-colors text-left
+                       @if($isActive) bg-ink-100 dark:bg-ink-800 ring-2 ring-inset ring-ink-300 dark:ring-ink-600
+                       @else hover:bg-ink-100 dark:hover:bg-ink-800 @endif"
                 data-member-id="{{ $member->id }}"
                 data-member-name="{{ $member->name }}">
-            <span class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-white flex-shrink-0"
+            <span class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-white flex-shrink-0 text-sm"
                   style="background-color: {{ $member->color }}">{{ $member->initials() }}</span>
-            <span class="font-medium">{{ $member->name }}</span>
+            <span class="font-medium flex-1">{{ $member->name }}</span>
+            @if($isActive)
+            <span class="text-xs font-semibold px-2 py-0.5 rounded-full text-white"
+                  style="background-color: {{ $member->color }}">Tú</span>
+            @endif
         </button>
         @endforeach
     </div>

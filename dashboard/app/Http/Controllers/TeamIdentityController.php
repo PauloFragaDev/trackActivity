@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\TeamMember;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class TeamIdentityController extends Controller
@@ -23,10 +24,14 @@ class TeamIdentityController extends Controller
         return response()->json(['ok' => true]);
     }
 
-    public function destroy(): JsonResponse
+    public function destroy(Request $request): JsonResponse|RedirectResponse
     {
         session()->forget(['team_member_id', 'team_member_name']);
 
-        return response()->json(['ok' => true]);
+        if ($request->expectsJson()) {
+            return response()->json(['ok' => true]);
+        }
+
+        return redirect()->back()->with('status', 'Te has desvinculado del equipo en este dispositivo.');
     }
 }
