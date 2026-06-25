@@ -109,9 +109,10 @@ function syncCardBadge() {
     }
 }
 
+const checkboxBase = () => (window.KANBAN_ROUTES && window.KANBAN_ROUTES.checkboxStore) || '/tasks';
 const addSubtask = async (title) => {
     if (! edit) return;
-    const res = await send(`/tasks/${edit.taskId}/checkboxes`, 'POST', { title });
+    const res = await send(`${checkboxBase()}/${edit.taskId}/checkboxes`, 'POST', { title });
     if (! res.ok) return;
     const item = await res.json();
     edit.checkboxes.push({ id: item.id, title: item.title, checked: !! item.checked });
@@ -123,13 +124,13 @@ const toggleSubtask = async (id, checked) => {
     if (! it) return;
     it.checked = checked;
     renderSubtasks();
-    await send(`/tasks/${edit.taskId}/checkboxes/${id}`, 'PATCH', { checked: checked ? '1' : '0' });
+    await send(`${checkboxBase()}/${edit.taskId}/checkboxes/${id}`, 'PATCH', { checked: checked ? '1' : '0' });
 };
 const deleteSubtask = async (id) => {
     if (! edit) return;
     edit.checkboxes = edit.checkboxes.filter((c) => c.id != id);
     renderSubtasks();
-    await send(`/tasks/${edit.taskId}/checkboxes/${id}`, 'DELETE');
+    await send(`${checkboxBase()}/${edit.taskId}/checkboxes/${id}`, 'DELETE');
 };
 
 // ─── Comentarios (panel lateral tipo chat) ─────────────────
@@ -176,9 +177,10 @@ function syncCommentsBadge() {
         chipRow.appendChild(span);
     }
 }
+const commentBase = () => (window.KANBAN_ROUTES && window.KANBAN_ROUTES.commentStore) || '/tasks';
 const addComment = async (body) => {
     if (! edit) return;
-    const res = await send(`/tasks/${edit.taskId}/comments`, 'POST', { body });
+    const res = await send(`${commentBase()}/${edit.taskId}/comments`, 'POST', { body });
     if (! res.ok) return;
     const c = await res.json();
     edit.comments.push(c);
@@ -188,7 +190,7 @@ const deleteComment = async (id) => {
     if (! edit) return;
     edit.comments = edit.comments.filter((c) => c.id != id);
     renderComments();
-    await send(`/tasks/${edit.taskId}/comments/${id}`, 'DELETE');
+    await send(`${commentBase()}/${edit.taskId}/comments/${id}`, 'DELETE');
 };
 
 // ─── Conteo / colapso / orden de columnas (compartidos con el drag) ──
@@ -293,8 +295,9 @@ function setupEditModalOpen() {
             const card = btn.closest('[data-task-id]');
             if (! card || ! editForm) return;
 
-            editForm.action = `/tasks/${card.dataset.taskId}`;
-            if (delForm) delForm.action = `/tasks/${card.dataset.taskId}`;
+            const taskBase = (window.KANBAN_ROUTES && window.KANBAN_ROUTES.update) || '/tasks';
+            editForm.action = `${taskBase}/${card.dataset.taskId}`;
+            if (delForm) delForm.action = `${taskBase}/${card.dataset.taskId}`;
 
             // Para <select> controlados por Choices.js, asignar .value
             // no actualiza la UI de la librería (sigue mostrando el
@@ -369,7 +372,8 @@ function setupDragAndDrop() {
                 const status = evt.to.dataset.taskList;
 
                 window.__taskMutationAt = Date.now();
-                fetch(`/tasks/${card.dataset.taskId}/move`, {
+                const moveUrl = `${window.KANBAN_ROUTES.move}/${card.dataset.taskId}/move`;
+                fetch(moveUrl, {
                     method: 'POST',
                     body: new URLSearchParams({
                         _token: csrf, _method: 'PATCH', status, position: String(evt.newIndex),
@@ -532,9 +536,10 @@ function setupSort() {
 // casos queda pendiente y se aplica al "soltarse".
 function initLivePolling() {
     const projectFilter = new URLSearchParams(window.location.search).get('project');
+    const peekBase = (window.KANBAN_ROUTES && window.KANBAN_ROUTES.peek) || '/tasks/peek';
     const url = projectFilter
-        ? `/tasks/peek?project=${encodeURIComponent(projectFilter)}`
-        : '/tasks/peek';
+        ? `${peekBase}?project=${encodeURIComponent(projectFilter)}`
+        : peekBase;
 
     let pendingReload = false;
     let lastSeen = null;

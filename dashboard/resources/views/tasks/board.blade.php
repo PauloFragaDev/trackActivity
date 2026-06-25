@@ -10,6 +10,18 @@
             <a href="{{ route('tasks.archived') }}" class="text-xs text-faint hover:underline">
                 Archivadas
             </a>
+            @if(!empty(config('database.connections.supabase.host')))
+            <div class="flex items-center gap-1 bg-surface-2 rounded-lg p-0.5 text-sm">
+                <a href="{{ route('tasks.index') }}"
+                   class="px-3 py-1 rounded-md transition-colors {{ $mode === 'personal' ? 'bg-surface-1 shadow-sm font-medium' : 'text-faint hover:text-default' }}">
+                    Personal
+                </a>
+                <a href="{{ route('team.tasks.index') }}"
+                   class="px-3 py-1 rounded-md transition-colors {{ $mode === 'team' ? 'bg-surface-1 shadow-sm font-medium' : 'text-faint hover:text-default' }}">
+                    Equipo
+                </a>
+            </div>
+            @endif
         </div>
         <div class="flex items-center gap-3 flex-wrap">
             {{-- Filtros del board. Ancho fijo en wrappers para que Choices.js
@@ -209,4 +221,20 @@
             </div>
         </div>
     </dialog>
+
+<script>
+window.KANBAN_MODE = '{{ $mode }}';
+window.KANBAN_ROUTES = {
+    store:  '{{ $mode === "team" ? route("team.tasks.store")   : route("tasks.store") }}',
+    move:   '{{ $mode === "team" ? "/team/tasks"               : "/tasks" }}',
+    update: '{{ $mode === "team" ? "/team/tasks"               : "/tasks" }}',
+    peek:   '{{ $mode === "team" ? route("team.tasks.peek")    : route("tasks.peek") }}',
+    checkboxStore: '{{ $mode === "team" ? "/team/tasks" : "/tasks" }}',
+    commentStore:  '{{ $mode === "team" ? "/team/tasks" : "/tasks" }}',
+};
+@if($mode === 'team')
+window.SUPABASE_URL      = '{{ env("SUPABASE_URL") }}';
+window.SUPABASE_ANON_KEY = '{{ env("SUPABASE_ANON_KEY") }}';
+@endif
+</script>
 @endsection

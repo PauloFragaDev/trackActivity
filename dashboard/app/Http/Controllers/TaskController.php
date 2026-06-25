@@ -38,6 +38,9 @@ class TaskController extends Controller
             'labels'     => TaskLabel::orderBy('position')->orderBy('title')->get(),
             'projectId'  => $projectId,
             'priority'   => $priority,
+            'mode'       => 'personal',
+            'members'    => collect(),
+            'assigneeId' => null,
         ]);
     }
 
