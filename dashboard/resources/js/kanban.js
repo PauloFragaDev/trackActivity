@@ -290,56 +290,56 @@ function setupEditModalOpen() {
     const editForm = editModal.querySelector('[data-task-edit-form]');
     const delForm  = editModal.querySelector('[data-task-delete-form]');
 
-    const wireEditButton = (btn) => {
-        btn.addEventListener('click', () => {
-            const card = btn.closest('[data-task-id]');
-            if (! card || ! editForm) return;
+    // Delegación en el board para que las cards creadas por AJAX también funcionen.
+    board.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-task-edit]');
+        if (! btn || ! editForm) return;
 
-            const taskBase = (window.KANBAN_ROUTES && window.KANBAN_ROUTES.update) || '/tasks';
-            editForm.action = `${taskBase}/${card.dataset.taskId}`;
-            if (delForm) delForm.action = `${taskBase}/${card.dataset.taskId}`;
-            const transferBtn = document.getElementById('btn-transfer-to-team');
-            if (transferBtn) transferBtn.dataset.taskId = card.dataset.taskId;
+        const card = btn.closest('[data-task-id]');
+        if (! card) return;
 
-            // Para <select> controlados por Choices.js, asignar .value
-            // no actualiza la UI de la librería (sigue mostrando el
-            // placeholder). setSelectValue conoce la instancia y la
-            // sincroniza vía API oficial.
-            const set = (name, value) => {
-                const field = editForm.querySelector(`[name="${name}"]`);
-                if (! field) return;
-                if (field instanceof HTMLSelectElement) {
-                    setSelectValue(field, value);
-                } else {
-                    field.value = value ?? '';
-                }
-            };
-            set('title', card.dataset.title);
-            set('description', card.dataset.description);
-            set('status', card.dataset.status);
-            set('priority', card.dataset.priority);
-            set('project_id', card.dataset.project);
-            set('due_date', card.dataset.due);
+        const taskBase = (window.KANBAN_ROUTES && window.KANBAN_ROUTES.update) || '/tasks';
+        editForm.action = `${taskBase}/${card.dataset.taskId}`;
+        if (delForm) delForm.action = `${taskBase}/${card.dataset.taskId}`;
+        const transferBtn = document.getElementById('btn-transfer-to-team');
+        if (transferBtn) transferBtn.dataset.taskId = card.dataset.taskId;
 
-            let labelIds = [];
-            try { labelIds = JSON.parse(card.dataset.labels || '[]'); } catch {}
-            editForm.querySelectorAll('input[name="label_ids[]"]').forEach((cb) => {
-                cb.checked = labelIds.includes(parseInt(cb.value, 10));
-            });
+        // Para <select> controlados por Choices.js, asignar .value
+        // no actualiza la UI de la librería (sigue mostrando el
+        // placeholder). setSelectValue conoce la instancia y la
+        // sincroniza vía API oficial.
+        const set = (name, value) => {
+            const field = editForm.querySelector(`[name="${name}"]`);
+            if (! field) return;
+            if (field instanceof HTMLSelectElement) {
+                setSelectValue(field, value);
+            } else {
+                field.value = value ?? '';
+            }
+        };
+        set('title', card.dataset.title);
+        set('description', card.dataset.description);
+        set('status', card.dataset.status);
+        set('priority', card.dataset.priority);
+        set('project_id', card.dataset.project);
+        set('due_date', card.dataset.due);
 
-            let checkboxes = [];
-            let comments   = [];
-            try { checkboxes = JSON.parse(card.dataset.checkboxes || '[]'); } catch {}
-            try { comments   = JSON.parse(card.dataset.comments   || '[]'); } catch {}
-            edit = { card, taskId: card.dataset.taskId, checkboxes, comments };
-            renderSubtasks();
-            renderComments();
-
-            if (typeof editModal.showModal === 'function') editModal.showModal();
+        let labelIds = [];
+        try { labelIds = JSON.parse(card.dataset.labels || '[]'); } catch {}
+        editForm.querySelectorAll('input[name="label_ids[]"]').forEach((cb) => {
+            cb.checked = labelIds.includes(parseInt(cb.value, 10));
         });
-    };
 
-    document.querySelectorAll('[data-task-edit]').forEach(wireEditButton);
+        let checkboxes = [];
+        let comments   = [];
+        try { checkboxes = JSON.parse(card.dataset.checkboxes || '[]'); } catch {}
+        try { comments   = JSON.parse(card.dataset.comments   || '[]'); } catch {}
+        edit = { card, taskId: card.dataset.taskId, checkboxes, comments };
+        renderSubtasks();
+        renderComments();
+
+        if (typeof editModal.showModal === 'function') editModal.showModal();
+    });
 }
 
 // ─── Drag & drop entre columnas ────────────────────────────
@@ -481,16 +481,101 @@ function setupFilters() {
     applyFilters();
 }
 
-// ─── Inline-add por columna ────────────────────────────────
+// ─── Inline-add por columna (AJAX + card optimista) ────────
 function setupInlineAdd() {
     document.querySelectorAll('[data-task-inline-add]').forEach((form) => {
-        form.addEventListener('submit', (e) => {
-            const title = form.querySelector('input[name="title"]')?.value.trim();
-            if (! title) { e.preventDefault(); return; }
-            // Submit normal — el redirect del controller recarga el board.
-            // Para evitar perder filtros, ya está persistido en localStorage.
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const input = form.querySelector('input[name="title"]');
+            const title = (input?.value || '').trim();
+            if (! title) return;
+            const status = form.dataset.status;
+
+            // Card fantasma mientras persiste en servidor
+            const list = document.querySelector(`[data-task-list="${status}"]`);
+            const ghost = document.createElement('div');
+            ghost.className = 'task-card card p-2.5 opacity-40 pointer-events-none';
+            ghost.innerHTML = `<p class="text-sm font-medium leading-snug">${escape(title)}</p>`;
+            list?.appendChild(ghost);
+            input.value = '';
+            updateColumnCounts();
+
+            try {
+                const fd = new FormData(form);
+                fd.set('title', title);
+                window.__taskMutationAt = Date.now();
+                const res = await fetch(form.action, {
+                    method: 'POST',
+                    headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrf },
+                    body: fd,
+                });
+                if (! res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+                if (data.ok && data.html) {
+                    const tmp = document.createElement('div');
+                    tmp.innerHTML = data.html.trim();
+                    const card = tmp.firstElementChild;
+                    if (card) ghost.replaceWith(card);
+                    else ghost.remove();
+                } else {
+                    ghost.remove();
+                }
+            } catch {
+                ghost.remove();
+                input.value = title;
+            }
+            updateColumnCounts();
         });
     });
+}
+
+// ─── Modal nueva tarea (AJAX) ───────────────────────────────
+function setupNewTask() {
+    if (! newModal) return;
+    const form = newModal.querySelector('form');
+    if (! form) return;
+    const submitBtn = form.querySelector('[type="submit"]');
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const title = (form.querySelector('[name="title"]')?.value || '').trim();
+        if (! title) return;
+        const status = form.querySelector('[name="status"]')?.value || 'todo';
+
+        if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Creando…'; }
+
+        try {
+            const fd = new FormData(form);
+            window.__taskMutationAt = Date.now();
+            const res = await fetch(form.action, {
+                method: 'POST',
+                headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrf },
+                body: fd,
+            });
+            if (! res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            if (data.ok && data.html) {
+                insertCard(data.html, status);
+                form.reset();
+                newModal.close();
+            }
+        } catch {
+            // En caso de error, submit nativo como fallback
+            window.location.reload();
+        } finally {
+            if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Crear'; }
+        }
+    });
+}
+
+function insertCard(html, status) {
+    const list = document.querySelector(`[data-task-list="${status}"]`);
+    if (! list) return;
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html.trim();
+    const card = tmp.firstElementChild;
+    if (card) list.appendChild(card);
+    updateColumnCounts();
 }
 
 // ─── Colapsar columnas ──────────────────────────────────────
@@ -621,52 +706,132 @@ export function initKanban() {
     setupDragAndDrop();
     setupFilters();
     setupInlineAdd();
+    setupNewTask();
     setupCollapse();
     setupSort();
     initLivePolling();
     initIdentity();
     initTransfer();
+    initTabSkeleton();
 }
 
 function initIdentity() {
     const modal = document.getElementById('identity-modal');
     if (!modal) return;
 
-    // Override MY_TOKEN with team member ID in team mode
+    const identityStore = (window.KANBAN_ROUTES && window.KANBAN_ROUTES.identityStore) || '/team/identity';
+    const identityClear = (window.KANBAN_ROUTES && window.KANBAN_ROUTES.identityClear) || '/team/identity';
+
     if (window.KANBAN_MODE === 'team' && window.TEAM_MEMBER_ID) {
         MY_TOKEN = String(window.TEAM_MEMBER_ID);
+        renderPastilla(window.TEAM_MEMBER_ID);
     } else if (window.KANBAN_MODE === 'team' && !window.TEAM_MEMBER_ID) {
         modal.showModal();
     }
-
-    const identityStore = (window.KANBAN_ROUTES && window.KANBAN_ROUTES.identityStore) || '/team/identity';
-    const identityClear = (window.KANBAN_ROUTES && window.KANBAN_ROUTES.identityClear) || '/team/identity';
 
     modal.querySelectorAll('.identity-option').forEach((btn) => {
         btn.addEventListener('click', async () => {
             const memberId   = btn.dataset.memberId;
             const memberName = btn.dataset.memberName;
 
-            await fetch(identityStore, {
-                method:  'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf },
-                body:    JSON.stringify({ member_id: memberId }),
-            });
+            try {
+                await fetch(identityStore, {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf },
+                    body:    JSON.stringify({ member_id: memberId }),
+                });
+            } catch {}
 
             localStorage.setItem('team_member_id',   memberId);
             localStorage.setItem('team_member_name', memberName);
-            window.location.reload();
+            window.TEAM_MEMBER_ID   = memberId;
+            window.TEAM_MEMBER_NAME = memberName;
+            MY_TOKEN = String(memberId);
+
+            // Actualizar estado visual de los botones del modal
+            modal.querySelectorAll('.identity-option').forEach((b) => {
+                const active = b.dataset.memberId === memberId;
+                b.classList.toggle('bg-ink-100', active);
+                b.classList.toggle('dark:bg-ink-800', active);
+                b.classList.toggle('ring-2', active);
+                b.classList.toggle('ring-inset', active);
+                b.classList.toggle('ring-ink-300', active);
+                b.classList.toggle('dark:ring-ink-600', active);
+                b.classList.toggle('hover:bg-ink-100', !active);
+                b.classList.toggle('dark:hover:bg-ink-800', !active);
+                b.querySelector('.tu-badge')?.remove();
+                if (active) {
+                    const badge = document.createElement('span');
+                    badge.className = 'tu-badge text-xs font-semibold px-2 py-0.5 rounded-full text-white';
+                    const avatar = b.querySelector('span[style]');
+                    badge.style.backgroundColor = avatar?.style.backgroundColor || '#666';
+                    badge.textContent = 'Tú';
+                    b.appendChild(badge);
+                }
+            });
+
+            renderPastilla(memberId);
+            modal.close();
         });
     });
 
-    document.getElementById('btn-change-identity')?.addEventListener('click', async () => {
-        await fetch(identityClear, {
-            method:  'DELETE',
-            headers: { 'X-CSRF-TOKEN': csrf },
+    // "Cambiar" — delegación sobre el contenedor de la pastilla
+    document.getElementById('identity-pastilla')?.addEventListener('click', (e) => {
+        if (! e.target.closest('#btn-change-identity')) return;
+        clearIdentity(identityClear, modal);
+    });
+}
+
+async function clearIdentity(identityClear, modal) {
+    try {
+        await fetch(identityClear, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': csrf } });
+    } catch {}
+    localStorage.removeItem('team_member_id');
+    localStorage.removeItem('team_member_name');
+    window.TEAM_MEMBER_ID   = '';
+    window.TEAM_MEMBER_NAME = '';
+    MY_TOKEN = document.querySelector('meta[name="user-token"]')?.content || '';
+
+    // Limpiar estado visual del modal
+    document.getElementById('identity-modal')?.querySelectorAll('.identity-option').forEach((b) => {
+        b.classList.remove('bg-ink-100', 'dark:bg-ink-800', 'ring-2', 'ring-inset', 'ring-ink-300', 'dark:ring-ink-600');
+        b.classList.add('hover:bg-ink-100', 'dark:hover:bg-ink-800');
+        b.querySelector('.tu-badge')?.remove();
+    });
+
+    renderPastilla(null);
+    modal.showModal();
+}
+
+function renderPastilla(memberId) {
+    const el = document.getElementById('identity-pastilla');
+    if (! el) return;
+    if (! memberId) { el.innerHTML = ''; return; }
+
+    const members = window.TEAM_MEMBERS || [];
+    const m = members.find((x) => String(x.id) === String(memberId));
+    if (! m) return;
+
+    el.innerHTML = `
+        <span class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white select-none"
+              style="background-color:${escape(m.color)}">${escape(m.initials)}</span>
+        <span class="text-faint">${escape(m.name)}</span>
+        <button type="button" id="btn-change-identity" class="text-xs text-faint hover:underline">Cambiar</button>
+    `;
+}
+
+// ─── Skeleton en cambio de pestaña Personal ↔ Equipo ───────
+function initTabSkeleton() {
+    document.querySelectorAll('[data-tab-link]').forEach((link) => {
+        link.addEventListener('click', () => {
+            const b = document.querySelector('[data-task-board]');
+            if (b) {
+                b.style.transition = 'opacity 0.12s ease-out';
+                b.style.opacity    = '0.25';
+                b.style.pointerEvents = 'none';
+            }
+            link.style.opacity = '0.5';
         });
-        localStorage.removeItem('team_member_id');
-        localStorage.removeItem('team_member_name');
-        modal.showModal();
     });
 }
 

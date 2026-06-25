@@ -12,27 +12,18 @@
             </a>
             @if(config('team.db_host') && env('APP_MODE') !== 'team_only' && \App\Services\ModuleVisibility::enabled('team'))
             <div class="flex items-center gap-1 bg-surface-2 rounded-lg p-0.5 text-sm">
-                <a href="{{ route('tasks.index') }}"
+                <a href="{{ route('tasks.index') }}" data-tab-link
                    class="px-3 py-1 rounded-md transition-colors {{ $mode === 'personal' ? 'bg-surface-1 shadow-sm font-medium' : 'text-faint hover:text-default' }}">
                     Personal
                 </a>
-                <a href="{{ route('team.tasks.index') }}"
+                <a href="{{ route('team.tasks.index') }}" data-tab-link
                    class="px-3 py-1 rounded-md transition-colors {{ $mode === 'team' ? 'bg-surface-1 shadow-sm font-medium' : 'text-faint hover:text-default' }}">
                     Equipo
                 </a>
             </div>
             @endif
-            @if($mode === 'team' && session('team_member_id') && isset($members) && $members->isNotEmpty())
-                @php $activeIdentity = $members->firstWhere('id', session('team_member_id')) @endphp
-                @if($activeIdentity)
-                <div class="flex items-center gap-1.5 text-sm ml-2">
-                    <span class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white select-none"
-                          style="background-color: {{ $activeIdentity->color }}">{{ $activeIdentity->initials() }}</span>
-                    <span class="text-faint">{{ $activeIdentity->name }}</span>
-                    <button type="button" id="btn-change-identity"
-                            class="text-xs text-faint hover:underline">Cambiar</button>
-                </div>
-                @endif
+            @if($mode === 'team')
+                <div id="identity-pastilla" class="flex items-center gap-1.5 text-sm ml-2"></div>
             @endif
         </div>
         <div class="flex items-center gap-3 flex-wrap">
@@ -301,6 +292,8 @@ window.SUPABASE_URL      = '{{ config("team.supabase_url") }}';
 window.SUPABASE_ANON_KEY = '{{ config("team.supabase_anon_key") }}';
 window.TEAM_MEMBER_ID   = '{{ session("team_member_id") ?? "" }}';
 window.TEAM_MEMBER_NAME = '{{ session("team_member_name") ?? "" }}';
+@php $teamMembersData = isset($members) ? $members->map(fn($m) => ['id' => $m->id, 'name' => $m->name, 'color' => $m->color, 'initials' => $m->initials()])->values() : []; @endphp
+window.TEAM_MEMBERS     = @json($teamMembersData);
 @endif
 </script>
 @endsection
