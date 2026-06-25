@@ -337,6 +337,8 @@ function setupEditModalOpen() {
         edit = { card, taskId: card.dataset.taskId, checkboxes, comments };
         renderSubtasks();
         renderComments();
+        setModalViewMode();
+        renderModalCreator(card);
 
         if (typeof editModal.showModal === 'function') editModal.showModal();
     });
@@ -626,6 +628,64 @@ function insertCard(html, status) {
     updateColumnCounts();
 }
 
+// ─── Vista / edición del modal ─────────────────────────────
+function setModalViewMode() {
+    if (! editModal) return;
+    const form      = editModal.querySelector('[data-task-edit-form]');
+    const subtasks  = editModal.querySelector('[data-task-subtasks]');
+    const btnEdit   = document.getElementById('btn-modal-edit');
+    const btnCancel = document.getElementById('btn-modal-cancel-edit');
+    const btnSave   = document.getElementById('btn-modal-save');
+
+    if (form)    { form.style.pointerEvents = 'none'; form.style.opacity = '0.65'; }
+    if (subtasks){ subtasks.style.pointerEvents = 'none'; subtasks.style.opacity = '0.65'; }
+    if (btnEdit)   btnEdit.classList.remove('hidden');
+    if (btnCancel) btnCancel.classList.add('hidden');
+    if (btnSave)   btnSave.classList.add('hidden');
+}
+
+function setModalEditMode() {
+    if (! editModal) return;
+    const form      = editModal.querySelector('[data-task-edit-form]');
+    const subtasks  = editModal.querySelector('[data-task-subtasks]');
+    const btnEdit   = document.getElementById('btn-modal-edit');
+    const btnCancel = document.getElementById('btn-modal-cancel-edit');
+    const btnSave   = document.getElementById('btn-modal-save');
+
+    if (form)    { form.style.pointerEvents = ''; form.style.opacity = ''; }
+    if (subtasks){ subtasks.style.pointerEvents = ''; subtasks.style.opacity = ''; }
+    if (btnEdit)   btnEdit.classList.add('hidden');
+    if (btnCancel) btnCancel.classList.remove('hidden');
+    if (btnSave)   btnSave.classList.remove('hidden');
+}
+
+function renderModalCreator(card) {
+    const infoEl = document.getElementById('modal-creator-info');
+    if (! infoEl) return;
+    const createdById = parseInt(card.dataset.createdBy, 10);
+    if (! createdById || ! Array.isArray(window.TEAM_MEMBERS)) {
+        infoEl.innerHTML = '';
+        return;
+    }
+    const member = window.TEAM_MEMBERS.find((m) => m.id === createdById);
+    if (! member) { infoEl.innerHTML = ''; return; }
+    infoEl.innerHTML = `
+        <span class="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold text-white select-none flex-shrink-0"
+              style="background-color:${escape(member.color)}"
+              title="${escape(member.name)}">${escape(member.initials)}</span>
+        <span>Creada por <strong class="font-medium">${escape(member.name)}</strong></span>`;
+}
+
+function setupViewEditToggle() {
+    if (! editModal) return;
+    const btnEdit   = document.getElementById('btn-modal-edit');
+    const btnCancel = document.getElementById('btn-modal-cancel-edit');
+
+    btnEdit?.addEventListener('click', () => setModalEditMode());
+    btnCancel?.addEventListener('click', () => setModalViewMode());
+    editModal.addEventListener('close', () => setModalViewMode());
+}
+
 // ─── Colapsar columnas ──────────────────────────────────────
 function setupCollapse() {
     const initialCollapsed = new Set(readJson(LS_COLLAPSED, []));
@@ -751,6 +811,7 @@ export function initKanban() {
     setupModalForms();
     setupColumnAddButtons();
     setupEditModalOpen();
+    setupViewEditToggle();
     setupDragAndDrop();
     setupFilters();
     setupInlineAdd();

@@ -158,6 +158,10 @@
     <dialog id="task-edit" class="modal modal-lg">
         @include('layouts.partials.modal-header', ['title' => 'Editar tarea'])
 
+        @if($mode === 'team')
+        <div id="modal-creator-info" class="flex items-center gap-2 px-1 pb-2 text-sm text-faint empty:hidden"></div>
+        @endif
+
         {{-- IMPORTANTE: forms NO se anidan en HTML5. El navegador los
              des-anida en parse, lo que desconecta el botón Guardar de
              su form y los del modal click-bubble al <dialog>.
@@ -240,8 +244,9 @@
                 @endif
             </div>
             <div class="flex gap-2">
-                <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
-                <button type="submit" form="task-edit-main-form" class="btn">Guardar</button>
+                <button type="button" id="btn-modal-edit" class="btn">Editar</button>
+                <button type="button" id="btn-modal-cancel-edit" class="btn-ghost hidden">Cancelar</button>
+                <button type="submit" form="task-edit-main-form" id="btn-modal-save" class="btn hidden">Guardar</button>
             </div>
         </div>
     </dialog>

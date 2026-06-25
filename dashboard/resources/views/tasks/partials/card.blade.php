@@ -22,7 +22,8 @@
      data-due="{{ $task->due_date?->format('Y-m-d') }}"
      data-labels="{{ $taskLabels->pluck('id')->toJson() }}"
      data-checkboxes="{{ $checkboxes->map(fn ($c) => ['id'=>$c->id,'title'=>$c->title,'checked'=>$c->checked])->toJson() }}"
-     data-comments="{{ $comments->map(fn ($c) => ['id'=>$c->id,'body'=>$c->body,'created_at'=>$c->created_at?->toIso8601String(),'author_name'=>$c->author_name,'author_token'=>$c->author_token])->toJson() }}">
+     data-comments="{{ $comments->map(fn ($c) => ['id'=>$c->id,'body'=>$c->body,'created_at'=>$c->created_at?->toIso8601String(),'author_name'=>$c->author_name,'author_token'=>$c->author_token])->toJson() }}"
+     data-created-by="{{ $task->created_by_id ?? '' }}">
     <div class="flex items-start justify-between gap-2">
         <p class="text-sm font-medium leading-snug {{ $task->status === \App\Enums\TaskStatus::Done ? 'line-through text-muted' : '' }}">{{ $task->title }}</p>
         <div class="flex items-center gap-0.5 shrink-0 -mr-1 -mt-1">
