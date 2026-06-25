@@ -372,7 +372,7 @@ function setupDragAndDrop() {
                 const status = evt.to.dataset.taskList;
 
                 window.__taskMutationAt = Date.now();
-                const moveUrl = `${window.KANBAN_ROUTES.move}/${card.dataset.taskId}/move`;
+                const moveUrl = `${(window.KANBAN_ROUTES && window.KANBAN_ROUTES.move) || '/tasks'}/${card.dataset.taskId}/move`;
                 fetch(moveUrl, {
                     method: 'POST',
                     body: new URLSearchParams({
