@@ -10,7 +10,7 @@
             <a href="{{ route('tasks.archived') }}" class="text-xs text-faint hover:underline">
                 Archivadas
             </a>
-            @if(env('SUPABASE_DB_HOST') && env('APP_MODE') !== 'team_only' && \App\Models\Setting::get('team.enabled', true))
+            @if(config('team.db_host') && env('APP_MODE') !== 'team_only' && \App\Models\Setting::get('team.enabled', true))
             <div class="flex items-center gap-1 bg-surface-2 rounded-lg p-0.5 text-sm">
                 <a href="{{ route('tasks.index') }}"
                    class="px-3 py-1 rounded-md transition-colors {{ $mode === 'personal' ? 'bg-surface-1 shadow-sm font-medium' : 'text-faint hover:text-default' }}">
@@ -240,7 +240,7 @@
                         class="btn-ghost text-rose-600 dark:text-rose-400 text-sm inline-flex items-center gap-1">
                     <x-icon name="trash" class="w-3.5 h-3.5" /> Archivar
                 </button>
-                @if($mode === 'personal' && env('SUPABASE_DB_HOST') && \App\Models\Setting::get('team.enabled', true))
+                @if($mode === 'personal' && config('team.db_host') && \App\Models\Setting::get('team.enabled', true))
                 <button type="button" id="btn-transfer-to-team"
                         class="btn-ghost text-blue-600 dark:text-blue-400"
                         data-task-id="">
@@ -290,8 +290,8 @@ window.KANBAN_ROUTES = {
     transfer:        '/tasks',
 };
 @if($mode === 'team')
-window.SUPABASE_URL      = '{{ env("SUPABASE_URL") }}';
-window.SUPABASE_ANON_KEY = '{{ env("SUPABASE_ANON_KEY") }}';
+window.SUPABASE_URL      = '{{ config("team.supabase_url") }}';
+window.SUPABASE_ANON_KEY = '{{ config("team.supabase_anon_key") }}';
 window.TEAM_MEMBER_ID   = '{{ session("team_member_id") ?? "" }}';
 window.TEAM_MEMBER_NAME = '{{ session("team_member_name") ?? "" }}';
 @endif

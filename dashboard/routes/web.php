@@ -184,4 +184,8 @@ Route::middleware(EnsureTeamEnabled::class)->group(function () {
 
     Route::post('/team/tasks/{teamTask}/comments',            [TeamTaskCommentController::class, 'store'])->name('team.tasks.comments.store');
     Route::delete('/team/tasks/{teamTask}/comments/{comment}', [TeamTaskCommentController::class, 'destroy'])->name('team.tasks.comments.destroy');
+
+    Route::post('/team/tasks/{teamTask}/checkboxes',                   [\App\Http\Controllers\TeamTaskCheckboxController::class, 'store'])->name('team.tasks.checkboxes.store');
+    Route::patch('/team/tasks/{teamTask}/checkboxes/{checkbox}',       [\App\Http\Controllers\TeamTaskCheckboxController::class, 'update'])->name('team.tasks.checkboxes.update');
+    Route::delete('/team/tasks/{teamTask}/checkboxes/{checkbox}',      [\App\Http\Controllers\TeamTaskCheckboxController::class, 'destroy'])->name('team.tasks.checkboxes.destroy');
 });

@@ -103,7 +103,7 @@ class SettingsController extends Controller
 
     public function integrations(): View
     {
-        $supConnected = (bool) env('SUPABASE_DB_HOST');
+        $supConnected = (bool) config('team.db_host');
         $members      = $supConnected ? \App\Models\TeamMember::orderBy('position')->get() : collect();
 
         return view('settings.integrations', [

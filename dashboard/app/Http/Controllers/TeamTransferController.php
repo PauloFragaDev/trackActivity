@@ -37,7 +37,7 @@ class TeamTransferController extends Controller
     public function transfer(Task $task): JsonResponse
     {
         abort_unless(Setting::get('team.enabled', true), 403);
-        abort_unless(\env('SUPABASE_DB_HOST'), 503);
+        abort_unless(config('team.db_host'), 503);
 
         // Load personal task with all relations
         $task->load(['checkboxes', 'comments', 'labels', 'project']);
@@ -64,37 +64,42 @@ class TeamTransferController extends Controller
             'created_by_id'  => session('team_member_id') ? (int) session('team_member_id') : null,
         ]);
 
-        // 3. Copy checkboxes
-        foreach ($task->checkboxes as $cb) {
-            TeamTaskCheckbox::create([
-                'task_id'  => $teamTask->id,
-                'title'    => $cb->title,
-                'checked'  => $cb->checked,
-                'position' => $cb->position,
-            ]);
-        }
+        try {
+            // 3. Copy checkboxes
+            foreach ($task->checkboxes as $cb) {
+                TeamTaskCheckbox::create([
+                    'task_id'  => $teamTask->id,
+                    'title'    => $cb->title,
+                    'checked'  => $cb->checked,
+                    'position' => $cb->position,
+                ]);
+            }
 
-        // 4. Copy comments
-        foreach ($task->comments as $comment) {
-            TeamTaskComment::create([
-                'task_id'      => $teamTask->id,
-                'body'         => $comment->body,
-                'author_name'  => $comment->author_name,
-                'author_token' => session('team_member_id') ? (string) session('team_member_id') : $comment->author_token,
-            ]);
-        }
+            // 4. Copy comments
+            foreach ($task->comments as $comment) {
+                TeamTaskComment::create([
+                    'task_id'      => $teamTask->id,
+                    'body'         => $comment->body,
+                    'author_name'  => $comment->author_name,
+                    'author_token' => session('team_member_id') ? (string) session('team_member_id') : $comment->author_token,
+                ]);
+            }
 
-        // 5. Copy labels (match by name or create)
-        foreach ($task->labels as $label) {
-            $teamLabel = TeamTaskLabel::firstOrCreate(
-                ['title' => $label->title],
-                ['color' => $label->color, 'position' => $label->position]
-            );
-            $teamTask->labels()->attach($teamLabel->id);
-        }
+            // 5. Copy labels (match by name or create)
+            foreach ($task->labels as $label) {
+                $teamLabel = TeamTaskLabel::firstOrCreate(
+                    ['title' => $label->title],
+                    ['color' => $label->color, 'position' => $label->position]
+                );
+                $teamTask->labels()->attach($teamLabel->id);
+            }
 
-        // 6. Archive original (only after successful team creation)
-        $task->delete();
+            // 6. Archive original (only after successful team creation)
+            $task->delete();
+        } catch (\Throwable $e) {
+            $teamTask->delete();
+            throw $e;
+        }
 
         return response()->json(['ok' => true, 'team_task_id' => $teamTask->id]);
     }
