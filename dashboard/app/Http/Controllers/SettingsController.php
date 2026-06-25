@@ -101,6 +101,37 @@ class SettingsController extends Controller
             ->with('status', 'Pomodoro actualizado.');
     }
 
+    public function integrations(): View
+    {
+        $supConnected = (bool) env('SUPABASE_DB_HOST');
+        $members      = $supConnected ? \App\Models\TeamMember::orderBy('position')->get() : collect();
+
+        return view('settings.integrations', [
+            'supConnected' => $supConnected,
+            'base44Url'    => Setting::get('base44.url', ''),
+            'base44Token'  => Setting::get('base44.token', '') ? '••••••••' : '',
+            'members'      => $members,
+        ]);
+    }
+
+    public function saveIntegrations(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'base44_url'   => ['nullable', 'url', 'max:255'],
+            'base44_token' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        if ($data['base44_url'] !== null) {
+            Setting::set('base44.url', $data['base44_url']);
+        }
+        // Solo actualizar el token si no es la máscara
+        if ($data['base44_token'] && $data['base44_token'] !== '••••••••') {
+            Setting::set('base44.token', $data['base44_token']);
+        }
+
+        return redirect()->route('settings.integrations')->with('status', 'Ajustes de integración guardados.');
+    }
+
     public function sync(): View
     {
         return view('settings.sync', [

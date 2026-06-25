@@ -21,6 +21,7 @@
     if ($modules['pomodoro']['enabled'] ?? true) {
         $sections[] = ['label' => 'Pomodoro',  'route' => 'settings.pomodoro', 'match' => ['settings.pomodoro*']];
     }
+    $sections[] = ['label' => 'Integraciones',  'route' => 'settings.integrations', 'match' => ['settings.integrations*']];
     $sections[] = ['label' => 'Sincronización', 'route' => 'settings.sync', 'match' => ['settings.sync*']];
     $sections[] = ['label' => 'Exportar', 'route' => 'export.form', 'match' => ['export.*']];
     $sections[] = ['label' => 'Datos',    'route' => 'data.index',  'match' => ['data.*']];

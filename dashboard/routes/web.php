@@ -149,8 +149,9 @@ Route::post('/settings/sync',       [\App\Http\Controllers\SettingsController::c
 // ─────────────────── Ayuda ───────────────────
 Route::get('/help', [HelpController::class, 'index'])->name('help');
 
-// ─────────────────── Ajustes — integraciones (placeholder; Task 8 implementará el controller) ───────────────────
-Route::get('/settings/integrations', fn () => redirect()->route('settings.index'))->name('settings.integrations');
+// ─────────────────── Ajustes — integraciones ───────────────────
+Route::get('/settings/integrations',  [\App\Http\Controllers\SettingsController::class, 'integrations'])->name('settings.integrations');
+Route::post('/settings/integrations', [\App\Http\Controllers\SettingsController::class, 'saveIntegrations'])->name('settings.integrations.save');
 
 // ─────────────────── Equipo (Kanban compartido, Supabase) ───────────────────
 Route::get('/team/tasks',                [TeamTaskController::class, 'index'])->name('team.tasks.index');
