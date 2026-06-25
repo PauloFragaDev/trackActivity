@@ -80,9 +80,13 @@ class TeamTaskController extends Controller
         return redirect()->route('team.tasks.index')->with('status', 'Tarea actualizada.');
     }
 
-    public function destroy(TeamTask $task): RedirectResponse
+    public function destroy(Request $request, TeamTask $task): JsonResponse|RedirectResponse
     {
         $task->delete();
+
+        if ($request->wantsJson()) {
+            return response()->json(['ok' => true]);
+        }
 
         return redirect()->route('team.tasks.index')->with('status', 'Tarea archivada.');
     }

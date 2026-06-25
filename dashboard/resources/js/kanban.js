@@ -568,6 +568,54 @@ function setupNewTask() {
     });
 }
 
+// ─── Archivar tarea desde el modal (AJAX) ──────────────────
+function setupDeleteTask() {
+    if (! editModal) return;
+    const delBtn  = editModal.querySelector('[form="task-delete-form"]');
+    const delForm = document.getElementById('task-delete-form');
+    if (! delBtn || ! delForm) return;
+
+    delBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+
+        const taskBase = (window.KANBAN_ROUTES && window.KANBAN_ROUTES.update) || '/tasks';
+        const taskId = edit?.taskId;
+        if (! taskId) return;
+
+        // Cerrar antes del Swal para evitar z-index issues con el top-layer del <dialog>
+        editModal.close();
+
+        const { isConfirmed } = await Swal.fire({
+            buttonsStyling: false,
+            reverseButtons: true,
+            customClass: { popup: 'app-swal', confirmButton: 'btn-danger', cancelButton: 'btn-ghost' },
+            title: '¿Archivar tarea?',
+            text: delForm.dataset.confirm,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: delForm.dataset.confirmButton || 'Sí, archivar',
+            cancelButtonText: 'Cancelar',
+        });
+
+        if (! isConfirmed) return;
+
+        try {
+            window.__taskMutationAt = Date.now();
+            const res = await fetch(`${taskBase}/${taskId}`, {
+                method: 'POST',
+                headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrf },
+                body: new URLSearchParams({ _token: csrf, _method: 'DELETE' }),
+            });
+            if (! res.ok) throw new Error();
+            edit?.card?.remove();
+            updateColumnCounts();
+            edit = null;
+        } catch {
+            window.location.reload();
+        }
+    });
+}
+
 function insertCard(html, status) {
     const list = document.querySelector(`[data-task-list="${status}"]`);
     if (! list) return;
@@ -707,6 +755,7 @@ export function initKanban() {
     setupFilters();
     setupInlineAdd();
     setupNewTask();
+    setupDeleteTask();
     setupCollapse();
     setupSort();
     initLivePolling();

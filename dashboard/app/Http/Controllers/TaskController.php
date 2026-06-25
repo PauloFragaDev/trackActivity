@@ -81,9 +81,13 @@ class TaskController extends Controller
      * "Archivar" — soft delete. La tarea sale del board pero puede recuperarse
      * desde /tasks/archived. Para borrado definitivo, ver forceDestroy().
      */
-    public function destroy(Task $task): RedirectResponse
+    public function destroy(Request $request, Task $task): JsonResponse|RedirectResponse
     {
         $task->delete();
+
+        if ($request->wantsJson()) {
+            return response()->json(['ok' => true]);
+        }
 
         return redirect()->route('tasks.index')->with('status', 'Tarea archivada.');
     }
