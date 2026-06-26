@@ -17,6 +17,7 @@ use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TaskLabelController;
 use App\Http\Controllers\TeamIdentityController;
 use App\Http\Controllers\TeamMemberController;
+use App\Http\Controllers\TeamProjectController;
 use App\Http\Controllers\TeamTaskController;
 use App\Http\Controllers\TeamTaskCommentController;
 use App\Http\Middleware\EnsureTeamEnabled;
@@ -174,6 +175,13 @@ Route::middleware(EnsureTeamEnabled::class)->group(function () {
     Route::patch('/team/tasks/{task}/move',  [TeamTaskController::class, 'move'])->name('team.tasks.move');
     Route::delete('/team/tasks/{task}',      [TeamTaskController::class, 'destroy'])->name('team.tasks.destroy');
 
+
+    Route::get('/team/projects',                  [TeamProjectController::class, 'index'])->name('team.projects.index');
+    Route::get('/team/projects/create',           [TeamProjectController::class, 'create'])->name('team.projects.create');
+    Route::post('/team/projects',                 [TeamProjectController::class, 'store'])->name('team.projects.store');
+    Route::get('/team/projects/{project}/edit',   [TeamProjectController::class, 'edit'])->name('team.projects.edit');
+    Route::patch('/team/projects/{project}',      [TeamProjectController::class, 'update'])->name('team.projects.update');
+    Route::delete('/team/projects/{project}',     [TeamProjectController::class, 'destroy'])->name('team.projects.destroy');
 
     Route::post('/team/identity',   [TeamIdentityController::class, 'store'])->name('team.identity.store');
     Route::delete('/team/identity', [TeamIdentityController::class, 'destroy'])->name('team.identity.destroy');
