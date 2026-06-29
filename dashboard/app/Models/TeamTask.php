@@ -39,11 +39,6 @@ class TeamTask extends TeamModel
                 $task->completed_at = null;
             }
         });
-
-        static::deleting(function (TeamTask $task) {
-            // Delete associated notifications when task is deleted (soft or hard)
-            Notification::where('task_id', $task->id)->delete();
-        });
     }
 
     /** Team tasks have no time-tracking entries; always returns 0. */

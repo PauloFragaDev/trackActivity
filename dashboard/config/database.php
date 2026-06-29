@@ -115,6 +115,7 @@ return [
             'prefix_indexes' => true,
             'search_path'    => 'public',
             'sslmode'        => env('SUPABASE_DB_SSLMODE', 'require'),
+            'foreign_key_constraints' => true,
         ],
 
         'sqlsrv' => [

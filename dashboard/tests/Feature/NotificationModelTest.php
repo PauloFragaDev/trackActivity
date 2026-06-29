@@ -43,7 +43,7 @@ class NotificationModelTest extends TestCase
         $task   = TeamTask::create(['title' => 'T', 'status' => 'todo', 'position' => 0]);
         Notification::create(['recipient_id' => $member->id, 'type' => 'assignment', 'task_id' => $task->id, 'payload' => []]);
 
-        $task->delete();
+        $task->forceDelete();
 
         $this->assertDatabaseMissing('notifications', ['task_id' => $task->id], 'supabase');
     }
@@ -62,5 +62,16 @@ class NotificationModelTest extends TestCase
         $fresh = Notification::find($notif->id);
         $this->assertIsArray($fresh->payload);
         $this->assertEquals('T', $fresh->payload['task_title']);
+    }
+
+    public function test_notification_deleted_when_member_deleted(): void
+    {
+        $member = TeamMember::create(['name' => 'Ana', 'color' => '#aaa', 'position' => 0]);
+        $task   = TeamTask::create(['title' => 'T', 'status' => 'todo', 'position' => 0]);
+        Notification::create(['recipient_id' => $member->id, 'type' => 'assignment', 'task_id' => $task->id, 'payload' => []]);
+
+        $member->delete();
+
+        $this->assertDatabaseMissing('notifications', ['recipient_id' => $member->id], 'supabase');
     }
 }
