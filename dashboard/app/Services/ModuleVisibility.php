@@ -57,6 +57,11 @@ class ModuleVisibility
             'description' => 'Tablero compartido vía Supabase para trabajar en equipo. Desactívalo si no usas Supabase en esta instalación.',
             'icon'        => 'bars',
         ],
+        'base44' => [
+            'label'       => 'CRM Base44',
+            'description' => 'Integración con el CRM Base44. Desactívalo para ocultar la sección en Integraciones y la opción de sincronización.',
+            'icon'        => 'link',
+        ],
     ];
 
     /**

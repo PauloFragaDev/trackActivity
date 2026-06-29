@@ -28,6 +28,7 @@
                 </span>
             </label>
 
+            @if(\App\Services\ModuleVisibility::enabled('base44'))
             <label class="flex items-start gap-3 px-2 py-3 cursor-pointer hover:bg-ink-50 dark:hover:bg-ink-800/40 rounded transition">
                 <input type="checkbox" name="crm" value="1" @checked($crm)
                        class="mt-1 h-4 w-4 rounded border-ink-300 dark:border-ink-600 text-emerald-600 focus:ring-emerald-500">
@@ -40,6 +41,7 @@
                     </span>
                 </span>
             </label>
+            @endif
         </div>
 
         <div class="pt-3 flex items-center justify-end border-t divider">

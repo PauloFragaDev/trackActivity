@@ -88,6 +88,7 @@
             @endif
         </section>
 
+        @if(\App\Services\ModuleVisibility::enabled('base44'))
         <hr class="border-ink-200 dark:border-ink-700">
 
         {{-- ── Base44 CRM ── --}}
@@ -123,6 +124,7 @@
                 </div>
             </form>
         </section>
+        @endif
 
     </div>
 
