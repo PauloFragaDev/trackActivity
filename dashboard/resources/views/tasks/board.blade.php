@@ -217,7 +217,7 @@
                 </h4>
                 <ul data-comments-list class="task-chat__list"></ul>
                 <form data-comments-add class="task-chat__compose">
-                    <textarea name="body" required maxlength="5000" rows="1"
+                    <textarea name="body" data-mention required maxlength="5000" rows="1"
                               class="textarea text-sm w-full" placeholder="Escribe un comentario…"></textarea>
                     <button type="submit" class="icon-btn task-chat__send"
                             aria-label="Publicar comentario" title="Publicar">

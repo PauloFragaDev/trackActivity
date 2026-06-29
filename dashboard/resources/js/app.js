@@ -7,6 +7,7 @@ import { initQuickSwitcher } from './quick-switcher.js';
 import { syncThemeColor } from './theme-color.js';
 import { initTeamRealtime } from './kanban-team-realtime.js';
 import { initNotifications } from './notifications.js';
+import { initMentionAutocomplete } from './mention-autocomplete.js';
 
 // ──────────────────────────────────────────────
 // Theme toggle (claro/oscuro) con persistencia.
@@ -298,6 +299,9 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // Notificaciones en tiempo real: solo activo si el módulo equipo está activo.
     initNotifications();
+
+    // Autocompletado de @menciones en textareas con data-mention.
+    initMentionAutocomplete();
 
     // Edición manual de un activity_event (modal del timeline).
     if (document.querySelector('[data-event-edit-modal]')) {
