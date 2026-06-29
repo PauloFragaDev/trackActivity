@@ -9,6 +9,7 @@ use App\Http\Controllers\HelpController;
 use App\Http\Controllers\ManualEntryController;
 use App\Http\Controllers\NoteController;
 use App\Http\Controllers\NoteFolderController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\TaskCheckboxController;
@@ -192,4 +193,8 @@ Route::middleware(EnsureTeamEnabled::class)->group(function () {
     Route::post('/team/tasks/{teamTask}/checkboxes',                   [\App\Http\Controllers\TeamTaskCheckboxController::class, 'store'])->name('team.tasks.checkboxes.store');
     Route::patch('/team/tasks/{teamTask}/checkboxes/{checkbox}',       [\App\Http\Controllers\TeamTaskCheckboxController::class, 'update'])->name('team.tasks.checkboxes.update');
     Route::delete('/team/tasks/{teamTask}/checkboxes/{checkbox}',      [\App\Http\Controllers\TeamTaskCheckboxController::class, 'destroy'])->name('team.tasks.checkboxes.destroy');
+
+    Route::get('/team/notifications',        [NotificationController::class, 'index'])->name('notification.index');
+    Route::delete('/team/notifications/{id}', [NotificationController::class, 'destroy'])->name('notification.destroy');
+    Route::delete('/team/notifications',      [NotificationController::class, 'destroyAll'])->name('notification.destroy_all');
 });
