@@ -14,6 +14,7 @@
  * enfocada y testeable a ojo por separado.
  */
 import Sortable from 'sortablejs';
+import Swal from 'sweetalert2';
 import { setSelectValue } from './select.js';
 
 // ─── localStorage helpers ──────────────────────────────
