@@ -52,7 +52,15 @@
                     <a href="{{ route('notes.index', ['folder' => $folderId]) }}"
                        class="btn-ghost text-xs shrink-0">limpiar</a>
                 @else
-                    <span class="text-sm font-medium truncate">{{ $currentFolder?->name ?? 'Notas' }}</span>
+                    <div class="flex flex-col min-w-0 flex-1">
+                        @if (isset($parentFolder) && $parentFolder)
+                            <a href="{{ route('notes.index', ['folder' => $parentFolder->id, 'back' => 1]) }}"
+                               class="text-xs text-muted hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center gap-1 mb-0.5">
+                                ← {{ $parentFolder->name }}
+                            </a>
+                        @endif
+                        <span class="text-sm font-medium truncate">{{ $currentFolder?->name ?? 'Notas' }}</span>
+                    </div>
                     <div class="flex items-center gap-1 shrink-0">
                         @if ($currentFolder)
                             <button type="button" class="btn-ghost text-xs" data-modal-open="#folder-edit" title="Renombrar carpeta" aria-label="Renombrar carpeta"><x-icon name="edit" class="w-3.5 h-3.5" /></button>
@@ -62,12 +70,16 @@
                                 <button type="submit" class="btn-ghost text-xs text-rose-600 dark:text-rose-400" title="Eliminar carpeta" aria-label="Eliminar carpeta"><x-icon name="trash" class="w-3.5 h-3.5" /></button>
                             </form>
                         @endif
+                        <button type="button" class="btn-ghost text-xs" data-modal-open="#subfolder-new">+ Carpeta</button>
                         <button type="button" class="btn text-xs" data-modal-open="#note-new">+ Nota</button>
                     </div>
                 @endif
             </div>
             {{-- Lista --}}
-            <div class="panel-full flex-1 min-h-0 overflow-y-auto p-2 space-y-1">
+            @php
+                $animClass = $navBack ? 'notes-nav-back' : ($folderId ? 'notes-nav-forward' : '');
+            @endphp
+            <div class="panel-full flex-1 min-h-0 overflow-y-auto p-2 space-y-1 {{ $animClass }}">
                 @if ($isTrash)
                     @forelse ($notes as $n)
                         <div class="flex items-start rounded hover:bg-ink-100 dark:hover:bg-ink-800">
@@ -87,6 +99,20 @@
                         <p class="text-sm text-muted text-center py-6">La papelera está vacía.</p>
                     @endforelse
                 @else
+                    {{-- Subcarpetas --}}
+                    @if (isset($subfolders) && $subfolders->isNotEmpty())
+                        @foreach ($subfolders as $sf)
+                            <a href="{{ route('notes.index', ['folder' => $sf->id]) }}"
+                               class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-ink-100 dark:hover:bg-ink-800 group">
+                                <span class="text-base leading-none">{{ $sf->icon ?: '📁' }}</span>
+                                <span class="text-sm font-medium truncate flex-1">{{ $sf->name }}</span>
+                                <span class="text-faint text-xs group-hover:text-muted">›</span>
+                            </a>
+                        @endforeach
+                        @if ($notes->isNotEmpty())
+                            <div class="border-t divider my-1"></div>
+                        @endif
+                    @endif
                     @forelse ($notes as $n)
                         @php
                             $noteLink = $search !== ''
@@ -163,19 +189,19 @@
                     <div class="border-t divider pt-3 mt-1 shrink-0 flex items-center gap-4 flex-wrap">
                         <label class="flex flex-col gap-0.5">
                             <span class="text-xs text-muted font-medium">Carpeta</span>
-                            <select name="folder_id" class="select min-w-[9rem]">
+                            <select name="folder_id" style="min-width: 15rem" class="select">
                                 <option value="">Sin carpeta</option>
-                                @foreach ($folders->sortBy('name') as $f)
-                                    <option value="{{ $f->id }}"
-                                        @selected((int) old('folder_id', $currentNote->folder_id) === $f->id)>
-                                        {{ $f->name }}
+                                @foreach ($folderOptions as $fo)
+                                    <option value="{{ $fo['id'] }}"
+                                        @selected((int) old('folder_id', $currentNote->folder_id) === $fo['id'])>
+                                        {{ $fo['name'] }}
                                     </option>
                                 @endforeach
                             </select>
                         </label>
                         <label class="flex flex-col gap-0.5">
                             <span class="text-xs text-muted font-medium">Proyecto</span>
-                            <select name="project_id" class="select min-w-[9rem]">
+                            <select name="project_id" style="min-width: 15rem" class="select">
                                 <option value="">Sin proyecto</option>
                                 @foreach ($projects as $pr)
                                     <option value="{{ $pr->id }}"
@@ -278,6 +304,23 @@
                     @endforeach
                 </select>
             </label>
+            <div class="modal-footer flex justify-end gap-2">
+                <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
+                <button type="submit" class="btn">Crear</button>
+            </div>
+        </form>
+    </dialog>
+
+    <dialog id="subfolder-new" class="modal">
+        <form method="POST" action="{{ route('note-folders.store') }}" class="space-y-3">
+            @csrf
+            <input type="hidden" name="parent_id" value="{{ $currentFolder?->id }}">
+            @include('layouts.partials.modal-header', ['title' => 'Nueva carpeta'])
+            <label class="label">
+                <span>Nombre</span>
+                <input type="text" name="name" required maxlength="120" class="input mt-1" placeholder="Nombre de la carpeta">
+            </label>
+            @include('notes.partials.icon-field', ['value' => ''])
             <div class="modal-footer flex justify-end gap-2">
                 <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
                 <button type="submit" class="btn">Crear</button>

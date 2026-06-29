@@ -59,6 +59,26 @@ class NoteController extends Controller
             $currentNote = $noteId ? Note::find($noteId) : $notes->first();
         }
 
+        // Subcarpetas de la carpeta actual (o de raíz si no hay carpeta seleccionada)
+        $subfolders = $currentFolder
+            ? $currentFolder->children()->orderBy('position')->orderBy('name')->get()
+            : collect();
+
+        $parentFolder = $currentFolder?->parent;
+        $navBack = $request->boolean('back');
+
+        // Full path para el select de carpeta en el editor
+        $folderOptions = $folders->map(function ($f) use ($folders) {
+            $path  = $f->name;
+            $pid   = $f->parent_id;
+            $guard = 0;
+            while ($pid && $guard++ < 8 && $p = $folders->firstWhere('id', $pid)) {
+                $path = $p->name . ' / ' . $path;
+                $pid  = $p->parent_id;
+            }
+            return ['id' => $f->id, 'name' => $path, 'folder' => $f];
+        })->sortBy('name');
+
         // Ruta de carpetas (breadcrumb) de la nota abierta, de raíz a hoja.
         $breadcrumb = [];
         if ($currentNote && $currentNote->folder_id) {
@@ -103,6 +123,10 @@ class NoteController extends Controller
             'backlinks'     => $backlinks,
             'outgoing'      => $outgoing,
             'projects'      => Project::orderBy('code')->get(),
+            'subfolders'    => $subfolders,
+            'parentFolder'  => $parentFolder,
+            'navBack'       => $navBack,
+            'folderOptions' => $folderOptions,
         ]);
     }
 

@@ -75,6 +75,9 @@ export async function initNoteEditor() {
     const toolbar = buildToolbar();
     mount.appendChild(toolbar);
 
+    const rawContent = textarea.value || '';
+    const isHtml = rawContent.trim().startsWith('<');
+
     let editor;
     try {
         textarea.classList.add('hidden');
@@ -85,9 +88,9 @@ export async function initNoteEditor() {
             extensions: [
                 StarterKit,
                 ResizableImage.configure({ inline: false, allowBase64: false }),
-                Markdown.configure({ html: false, transformPastedText: true }),
+                Markdown.configure({ html: true, transformPastedText: true }),
             ],
-            content: textarea.value || '',
+            content: isHtml ? '' : rawContent,
             editorProps: {
                 handlePaste(_view, event) {
                     const items = [...(event.clipboardData?.items ?? [])];
@@ -114,10 +117,15 @@ export async function initNoteEditor() {
                 },
             },
             onUpdate({ editor }) {
-                textarea.value = editor.storage.markdown.getMarkdown();
+                textarea.value = editor.getHTML();
                 scheduleSave();
             },
         });
+
+        // Si el contenido es HTML, cargarlo después de init usando el parser DOM nativo
+        if (isHtml && rawContent) {
+            editor.commands.setContent(rawContent, false);
+        }
     } catch (err) {
         console.error('Notas: no se pudo iniciar Tiptap; se usa el textarea.', err);
         textarea.classList.remove('hidden');
@@ -170,7 +178,7 @@ export async function initNoteEditor() {
     form.querySelector('input[name="title"]')?.addEventListener('input', scheduleSave);
 
     form.addEventListener('submit', () => {
-        textarea.value = editor.storage.markdown.getMarkdown();
+        textarea.value = editor.getHTML();
     });
 }
 

@@ -1018,6 +1018,18 @@ html.dark * {
 html.dark ::-webkit-scrollbar-thumb { background: rgb(51 65 85); }
 html.dark ::-webkit-scrollbar-thumb:hover { background: rgb(71 85 105); }
 
+/* Notas · animación de navegación entre carpetas */
+@keyframes notesSlideRight {
+    from { transform: translateX(18px); opacity: 0; }
+    to   { transform: translateX(0);    opacity: 1; }
+}
+@keyframes notesSlideLeft {
+    from { transform: translateX(-18px); opacity: 0; }
+    to   { transform: translateX(0);     opacity: 1; }
+}
+.notes-nav-forward { animation: notesSlideRight 0.22s ease-out; }
+.notes-nav-back    { animation: notesSlideLeft  0.22s ease-out; }
+
 /* ─────────────── Accesibilidad ─────────────── */
 
 /* Indicador de foco visible para navegación por teclado. Los inputs ya
