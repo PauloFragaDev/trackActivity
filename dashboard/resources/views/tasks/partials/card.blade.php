@@ -10,7 +10,7 @@
     $comments     = $task->comments;
     $hasChips     = $task->project || $task->priority || $task->due_date || $logged > 0 || $checkboxAll > 0 || $comments->isNotEmpty();
 @endphp
-<div class="task-card card p-2.5 cursor-grab active:cursor-grabbing
+<div class="task-card card p-2.5 cursor-grab active:cursor-grabbing relative
             {{ $task->status === \App\Enums\TaskStatus::Done ? 'opacity-70' : '' }}"
      @if ($task->project) style="--project-color: {{ $task->project->color }}" @endif
      data-task-id="{{ $task->id }}"
@@ -22,7 +22,8 @@
      data-due="{{ $task->due_date?->format('Y-m-d') }}"
      data-labels="{{ $taskLabels->pluck('id')->toJson() }}"
      data-checkboxes="{{ $checkboxes->map(fn ($c) => ['id'=>$c->id,'title'=>$c->title,'checked'=>$c->checked])->toJson() }}"
-     data-comments="{{ $comments->map(fn ($c) => ['id'=>$c->id,'body'=>$c->body,'created_at'=>$c->created_at?->toIso8601String(),'author_name'=>$c->author_name,'author_token'=>$c->author_token])->toJson() }}">
+     data-comments="{{ $comments->map(fn ($c) => ['id'=>$c->id,'body'=>$c->body,'created_at'=>$c->created_at?->toIso8601String(),'author_name'=>$c->author_name,'author_token'=>$c->author_token])->toJson() }}"
+     data-created-by="{{ $task->created_by_id ?? '' }}">
     <div class="flex items-start justify-between gap-2">
         <p class="text-sm font-medium leading-snug {{ $task->status === \App\Enums\TaskStatus::Done ? 'line-through text-muted' : '' }}">{{ $task->title }}</p>
         <div class="flex items-center gap-0.5 shrink-0 -mr-1 -mt-1">
@@ -73,5 +74,13 @@
                 <span class="chip" title="Comentarios" data-card-comments-badge><x-icon name="chat" class="w-3 h-3" />{{ $comments->count() }}</span>
             @endif
         </div>
+    @endif
+
+    @if(isset($task->assignee) && $task->assignee)
+    <div class="flex justify-start mt-2">
+        <span class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white select-none"
+              style="background-color: {{ $task->assignee->color }}"
+              title="{{ $task->assignee->name }}">{{ $task->assignee->initials() }}</span>
+    </div>
     @endif
 </div>

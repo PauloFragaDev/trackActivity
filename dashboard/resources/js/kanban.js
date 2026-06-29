@@ -14,6 +14,7 @@
  * enfocada y testeable a ojo por separado.
  */
 import Sortable from 'sortablejs';
+import Swal from 'sweetalert2';
 import { setSelectValue } from './select.js';
 
 // ─── localStorage helpers ──────────────────────────────
@@ -109,9 +110,10 @@ function syncCardBadge() {
     }
 }
 
+const checkboxBase = () => (window.KANBAN_ROUTES && window.KANBAN_ROUTES.checkboxStore) || '/tasks';
 const addSubtask = async (title) => {
     if (! edit) return;
-    const res = await send(`/tasks/${edit.taskId}/checkboxes`, 'POST', { title });
+    const res = await send(`${checkboxBase()}/${edit.taskId}/checkboxes`, 'POST', { title });
     if (! res.ok) return;
     const item = await res.json();
     edit.checkboxes.push({ id: item.id, title: item.title, checked: !! item.checked });
@@ -123,13 +125,13 @@ const toggleSubtask = async (id, checked) => {
     if (! it) return;
     it.checked = checked;
     renderSubtasks();
-    await send(`/tasks/${edit.taskId}/checkboxes/${id}`, 'PATCH', { checked: checked ? '1' : '0' });
+    await send(`${checkboxBase()}/${edit.taskId}/checkboxes/${id}`, 'PATCH', { checked: checked ? '1' : '0' });
 };
 const deleteSubtask = async (id) => {
     if (! edit) return;
     edit.checkboxes = edit.checkboxes.filter((c) => c.id != id);
     renderSubtasks();
-    await send(`/tasks/${edit.taskId}/checkboxes/${id}`, 'DELETE');
+    await send(`${checkboxBase()}/${edit.taskId}/checkboxes/${id}`, 'DELETE');
 };
 
 // ─── Comentarios (panel lateral tipo chat) ─────────────────
@@ -176,9 +178,10 @@ function syncCommentsBadge() {
         chipRow.appendChild(span);
     }
 }
+const commentBase = () => (window.KANBAN_ROUTES && window.KANBAN_ROUTES.commentStore) || '/tasks';
 const addComment = async (body) => {
     if (! edit) return;
-    const res = await send(`/tasks/${edit.taskId}/comments`, 'POST', { body });
+    const res = await send(`${commentBase()}/${edit.taskId}/comments`, 'POST', { body });
     if (! res.ok) return;
     const c = await res.json();
     edit.comments.push(c);
@@ -188,7 +191,7 @@ const deleteComment = async (id) => {
     if (! edit) return;
     edit.comments = edit.comments.filter((c) => c.id != id);
     renderComments();
-    await send(`/tasks/${edit.taskId}/comments/${id}`, 'DELETE');
+    await send(`${commentBase()}/${edit.taskId}/comments/${id}`, 'DELETE');
 };
 
 // ─── Conteo / colapso / orden de columnas (compartidos con el drag) ──
@@ -228,6 +231,42 @@ function reorderColumnAlpha(col) {
 // ─── Modal de edición: handlers de subtareas y comentarios ────
 function setupModalForms() {
     if (! editModal) return;
+
+    const mainForm = editModal.querySelector('[data-task-edit-form]');
+    mainForm?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (! edit) return;
+        const saveBtn = document.getElementById('btn-modal-save');
+        if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Guardando…'; }
+
+        const params = new URLSearchParams({ _token: csrf, _method: 'PATCH' });
+        new FormData(mainForm).forEach((v, k) => params.append(k, v));
+
+        try {
+            const res  = await fetch(mainForm.action, {
+                method:  'POST',
+                headers: { Accept: 'application/json' },
+                body:    params,
+            });
+            const data = await res.json();
+            if (data.ok && data.html) {
+                const tmp = document.createElement('div');
+                tmp.innerHTML = data.html.trim();
+                const newCard = tmp.firstElementChild;
+                if (newCard) {
+                    const newStatus = newCard.dataset.status;
+                    edit.card.remove();
+                    insertCard(data.html, newStatus);
+                }
+            }
+            editModal.close();
+            window.toast?.('Tarea actualizada.');
+        } catch {
+            // fall through — native submit would have worked anyway
+        } finally {
+            if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Guardar'; }
+        }
+    });
 
     const list = editModal.querySelector('[data-subtasks-list]');
     list?.addEventListener('change', (e) => {
@@ -288,53 +327,58 @@ function setupEditModalOpen() {
     const editForm = editModal.querySelector('[data-task-edit-form]');
     const delForm  = editModal.querySelector('[data-task-delete-form]');
 
-    const wireEditButton = (btn) => {
-        btn.addEventListener('click', () => {
-            const card = btn.closest('[data-task-id]');
-            if (! card || ! editForm) return;
+    // Delegación en el board para que las cards creadas por AJAX también funcionen.
+    board.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-task-edit]');
+        if (! btn || ! editForm) return;
 
-            editForm.action = `/tasks/${card.dataset.taskId}`;
-            if (delForm) delForm.action = `/tasks/${card.dataset.taskId}`;
+        const card = btn.closest('[data-task-id]');
+        if (! card) return;
 
-            // Para <select> controlados por Choices.js, asignar .value
-            // no actualiza la UI de la librería (sigue mostrando el
-            // placeholder). setSelectValue conoce la instancia y la
-            // sincroniza vía API oficial.
-            const set = (name, value) => {
-                const field = editForm.querySelector(`[name="${name}"]`);
-                if (! field) return;
-                if (field instanceof HTMLSelectElement) {
-                    setSelectValue(field, value);
-                } else {
-                    field.value = value ?? '';
-                }
-            };
-            set('title', card.dataset.title);
-            set('description', card.dataset.description);
-            set('status', card.dataset.status);
-            set('priority', card.dataset.priority);
-            set('project_id', card.dataset.project);
-            set('due_date', card.dataset.due);
+        const taskBase = (window.KANBAN_ROUTES && window.KANBAN_ROUTES.update) || '/tasks';
+        editForm.action = `${taskBase}/${card.dataset.taskId}`;
+        if (delForm) delForm.action = `${taskBase}/${card.dataset.taskId}`;
+        const transferBtn = document.getElementById('btn-transfer-to-team');
+        if (transferBtn) transferBtn.dataset.taskId = card.dataset.taskId;
 
-            let labelIds = [];
-            try { labelIds = JSON.parse(card.dataset.labels || '[]'); } catch {}
-            editForm.querySelectorAll('input[name="label_ids[]"]').forEach((cb) => {
-                cb.checked = labelIds.includes(parseInt(cb.value, 10));
-            });
+        // Para <select> controlados por Choices.js, asignar .value
+        // no actualiza la UI de la librería (sigue mostrando el
+        // placeholder). setSelectValue conoce la instancia y la
+        // sincroniza vía API oficial.
+        const set = (name, value) => {
+            const field = editForm.querySelector(`[name="${name}"]`);
+            if (! field) return;
+            if (field instanceof HTMLSelectElement) {
+                setSelectValue(field, value);
+            } else {
+                field.value = value ?? '';
+            }
+        };
+        set('title', card.dataset.title);
+        set('description', card.dataset.description);
+        set('status', card.dataset.status);
+        set('priority', card.dataset.priority);
+        set('project_id', card.dataset.project);
+        set('due_date', card.dataset.due);
 
-            let checkboxes = [];
-            let comments   = [];
-            try { checkboxes = JSON.parse(card.dataset.checkboxes || '[]'); } catch {}
-            try { comments   = JSON.parse(card.dataset.comments   || '[]'); } catch {}
-            edit = { card, taskId: card.dataset.taskId, checkboxes, comments };
-            renderSubtasks();
-            renderComments();
-
-            if (typeof editModal.showModal === 'function') editModal.showModal();
+        let labelIds = [];
+        try { labelIds = JSON.parse(card.dataset.labels || '[]'); } catch {}
+        editForm.querySelectorAll('input[name="label_ids[]"]').forEach((cb) => {
+            cb.checked = labelIds.includes(parseInt(cb.value, 10));
         });
-    };
 
-    document.querySelectorAll('[data-task-edit]').forEach(wireEditButton);
+        let checkboxes = [];
+        let comments   = [];
+        try { checkboxes = JSON.parse(card.dataset.checkboxes || '[]'); } catch {}
+        try { comments   = JSON.parse(card.dataset.comments   || '[]'); } catch {}
+        edit = { card, taskId: card.dataset.taskId, checkboxes, comments };
+        renderSubtasks();
+        renderComments();
+        setModalViewMode();
+        renderModalCreator(card);
+
+        if (typeof editModal.showModal === 'function') editModal.showModal();
+    });
 }
 
 // ─── Drag & drop entre columnas ────────────────────────────
@@ -369,7 +413,8 @@ function setupDragAndDrop() {
                 const status = evt.to.dataset.taskList;
 
                 window.__taskMutationAt = Date.now();
-                fetch(`/tasks/${card.dataset.taskId}/move`, {
+                const moveUrl = `${(window.KANBAN_ROUTES && window.KANBAN_ROUTES.move) || '/tasks'}/${card.dataset.taskId}/move`;
+                fetch(moveUrl, {
                     method: 'POST',
                     body: new URLSearchParams({
                         _token: csrf, _method: 'PATCH', status, position: String(evt.newIndex),
@@ -475,16 +520,206 @@ function setupFilters() {
     applyFilters();
 }
 
-// ─── Inline-add por columna ────────────────────────────────
+// ─── Inline-add por columna (AJAX + card optimista) ────────
 function setupInlineAdd() {
     document.querySelectorAll('[data-task-inline-add]').forEach((form) => {
-        form.addEventListener('submit', (e) => {
-            const title = form.querySelector('input[name="title"]')?.value.trim();
-            if (! title) { e.preventDefault(); return; }
-            // Submit normal — el redirect del controller recarga el board.
-            // Para evitar perder filtros, ya está persistido en localStorage.
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const input = form.querySelector('input[name="title"]');
+            const title = (input?.value || '').trim();
+            if (! title) return;
+            const status = form.dataset.status;
+
+            // Card fantasma mientras persiste en servidor
+            const list = document.querySelector(`[data-task-list="${status}"]`);
+            const ghost = document.createElement('div');
+            ghost.className = 'task-card card p-2.5 opacity-40 pointer-events-none';
+            ghost.innerHTML = `<p class="text-sm font-medium leading-snug">${escape(title)}</p>`;
+            list?.appendChild(ghost);
+            input.value = '';
+            updateColumnCounts();
+
+            try {
+                const fd = new FormData(form);
+                fd.set('title', title);
+                window.__taskMutationAt = Date.now();
+                const res = await fetch(form.action, {
+                    method: 'POST',
+                    headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrf },
+                    body: fd,
+                });
+                if (! res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+                if (data.ok && data.html) {
+                    const tmp = document.createElement('div');
+                    tmp.innerHTML = data.html.trim();
+                    const card = tmp.firstElementChild;
+                    if (card) ghost.replaceWith(card);
+                    else ghost.remove();
+                } else {
+                    ghost.remove();
+                }
+            } catch {
+                ghost.remove();
+                input.value = title;
+            }
+            updateColumnCounts();
         });
     });
+}
+
+// ─── Modal nueva tarea (AJAX) ───────────────────────────────
+function setupNewTask() {
+    if (! newModal) return;
+    const form = newModal.querySelector('form');
+    if (! form) return;
+    const submitBtn = form.querySelector('[type="submit"]');
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const title = (form.querySelector('[name="title"]')?.value || '').trim();
+        if (! title) return;
+        const status = form.querySelector('[name="status"]')?.value || 'todo';
+
+        if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Creando…'; }
+
+        try {
+            const fd = new FormData(form);
+            window.__taskMutationAt = Date.now();
+            const res = await fetch(form.action, {
+                method: 'POST',
+                headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrf },
+                body: fd,
+            });
+            if (! res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            if (data.ok && data.html) {
+                insertCard(data.html, status);
+                form.reset();
+                newModal.close();
+            }
+        } catch {
+            // En caso de error, submit nativo como fallback
+            window.location.reload();
+        } finally {
+            if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Crear'; }
+        }
+    });
+}
+
+// ─── Archivar tarea desde el modal (AJAX) ──────────────────
+function setupDeleteTask() {
+    if (! editModal) return;
+    const archiveBtn = document.getElementById('btn-modal-archive');
+    if (! archiveBtn) return;
+
+    archiveBtn.addEventListener('click', async () => {
+        const taskBase = (window.KANBAN_ROUTES && window.KANBAN_ROUTES.update) || '/tasks';
+        const taskId   = edit?.taskId;
+        const card     = edit?.card;
+        if (! taskId) return;
+
+        // Cerrar antes del Swal para evitar z-index issues con el top-layer del <dialog>
+        editModal.close();
+
+        const { isConfirmed } = await Swal.fire({
+            buttonsStyling: false,
+            reverseButtons: true,
+            customClass: { popup: 'app-swal', confirmButton: 'btn-danger', cancelButton: 'btn-ghost' },
+            title: '¿Archivar tarea?',
+            text: 'La podrás restaurar más adelante.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, archivar',
+            cancelButtonText: 'Cancelar',
+        });
+
+        if (! isConfirmed) return;
+
+        try {
+            window.__taskMutationAt = Date.now();
+            const res = await fetch(`${taskBase}/${taskId}`, {
+                method: 'POST',
+                headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrf },
+                body: new URLSearchParams({ _token: csrf, _method: 'DELETE' }),
+            });
+            if (! res.ok) throw new Error();
+            card?.remove();
+            updateColumnCounts();
+            edit = null;
+            window.toast?.('Tarea archivada.');
+        } catch {
+            window.location.reload();
+        }
+    });
+}
+
+function insertCard(html, status) {
+    const list = document.querySelector(`[data-task-list="${status}"]`);
+    if (! list) return;
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html.trim();
+    const card = tmp.firstElementChild;
+    if (card) list.appendChild(card);
+    updateColumnCounts();
+}
+
+// ─── Vista / edición del modal ─────────────────────────────
+function setModalViewMode() {
+    if (! editModal) return;
+    const form      = editModal.querySelector('[data-task-edit-form]');
+    const subtasks  = editModal.querySelector('[data-task-subtasks]');
+    const btnEdit   = document.getElementById('btn-modal-edit');
+    const btnCancel = document.getElementById('btn-modal-cancel-edit');
+    const btnSave   = document.getElementById('btn-modal-save');
+
+    if (form)    { form.style.pointerEvents = 'none'; form.style.opacity = '0.65'; }
+    if (subtasks){ subtasks.style.pointerEvents = 'none'; subtasks.style.opacity = '0.65'; }
+    if (btnEdit)   btnEdit.classList.remove('hidden');
+    if (btnCancel) btnCancel.classList.add('hidden');
+    if (btnSave)   btnSave.classList.add('hidden');
+}
+
+function setModalEditMode() {
+    if (! editModal) return;
+    const form      = editModal.querySelector('[data-task-edit-form]');
+    const subtasks  = editModal.querySelector('[data-task-subtasks]');
+    const btnEdit   = document.getElementById('btn-modal-edit');
+    const btnCancel = document.getElementById('btn-modal-cancel-edit');
+    const btnSave   = document.getElementById('btn-modal-save');
+
+    if (form)    { form.style.pointerEvents = ''; form.style.opacity = ''; }
+    if (subtasks){ subtasks.style.pointerEvents = ''; subtasks.style.opacity = ''; }
+    if (btnEdit)   btnEdit.classList.add('hidden');
+    if (btnCancel) btnCancel.classList.remove('hidden');
+    if (btnSave)   btnSave.classList.remove('hidden');
+}
+
+function renderModalCreator(card) {
+    const infoEl = document.getElementById('modal-creator-info');
+    if (! infoEl) return;
+    const createdById = parseInt(card.dataset.createdBy, 10);
+    if (! createdById || ! Array.isArray(window.TEAM_MEMBERS)) {
+        infoEl.innerHTML = '';
+        return;
+    }
+    const member = window.TEAM_MEMBERS.find((m) => m.id === createdById);
+    if (! member) { infoEl.innerHTML = ''; return; }
+    infoEl.innerHTML = `
+        <span class="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold text-white select-none flex-shrink-0"
+              style="background-color:${escape(member.color)}"
+              title="${escape(member.name)}">${escape(member.initials)}</span>
+        <span>Creada por <strong class="font-medium">${escape(member.name)}</strong></span>`;
+}
+
+function setupViewEditToggle() {
+    if (! editModal) return;
+    const btnEdit   = document.getElementById('btn-modal-edit');
+    const btnCancel = document.getElementById('btn-modal-cancel-edit');
+
+    btnEdit?.addEventListener('click', () => setModalEditMode());
+    btnCancel?.addEventListener('click', () => setModalViewMode());
+    editModal.addEventListener('close', () => setModalViewMode());
 }
 
 // ─── Colapsar columnas ──────────────────────────────────────
@@ -532,9 +767,10 @@ function setupSort() {
 // casos queda pendiente y se aplica al "soltarse".
 function initLivePolling() {
     const projectFilter = new URLSearchParams(window.location.search).get('project');
+    const peekBase = (window.KANBAN_ROUTES && window.KANBAN_ROUTES.peek) || '/tasks/peek';
     const url = projectFilter
-        ? `/tasks/peek?project=${encodeURIComponent(projectFilter)}`
-        : '/tasks/peek';
+        ? `${peekBase}?project=${encodeURIComponent(projectFilter)}`
+        : peekBase;
 
     let pendingReload = false;
     let lastSeen = null;
@@ -611,10 +847,188 @@ export function initKanban() {
     setupModalForms();
     setupColumnAddButtons();
     setupEditModalOpen();
+    setupViewEditToggle();
     setupDragAndDrop();
     setupFilters();
     setupInlineAdd();
+    setupNewTask();
+    setupDeleteTask();
     setupCollapse();
     setupSort();
     initLivePolling();
+    initIdentity();
+    initTransfer();
+    initTabSkeleton();
+}
+
+function initIdentity() {
+    const modal = document.getElementById('identity-modal');
+    if (!modal) return;
+
+    const identityStore = (window.KANBAN_ROUTES && window.KANBAN_ROUTES.identityStore) || '/team/identity';
+    const identityClear = (window.KANBAN_ROUTES && window.KANBAN_ROUTES.identityClear) || '/team/identity';
+
+    if (window.KANBAN_MODE === 'team' && window.TEAM_MEMBER_ID) {
+        MY_TOKEN = String(window.TEAM_MEMBER_ID);
+        renderPastilla(window.TEAM_MEMBER_ID);
+    } else if (window.KANBAN_MODE === 'team' && !window.TEAM_MEMBER_ID) {
+        modal.showModal();
+    }
+
+    modal.querySelectorAll('.identity-option').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+            const memberId   = btn.dataset.memberId;
+            const memberName = btn.dataset.memberName;
+
+            try {
+                await fetch(identityStore, {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf },
+                    body:    JSON.stringify({ member_id: memberId }),
+                });
+            } catch {}
+
+            localStorage.setItem('team_member_id',   memberId);
+            localStorage.setItem('team_member_name', memberName);
+            window.TEAM_MEMBER_ID   = memberId;
+            window.TEAM_MEMBER_NAME = memberName;
+            MY_TOKEN = String(memberId);
+
+            // Actualizar estado visual de los botones del modal
+            modal.querySelectorAll('.identity-option').forEach((b) => {
+                const active = b.dataset.memberId === memberId;
+                b.classList.toggle('bg-ink-100', active);
+                b.classList.toggle('dark:bg-ink-800', active);
+                b.classList.toggle('ring-2', active);
+                b.classList.toggle('ring-inset', active);
+                b.classList.toggle('ring-ink-300', active);
+                b.classList.toggle('dark:ring-ink-600', active);
+                b.classList.toggle('hover:bg-ink-100', !active);
+                b.classList.toggle('dark:hover:bg-ink-800', !active);
+                b.querySelector('.tu-badge')?.remove();
+                if (active) {
+                    const badge = document.createElement('span');
+                    badge.className = 'tu-badge text-xs font-semibold px-2 py-0.5 rounded-full text-white';
+                    const avatar = b.querySelector('span[style]');
+                    badge.style.backgroundColor = avatar?.style.backgroundColor || '#666';
+                    badge.textContent = 'Tú';
+                    b.appendChild(badge);
+                }
+            });
+
+            renderPastilla(memberId);
+            modal.close();
+        });
+    });
+
+    // "Cambiar" — delegación sobre el contenedor de la pastilla
+    document.getElementById('identity-pastilla')?.addEventListener('click', (e) => {
+        if (! e.target.closest('#btn-change-identity')) return;
+        clearIdentity(identityClear, modal);
+    });
+}
+
+async function clearIdentity(identityClear, modal) {
+    try {
+        await fetch(identityClear, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': csrf } });
+    } catch {}
+    localStorage.removeItem('team_member_id');
+    localStorage.removeItem('team_member_name');
+    window.TEAM_MEMBER_ID   = '';
+    window.TEAM_MEMBER_NAME = '';
+    MY_TOKEN = document.querySelector('meta[name="user-token"]')?.content || '';
+
+    // Limpiar estado visual del modal
+    document.getElementById('identity-modal')?.querySelectorAll('.identity-option').forEach((b) => {
+        b.classList.remove('bg-ink-100', 'dark:bg-ink-800', 'ring-2', 'ring-inset', 'ring-ink-300', 'dark:ring-ink-600');
+        b.classList.add('hover:bg-ink-100', 'dark:hover:bg-ink-800');
+        b.querySelector('.tu-badge')?.remove();
+    });
+
+    renderPastilla(null);
+    modal.showModal();
+}
+
+function renderPastilla(memberId) {
+    const el = document.getElementById('identity-pastilla');
+    if (! el) return;
+    if (! memberId) { el.innerHTML = ''; return; }
+
+    const members = window.TEAM_MEMBERS || [];
+    const m = members.find((x) => String(x.id) === String(memberId));
+    if (! m) return;
+
+    el.innerHTML = `
+        <span class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white select-none"
+              style="background-color:${escape(m.color)}">${escape(m.initials)}</span>
+        <span class="text-faint">${escape(m.name)}</span>
+        <button type="button" id="btn-change-identity" class="text-xs text-faint hover:underline">Cambiar</button>
+    `;
+}
+
+// ─── Skeleton en cambio de pestaña Personal ↔ Equipo ───────
+function initTabSkeleton() {
+    document.querySelectorAll('[data-tab-link]').forEach((link) => {
+        link.addEventListener('click', () => {
+            const b = document.querySelector('[data-task-board]');
+            if (b) {
+                b.style.transition = 'opacity 0.12s ease-out';
+                b.style.opacity    = '0.25';
+                b.style.pointerEvents = 'none';
+            }
+            link.style.opacity = '0.5';
+        });
+    });
+}
+
+function initTransfer() {
+    const btn = document.getElementById('btn-transfer-to-team');
+    if (!btn) return;
+
+    btn.addEventListener('click', async () => {
+        const taskId = btn.dataset.taskId;
+        if (!taskId) return;
+
+        const base = (window.KANBAN_ROUTES && window.KANBAN_ROUTES.transferPreview) || '/tasks';
+
+        // Fetch preview
+        let preview;
+        try {
+            const res = await fetch(`${base}/${taskId}/transfer-preview`, {
+                headers: { 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' },
+            });
+            preview = await res.json();
+        } catch {
+            Swal.fire('Error', 'No se pudo conectar con el equipo.', 'error');
+            return;
+        }
+
+        const projectLine = preview.project
+            ? `<p class="text-sm mt-2">Proyecto: <strong>${preview.project.code}</strong> — ${preview.project.exists ? '✓ ya existe en el equipo' : '⚠ se creará en el equipo'}</p>`
+            : '';
+
+        const { isConfirmed } = await Swal.fire({
+            title:             'Transferir al equipo',
+            html:              `<p class="text-sm">La tarea se copiará al board del equipo con subtareas, comentarios y etiquetas. La tarea personal quedará archivada.</p>${projectLine}`,
+            icon:              'question',
+            showCancelButton:  true,
+            confirmButtonText: 'Transferir',
+            cancelButtonText:  'Cancelar',
+        });
+
+        if (!isConfirmed) return;
+
+        const transferBase = (window.KANBAN_ROUTES && window.KANBAN_ROUTES.transfer) || '/tasks';
+        const res = await fetch(`${transferBase}/${taskId}/transfer-to-team`, {
+            method:  'POST',
+            headers: { 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' },
+        });
+
+        if (res.ok) {
+            window.__taskMutationAt = Date.now();
+            window.location.reload();
+        } else {
+            Swal.fire('Error', 'No se pudo transferir la tarea.', 'error');
+        }
+    });
 }

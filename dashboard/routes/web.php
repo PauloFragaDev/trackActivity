@@ -15,10 +15,21 @@ use App\Http\Controllers\TaskCheckboxController;
 use App\Http\Controllers\TaskCommentController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TaskLabelController;
+use App\Http\Controllers\TeamIdentityController;
+use App\Http\Controllers\TeamMemberController;
+use App\Http\Controllers\TeamProjectController;
+use App\Http\Controllers\TeamTaskController;
+use App\Http\Controllers\TeamTaskCommentController;
+use App\Http\Middleware\EnsureTeamEnabled;
 use App\Http\Controllers\TimeBlockController;
 use App\Http\Controllers\TrackerController;
 use App\Http\Controllers\TimelineController;
 use Illuminate\Support\Facades\Route;
+
+// En Render (APP_MODE=team_only) redirigir la raíz del kanban al equipo
+if (env('APP_MODE') === 'team_only') {
+    Route::redirect('/tasks', '/team/tasks');
+}
 
 // ─────────────────── Inicio ───────────────────
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -122,6 +133,10 @@ Route::delete('/tasks/{task}/checkboxes/{taskCheckbox}', [TaskCheckboxController
 Route::post('/tasks/{task}/comments',                  [TaskCommentController::class, 'store'])->name('task-comments.store');
 Route::delete('/tasks/{task}/comments/{taskComment}',  [TaskCommentController::class, 'destroy'])->name('task-comments.destroy');
 
+// Transferencia de tarea personal al tablero del equipo
+Route::get('/tasks/{task}/transfer-preview',  [\App\Http\Controllers\TeamTransferController::class, 'preview'])->name('tasks.transfer.preview');
+Route::post('/tasks/{task}/transfer-to-team', [\App\Http\Controllers\TeamTransferController::class, 'transfer'])->name('tasks.transfer.store');
+
 // ─────────────────── Control del tracker ───────────────────
 Route::post('/tracker/toggle', [TrackerController::class, 'toggle'])->name('tracker.toggle');
 
@@ -146,3 +161,35 @@ Route::post('/settings/sync',       [\App\Http\Controllers\SettingsController::c
 
 // ─────────────────── Ayuda ───────────────────
 Route::get('/help', [HelpController::class, 'index'])->name('help');
+
+// ─────────────────── Ajustes — integraciones ───────────────────
+Route::get('/settings/integrations',  [\App\Http\Controllers\SettingsController::class, 'integrations'])->name('settings.integrations');
+Route::post('/settings/integrations', [\App\Http\Controllers\SettingsController::class, 'saveIntegrations'])->name('settings.integrations.save');
+
+// ─────────────────── Equipo (Kanban compartido, Supabase) ───────────────────
+Route::middleware(EnsureTeamEnabled::class)->group(function () {
+    Route::get('/team/tasks',                [TeamTaskController::class, 'index'])->name('team.tasks.index');
+    Route::get('/team/tasks/peek',           [TeamTaskController::class, 'peek'])->name('team.tasks.peek');
+    Route::post('/team/tasks',               [TeamTaskController::class, 'store'])->name('team.tasks.store');
+    Route::patch('/team/tasks/{task}',       [TeamTaskController::class, 'update'])->name('team.tasks.update');
+    Route::patch('/team/tasks/{task}/move',  [TeamTaskController::class, 'move'])->name('team.tasks.move');
+    Route::delete('/team/tasks/{task}',      [TeamTaskController::class, 'destroy'])->name('team.tasks.destroy');
+
+
+    Route::get('/team/projects',                  [TeamProjectController::class, 'index'])->name('team.projects.index');
+    Route::get('/team/projects/create',           [TeamProjectController::class, 'create'])->name('team.projects.create');
+    Route::post('/team/projects',                 [TeamProjectController::class, 'store'])->name('team.projects.store');
+    Route::get('/team/projects/{project}/edit',   [TeamProjectController::class, 'edit'])->name('team.projects.edit');
+    Route::patch('/team/projects/{project}',      [TeamProjectController::class, 'update'])->name('team.projects.update');
+    Route::delete('/team/projects/{project}',     [TeamProjectController::class, 'destroy'])->name('team.projects.destroy');
+
+    Route::post('/team/identity',   [TeamIdentityController::class, 'store'])->name('team.identity.store');
+    Route::delete('/team/identity', [TeamIdentityController::class, 'destroy'])->name('team.identity.destroy');
+
+    Route::post('/team/tasks/{teamTask}/comments',            [TeamTaskCommentController::class, 'store'])->name('team.tasks.comments.store');
+    Route::delete('/team/tasks/{teamTask}/comments/{comment}', [TeamTaskCommentController::class, 'destroy'])->name('team.tasks.comments.destroy');
+
+    Route::post('/team/tasks/{teamTask}/checkboxes',                   [\App\Http\Controllers\TeamTaskCheckboxController::class, 'store'])->name('team.tasks.checkboxes.store');
+    Route::patch('/team/tasks/{teamTask}/checkboxes/{checkbox}',       [\App\Http\Controllers\TeamTaskCheckboxController::class, 'update'])->name('team.tasks.checkboxes.update');
+    Route::delete('/team/tasks/{teamTask}/checkboxes/{checkbox}',      [\App\Http\Controllers\TeamTaskCheckboxController::class, 'destroy'])->name('team.tasks.checkboxes.destroy');
+});

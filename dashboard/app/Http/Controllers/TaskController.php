@@ -38,10 +38,13 @@ class TaskController extends Controller
             'labels'     => TaskLabel::orderBy('position')->orderBy('title')->get(),
             'projectId'  => $projectId,
             'priority'   => $priority,
+            'mode'       => 'personal',
+            'members'    => collect(),
+            'assigneeId' => null,
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): JsonResponse|RedirectResponse
     {
         $data = $this->validateTask($request);
         $labelIds = $data['label_ids'] ?? [];
@@ -51,10 +54,18 @@ class TaskController extends Controller
         $task = Task::create($data);
         $task->labels()->sync($labelIds);
 
+        if ($request->wantsJson()) {
+            $task->load(['labels', 'checkboxes', 'comments', 'project']);
+            return response()->json([
+                'ok'   => true,
+                'html' => view('tasks.partials.card', compact('task'))->render(),
+            ]);
+        }
+
         return redirect()->route('tasks.index')->with('status', 'Tarea creada.');
     }
 
-    public function update(Request $request, Task $task): RedirectResponse
+    public function update(Request $request, Task $task): JsonResponse|RedirectResponse
     {
         $data = $this->validateTask($request);
         $labelIds = $data['label_ids'] ?? [];
@@ -63,6 +74,14 @@ class TaskController extends Controller
         $task->update($data);
         $task->labels()->sync($labelIds);
 
+        if ($request->wantsJson()) {
+            $task->load(['labels', 'checkboxes', 'comments', 'project']);
+            return response()->json([
+                'ok'   => true,
+                'html' => view('tasks.partials.card', compact('task'))->render(),
+            ]);
+        }
+
         return redirect()->route('tasks.index')->with('status', 'Tarea actualizada.');
     }
 
@@ -70,9 +89,13 @@ class TaskController extends Controller
      * "Archivar" — soft delete. La tarea sale del board pero puede recuperarse
      * desde /tasks/archived. Para borrado definitivo, ver forceDestroy().
      */
-    public function destroy(Task $task): RedirectResponse
+    public function destroy(Request $request, Task $task): JsonResponse|RedirectResponse
     {
         $task->delete();
+
+        if ($request->wantsJson()) {
+            return response()->json(['ok' => true]);
+        }
 
         return redirect()->route('tasks.index')->with('status', 'Tarea archivada.');
     }

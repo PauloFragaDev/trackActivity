@@ -21,6 +21,10 @@
     if ($modules['pomodoro']['enabled'] ?? true) {
         $sections[] = ['label' => 'Pomodoro',  'route' => 'settings.pomodoro', 'match' => ['settings.pomodoro*']];
     }
+    if ($modules['team']['enabled'] ?? true) {
+        $sections[] = ['label' => 'Proyectos equipo', 'route' => 'team.projects.index', 'match' => ['team.projects.*']];
+        $sections[] = ['label' => 'Integraciones',    'route' => 'settings.integrations', 'match' => ['settings.integrations*']];
+    }
     $sections[] = ['label' => 'Sincronización', 'route' => 'settings.sync', 'match' => ['settings.sync*']];
     $sections[] = ['label' => 'Exportar', 'route' => 'export.form', 'match' => ['export.*']];
     $sections[] = ['label' => 'Datos',    'route' => 'data.index',  'match' => ['data.*']];
