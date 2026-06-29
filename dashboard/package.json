@@ -20,10 +20,15 @@
         "@fontsource/jetbrains-mono": "^5.2.8",
         "@milkdown/crepe": "^7.21.1",
         "@supabase/supabase-js": "^2.108.2",
+        "@tiptap/core": "^3.27.1",
+        "@tiptap/extension-image": "^3.27.1",
+        "@tiptap/pm": "^3.27.1",
+        "@tiptap/starter-kit": "^3.27.1",
         "chart.js": "^4.5.1",
         "choices.js": "^11.2.3",
         "sortablejs": "^1.15.7",
         "sweetalert2": "^11.26.24",
+        "tiptap-markdown": "^0.9.0",
         "toastify-js": "^1.12.0"
     }
 }
