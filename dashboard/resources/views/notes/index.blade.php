@@ -160,11 +160,11 @@
                          Altura fija: el contenido scrollea dentro de .ProseMirror (CSS en app.css);
                          el editor en sí no lleva overflow, para que el menú "/" no se recorte. --}}
                     <div data-note-editor hidden class="flex-1 min-h-0"></div>
-                    <div class="flex items-center gap-3 flex-wrap shrink-0">
-                        <label class="inline-flex items-center gap-1.5 text-sm">
-                            <span class="text-muted">Carpeta</span>
-                            <select name="folder_id" class="select" style="width:auto">
-                                <option value="">— Sin carpeta —</option>
+                    <div class="border-t divider pt-3 mt-1 shrink-0 flex items-center gap-4 flex-wrap">
+                        <label class="flex flex-col gap-0.5">
+                            <span class="text-xs text-muted font-medium">Carpeta</span>
+                            <select name="folder_id" class="select min-w-[9rem]">
+                                <option value="">Sin carpeta</option>
                                 @foreach ($folders->sortBy('name') as $f)
                                     <option value="{{ $f->id }}"
                                         @selected((int) old('folder_id', $currentNote->folder_id) === $f->id)>
@@ -173,26 +173,26 @@
                                 @endforeach
                             </select>
                         </label>
-                        <label class="inline-flex items-center gap-1.5 text-sm">
-                            <span class="text-muted">Proyecto</span>
-                            <select name="project_id" class="select" style="width:auto">
-                                <option value="">— Sin proyecto —</option>
+                        <label class="flex flex-col gap-0.5">
+                            <span class="text-xs text-muted font-medium">Proyecto</span>
+                            <select name="project_id" class="select min-w-[9rem]">
+                                <option value="">Sin proyecto</option>
                                 @foreach ($projects as $pr)
                                     <option value="{{ $pr->id }}"
                                         @selected((int) old('project_id', $currentNote->project_id) === $pr->id)>
-                                        {{ $pr->code }}
+                                        {{ $pr->code }} · {{ $pr->name }}
                                     </option>
                                 @endforeach
                             </select>
                         </label>
-                        <label class="inline-flex items-center gap-2 text-sm">
+                        <label class="inline-flex items-center gap-2 text-sm mt-3.5">
                             <input type="checkbox" name="pinned" value="1" class="accent-emerald-500" @checked($currentNote->pinned)>
                             Fijada
                         </label>
-                        <button type="button" class="btn-ghost text-sm" data-copy-link
-                                data-url="{{ route('notes.index', ['note' => $currentNote->id]) }}">Copiar enlace</button>
-                        <div class="ml-auto flex items-center gap-3">
+                        <div class="ml-auto flex items-center gap-3 mt-3.5">
                             <span data-autosave-status class="text-xs text-muted"></span>
+                            <button type="button" class="btn-ghost text-sm" data-copy-link
+                                    data-url="{{ route('notes.index', ['note' => $currentNote->id]) }}">Copiar enlace</button>
                             <button type="submit" class="btn">Guardar</button>
                         </div>
                     </div>

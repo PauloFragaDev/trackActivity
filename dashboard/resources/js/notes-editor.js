@@ -3,6 +3,27 @@ import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import { Markdown } from 'tiptap-markdown';
 
+// Image extension extended with width + align attributes.
+// Both are stored as data-* attributes on the <img> element so CSS handles
+// the visual rules — no inline style.height, no layout shift, cursor stays correct.
+const ResizableImage = Image.extend({
+    addAttributes() {
+        return {
+            ...this.parent?.(),
+            width: {
+                default: null,
+                parseHTML: el => el.getAttribute('data-width'),
+                renderHTML: attrs => attrs.width ? { 'data-width': attrs.width } : {},
+            },
+            align: {
+                default: 'center',
+                parseHTML: el => el.getAttribute('data-align') || 'center',
+                renderHTML: attrs => ({ 'data-align': attrs.align || 'center' }),
+            },
+        };
+    },
+});
+
 export async function initNoteEditor() {
     const form     = document.querySelector('[data-note-form]');
     const mount    = document.querySelector('[data-note-editor]');
@@ -45,14 +66,12 @@ export async function initNoteEditor() {
         return url;
     };
 
-    // Hidden file input for picking images from disk
     const fileInput = document.createElement('input');
-    fileInput.type    = 'file';
-    fileInput.accept  = 'image/jpeg,image/png,image/gif,image/webp';
+    fileInput.type   = 'file';
+    fileInput.accept = 'image/jpeg,image/png,image/gif,image/webp';
     fileInput.style.display = 'none';
     mount.appendChild(fileInput);
 
-    // Toolbar (rendered before the editor div so it sits on top)
     const toolbar = buildToolbar();
     mount.appendChild(toolbar);
 
@@ -65,7 +84,7 @@ export async function initNoteEditor() {
             element: mount,
             extensions: [
                 StarterKit,
-                Image.configure({ inline: false, allowBase64: false }),
+                ResizableImage.configure({ inline: false, allowBase64: false }),
                 Markdown.configure({ html: false, transformPastedText: true }),
             ],
             content: textarea.value || '',
@@ -106,28 +125,36 @@ export async function initNoteEditor() {
         return;
     }
 
-    // Toolbar: mousedown (not click) to avoid blurring the editor
     toolbar.addEventListener('mousedown', (e) => {
         const btn = e.target.closest('[data-cmd]');
         if (!btn) return;
         e.preventDefault();
-        switch (btn.dataset.cmd) {
-            case 'bold':       editor.chain().focus().toggleBold().run();               break;
-            case 'italic':     editor.chain().focus().toggleItalic().run();             break;
-            case 'strike':     editor.chain().focus().toggleStrike().run();             break;
+        const cmd = btn.dataset.cmd;
+        switch (cmd) {
+            case 'bold':       editor.chain().focus().toggleBold().run();                break;
+            case 'italic':     editor.chain().focus().toggleItalic().run();              break;
+            case 'strike':     editor.chain().focus().toggleStrike().run();              break;
             case 'h1':         editor.chain().focus().toggleHeading({ level: 1 }).run(); break;
             case 'h2':         editor.chain().focus().toggleHeading({ level: 2 }).run(); break;
             case 'h3':         editor.chain().focus().toggleHeading({ level: 3 }).run(); break;
-            case 'bullet':     editor.chain().focus().toggleBulletList().run();         break;
-            case 'ordered':    editor.chain().focus().toggleOrderedList().run();        break;
-            case 'blockquote': editor.chain().focus().toggleBlockquote().run();         break;
-            case 'code':       editor.chain().focus().toggleCodeBlock().run();          break;
-            case 'hr':         editor.chain().focus().setHorizontalRule().run();        break;
-            case 'image':      fileInput.click();                                       break;
+            case 'bullet':     editor.chain().focus().toggleBulletList().run();          break;
+            case 'ordered':    editor.chain().focus().toggleOrderedList().run();         break;
+            case 'blockquote': editor.chain().focus().toggleBlockquote().run();          break;
+            case 'code':       editor.chain().focus().toggleCodeBlock().run();           break;
+            case 'hr':         editor.chain().focus().setHorizontalRule().run();         break;
+            case 'image':      fileInput.click();                                        break;
+            // Image width presets
+            case 'img-w-25':   editor.chain().focus().updateAttributes('image', { width: '25%' }).run();  break;
+            case 'img-w-50':   editor.chain().focus().updateAttributes('image', { width: '50%' }).run();  break;
+            case 'img-w-75':   editor.chain().focus().updateAttributes('image', { width: '75%' }).run();  break;
+            case 'img-w-100':  editor.chain().focus().updateAttributes('image', { width: null  }).run();  break;
+            // Image alignment
+            case 'img-a-left':   editor.chain().focus().updateAttributes('image', { align: 'left'   }).run(); break;
+            case 'img-a-center': editor.chain().focus().updateAttributes('image', { align: 'center' }).run(); break;
+            case 'img-a-right':  editor.chain().focus().updateAttributes('image', { align: 'right'  }).run(); break;
         }
     });
 
-    // Highlight active toolbar buttons on every state change
     editor.on('transaction', () => syncToolbar(toolbar, editor));
 
     fileInput.addEventListener('change', async () => {
@@ -174,11 +201,30 @@ function buildToolbar() {
         <button type="button" data-cmd="hr"         class="ntb" title="Separador">&#8212;</button>
         <span class="ntb-sep"></span>
         <button type="button" data-cmd="image"      class="ntb" title="Insertar imagen">${imgIcon}</button>
+
+        <span class="ntb-image-controls">
+            <span class="ntb-sep"></span>
+            <span class="ntb-label">Ancho</span>
+            <button type="button" data-cmd="img-w-25"  class="ntb" title="25%">¼</button>
+            <button type="button" data-cmd="img-w-50"  class="ntb" title="50%">½</button>
+            <button type="button" data-cmd="img-w-75"  class="ntb" title="75%">¾</button>
+            <button type="button" data-cmd="img-w-100" class="ntb" title="Ancho completo">↔</button>
+            <span class="ntb-sep"></span>
+            <span class="ntb-label">Alinear</span>
+            <button type="button" data-cmd="img-a-left"   class="ntb" title="Izquierda">&#8676;</button>
+            <button type="button" data-cmd="img-a-center" class="ntb" title="Centrar">&#8596;</button>
+            <button type="button" data-cmd="img-a-right"  class="ntb" title="Derecha">&#8677;</button>
+        </span>
     `;
     return bar;
 }
 
 function syncToolbar(toolbar, editor) {
+    const isImage = editor.isActive('image');
+    toolbar.classList.toggle('has-image-active', isImage);
+
+    const imgAttrs = isImage ? editor.getAttributes('image') : {};
+
     const map = {
         bold:       () => editor.isActive('bold'),
         italic:     () => editor.isActive('italic'),
@@ -190,6 +236,15 @@ function syncToolbar(toolbar, editor) {
         ordered:    () => editor.isActive('orderedList'),
         blockquote: () => editor.isActive('blockquote'),
         code:       () => editor.isActive('codeBlock'),
+        // Image width active state
+        'img-w-25':  () => imgAttrs.width === '25%',
+        'img-w-50':  () => imgAttrs.width === '50%',
+        'img-w-75':  () => imgAttrs.width === '75%',
+        'img-w-100': () => !imgAttrs.width,
+        // Image align active state
+        'img-a-left':   () => imgAttrs.align === 'left',
+        'img-a-center': () => !imgAttrs.align || imgAttrs.align === 'center',
+        'img-a-right':  () => imgAttrs.align === 'right',
     };
     for (const [cmd, isActive] of Object.entries(map)) {
         toolbar.querySelector(`[data-cmd="${cmd}"]`)?.classList.toggle('ntb--active', isActive());

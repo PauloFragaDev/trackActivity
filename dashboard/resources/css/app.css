@@ -891,6 +891,22 @@ html.dark .ntb--active {
     margin: 0 3px;
     flex-shrink: 0;
 }
+.ntb-label {
+    font-size: 10px;
+    color: rgb(148 163 184);
+    padding: 0 2px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+/* Controles de imagen: ocultos por defecto, visibles solo al seleccionar imagen */
+.ntb-image-controls {
+    display: none;
+    align-items: center;
+    gap: 1px;
+}
+.note-toolbar.has-image-active .ntb-image-controls {
+    display: inline-flex;
+}
 
 /* El editor Tiptap ocupa el espacio restante y scrollea internamente */
 [data-note-editor] .tiptap {
@@ -966,6 +982,13 @@ html.dark [data-note-editor] .tiptap pre {
     outline: 2px solid #10b981;
     outline-offset: 2px;
 }
+/* Ancho relativo al contenedor */
+[data-note-editor] .tiptap img[data-width="25%"] { width: 25%; }
+[data-note-editor] .tiptap img[data-width="50%"] { width: 50%; }
+[data-note-editor] .tiptap img[data-width="75%"] { width: 75%; }
+/* Alineación — el valor por defecto (center) ya está cubierto por margin: auto */
+[data-note-editor] .tiptap img[data-align="left"]   { margin-left: 0; margin-right: auto; }
+[data-note-editor] .tiptap img[data-align="right"]  { margin-left: auto; margin-right: 0; }
 /* Placeholder cuando el editor está vacío */
 [data-note-editor] .tiptap p.is-editor-empty:first-child::before {
     content: attr(data-placeholder);
