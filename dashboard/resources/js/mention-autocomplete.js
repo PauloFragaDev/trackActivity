@@ -19,7 +19,7 @@ function attach(textarea) {
     function getQuery() {
         const pos  = textarea.selectionStart;
         const text = textarea.value.slice(0, pos);
-        const match = text.match(/@([\w\s]*)$/);
+        const match = text.match(/@(\w*)$/);
         return match ? match[1] : null;
     }
 
@@ -43,7 +43,7 @@ function attach(textarea) {
 
         dropdown = document.createElement('ul');
         dropdown.className = [
-            'absolute z-[300] bg-[var(--paper)] dark:bg-ink-900',
+            'z-[300] bg-[var(--paper)] dark:bg-ink-900',
             'border divider rounded shadow-lg py-1 w-48 text-sm',
         ].join(' ');
 
@@ -78,7 +78,7 @@ function attach(textarea) {
         const pos   = textarea.selectionStart;
         const before = textarea.value.slice(0, pos);
         const after  = textarea.value.slice(pos);
-        const replaced = before.replace(/@[\w\s]*$/, `@${member.name} `);
+        const replaced = before.replace(/@\w*$/, `@${member.name} `);
         textarea.value = replaced + after;
         textarea.selectionStart = textarea.selectionEnd = replaced.length;
         textarea.dispatchEvent(new Event('input'));
