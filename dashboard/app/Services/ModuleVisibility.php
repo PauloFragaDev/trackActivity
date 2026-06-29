@@ -61,6 +61,7 @@ class ModuleVisibility
             'label'       => 'CRM Base44',
             'description' => 'Integración con el CRM Base44. Desactívalo para ocultar la sección en Integraciones y la opción de sincronización.',
             'icon'        => 'link',
+            'default'     => false,
         ],
     ];
 
@@ -70,7 +71,8 @@ class ModuleVisibility
     public static function enabled(string $module): bool
     {
         if (! isset(self::MODULES[$module])) return false;
-        return (bool) Setting::get('modules.' . $module, true);
+        $default = self::MODULES[$module]['default'] ?? true;
+        return (bool) Setting::get('modules.' . $module, $default);
     }
 
     /**
@@ -82,8 +84,8 @@ class ModuleVisibility
     public static function all(): array
     {
         $defaults = [];
-        foreach (array_keys(self::MODULES) as $slug) {
-            $defaults['modules.' . $slug] = true;
+        foreach (self::MODULES as $slug => $meta) {
+            $defaults['modules.' . $slug] = $meta['default'] ?? true;
         }
         $values = Setting::many($defaults);
 
