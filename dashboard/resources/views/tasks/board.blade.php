@@ -231,7 +231,7 @@
              aunque vivan fuera de ellos. Esto es HTML estándar (HTML5 form attr). --}}
         <div class="modal-footer flex items-center justify-between gap-2">
             <div class="flex items-center gap-2">
-                <button type="submit" form="task-delete-form"
+                <button type="button" id="btn-modal-archive"
                         class="btn-ghost text-rose-600 dark:text-rose-400 text-sm inline-flex items-center gap-1">
                     <x-icon name="trash" class="w-3.5 h-3.5" /> Archivar
                 </button>

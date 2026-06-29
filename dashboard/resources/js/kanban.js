@@ -609,15 +609,13 @@ function setupNewTask() {
 // ─── Archivar tarea desde el modal (AJAX) ──────────────────
 function setupDeleteTask() {
     if (! editModal) return;
-    const delBtn  = editModal.querySelector('[form="task-delete-form"]');
-    const delForm = document.getElementById('task-delete-form');
-    if (! delBtn || ! delForm) return;
+    const archiveBtn = document.getElementById('btn-modal-archive');
+    if (! archiveBtn) return;
 
-    delBtn.addEventListener('click', async (e) => {
-        e.preventDefault();
-
+    archiveBtn.addEventListener('click', async () => {
         const taskBase = (window.KANBAN_ROUTES && window.KANBAN_ROUTES.update) || '/tasks';
-        const taskId = edit?.taskId;
+        const taskId   = edit?.taskId;
+        const card     = edit?.card;
         if (! taskId) return;
 
         // Cerrar antes del Swal para evitar z-index issues con el top-layer del <dialog>
@@ -628,10 +626,10 @@ function setupDeleteTask() {
             reverseButtons: true,
             customClass: { popup: 'app-swal', confirmButton: 'btn-danger', cancelButton: 'btn-ghost' },
             title: '¿Archivar tarea?',
-            text: delForm.dataset.confirm,
+            text: 'La podrás restaurar más adelante.',
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: delForm.dataset.confirmButton || 'Sí, archivar',
+            confirmButtonText: 'Sí, archivar',
             cancelButtonText: 'Cancelar',
         });
 
@@ -645,9 +643,10 @@ function setupDeleteTask() {
                 body: new URLSearchParams({ _token: csrf, _method: 'DELETE' }),
             });
             if (! res.ok) throw new Error();
-            edit?.card?.remove();
+            card?.remove();
             updateColumnCounts();
             edit = null;
+            window.toast?.('Tarea archivada.');
         } catch {
             window.location.reload();
         }
