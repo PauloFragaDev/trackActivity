@@ -100,6 +100,8 @@ Route::patch('/notes/{note}/pin',    [NoteController::class, 'togglePin'])->name
 Route::patch('/notes/{id}/restore',  [NoteController::class, 'restore'])->name('notes.restore');
 Route::delete('/notes/{note}',       [NoteController::class, 'destroy'])->name('notes.destroy');
 
+Route::post('/notes/images', [NoteController::class, 'uploadImage'])->name('notes.images.upload');
+
 Route::post('/note-folders',                [NoteFolderController::class, 'store'])->name('note-folders.store');
 Route::patch('/note-folders/{noteFolder}',  [NoteFolderController::class, 'update'])->name('note-folders.update');
 Route::delete('/note-folders/{noteFolder}', [NoteFolderController::class, 'destroy'])->name('note-folders.destroy');

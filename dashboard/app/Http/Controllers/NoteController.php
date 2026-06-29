@@ -9,6 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 /**
@@ -212,5 +213,17 @@ class NoteController extends Controller
         return redirect()
             ->route('notes.index', ['folder' => $note->folder_id, 'note' => $note->id])
             ->with('status', $note->pinned ? 'Nota fijada.' : 'Nota desfijada.');
+    }
+
+    /** Sube una imagen adjunta a una nota y devuelve su URL pública. */
+    public function uploadImage(Request $request): JsonResponse
+    {
+        $request->validate([
+            'image' => ['required', 'file', 'mimes:jpeg,png,gif,webp', 'max:5120'],
+        ]);
+
+        $path = $request->file('image')->store('note-images', 'public');
+
+        return response()->json(['url' => Storage::url($path)]);
     }
 }
