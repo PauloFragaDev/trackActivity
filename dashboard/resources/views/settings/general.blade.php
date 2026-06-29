@@ -31,32 +31,9 @@
 
         <div class="space-y-3 pt-4 border-t divider">
             <div>
-                <h2 class="text-sm font-semibold">Tracking de actividad</h2>
-                <p class="text-xs text-faint mt-0.5">
-                    Cuando está activo, el daemon registra la ventana en uso, commits y tiempo de inactividad.
-                    Por defecto desactivado; solo necesario en el equipo de seguimiento.
-                </p>
-            </div>
-            <label class="flex items-start gap-3 px-2 py-3 cursor-pointer hover:bg-ink-50 dark:hover:bg-ink-800/40 rounded transition -mx-2">
-                <input type="checkbox"
-                       name="tracking_enabled"
-                       value="1"
-                       @checked($trackingEnabled)
-                       class="mt-1 h-4 w-4 rounded border-ink-300 dark:border-ink-600 text-emerald-600 focus:ring-emerald-500">
-                <span class="flex-1 min-w-0">
-                    <span class="block text-sm font-medium">Activar tracking automáticamente</span>
-                    <span class="block text-xs text-faint mt-0.5">
-                        El tracker arranca al abrir la app de escritorio y se mantiene activo en segundo plano.
-                    </span>
-                </span>
-            </label>
-        </div>
-
-        <div class="space-y-3 pt-4 border-t divider">
-            <div>
                 <h2 class="text-sm font-semibold">Módulos visibles</h2>
                 <p class="text-xs text-faint mt-0.5">
-                    El Tracker (Inicio · Tracking) es núcleo y no se puede desactivar.
+                    Los módulos desactivados desaparecen del sidebar. Desactivar Tracking también detiene el daemon de captura.
                 </p>
             </div>
 

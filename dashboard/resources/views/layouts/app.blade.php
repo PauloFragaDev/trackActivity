@@ -129,8 +129,8 @@
                 <a href="{{ route('dashboard') }}"
                    class="block px-2 py-1.5 rounded {{ $navItem(['dashboard']) }}">Inicio</a>
 
-                {{-- Tracking. Hoy/Semana son núcleo; Mes/Informes respetan
-                     la visibilidad configurada en /settings/general. --}}
+                {{-- Tracking. Oculto si el módulo está desactivado en ajustes generales. --}}
+                @if ($modules['tracking']['enabled'] ?? true)
                 <details class="group" @if (request()->routeIs('timeline.*', 'calendar.*', 'reports.*', 'insights.*')) open @endif>
                     <summary class="flex items-center gap-1.5 px-2 py-1.5 rounded cursor-pointer select-none list-none
                                     text-[11px] uppercase tracking-wider text-muted hover:bg-ink-100 dark:hover:bg-ink-800">
@@ -156,6 +156,7 @@
                         @endif
                     </div>
                 </details>
+                @endif
 
                 {{-- Notas: grupo desplegable con el árbol de carpetas --}}
                 @if ($modules['notes']['enabled'] ?? true)

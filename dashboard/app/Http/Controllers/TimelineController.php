@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\ActivityEvent;
 use App\Models\ManualEntry;
 use App\Models\Project;
+use App\Services\ModuleVisibility;
 use App\Services\SessionBuilder;
 use Carbon\CarbonImmutable;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
@@ -16,13 +18,19 @@ class TimelineController extends Controller
 
     // ─────────────────── DIA ───────────────────
 
-    public function today(): View
+    public function today(): View|RedirectResponse
     {
+        if (! ModuleVisibility::enabled('tracking')) {
+            return redirect()->route('tasks.index');
+        }
         return $this->renderDay(CarbonImmutable::now($this->tz()));
     }
 
-    public function day(string $date): View
+    public function day(string $date): View|RedirectResponse
     {
+        if (! ModuleVisibility::enabled('tracking')) {
+            return redirect()->route('tasks.index');
+        }
         $day = CarbonImmutable::parse($date, $this->tz());
         return $this->renderDay($day);
     }
@@ -84,14 +92,20 @@ class TimelineController extends Controller
 
     // ─────────────────── SEMANA ───────────────────
 
-    public function thisWeek(): View
+    public function thisWeek(): View|RedirectResponse
     {
+        if (! ModuleVisibility::enabled('tracking')) {
+            return redirect()->route('tasks.index');
+        }
         $now = CarbonImmutable::now($this->tz());
         return $this->renderWeek($now->isoWeekYear(), $now->isoWeek());
     }
 
-    public function week(string $week): View
+    public function week(string $week): View|RedirectResponse
     {
+        if (! ModuleVisibility::enabled('tracking')) {
+            return redirect()->route('tasks.index');
+        }
         // formato "YYYY-Www" e.g. "2026-W21"
         [$year, $w] = sscanf($week, '%d-W%d');
         return $this->renderWeek((int) $year, (int) $w);

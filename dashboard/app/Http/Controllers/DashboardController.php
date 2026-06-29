@@ -9,6 +9,7 @@ use App\Models\Task;
 use App\Services\InsightsService;
 use App\Services\ModuleVisibility;
 use App\Services\SessionBuilder;
+use Illuminate\Http\RedirectResponse;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
@@ -23,40 +24,46 @@ class DashboardController extends Controller
 
     public function index(InsightsService $insights): View
     {
-        $tz     = config('tracker.display_timezone', 'UTC');
-        $today  = CarbonImmutable::now($tz)->startOfDay();
-        $monday = $today->setISODate($today->isoWeekYear(), $today->isoWeek(), 1)->startOfDay();
+        $tz              = config('tracker.display_timezone', 'UTC');
+        $today           = CarbonImmutable::now($tz)->startOfDay();
+        $trackingEnabled = ModuleVisibility::enabled('tracking');
 
-        // Minutos trackeados por día — mismo cálculo que la vista de semana.
-        $week = [];
-        for ($i = 0; $i < 7; $i++) {
-            $day      = $monday->addDays($i);
-            $sessions = $this->sessions->buildForDay($day);
-            $week[] = [
-                'date'     => $day,
-                'minutes'  => array_sum(array_column($sessions, 'duration_minutes')),
-                'is_today' => $day->isSameDay($today),
-            ];
-        }
-
-        // Último evento del tracker: para "ahora mismo" y para avisar si el
-        // daemon parece parado. (Sin eventos no se avisa — instalación nueva.)
-        $latestEvent = ActivityEvent::orderByDesc('occurred_at')->first();
+        $week              = [];
+        $latestEvent       = null;
         $trackerStaleSince = null;
-        if ($latestEvent !== null
-            && abs($latestEvent->occurred_at->diffInMinutes(CarbonImmutable::now('UTC'))) >= 20) {
-            $trackerStaleSince = $latestEvent->occurred_at;
-        }
+        $insightsDigest    = null;
+        $heatmap           = [];
 
-        // Digest de insights del día (solo si el módulo está activo).
-        $insightsDigest = ModuleVisibility::enabled('insights')
-            ? $insights->forDay($today)
-            : null;
+        if ($trackingEnabled) {
+            $monday = $today->setISODate($today->isoWeekYear(), $today->isoWeek(), 1)->startOfDay();
+            for ($i = 0; $i < 7; $i++) {
+                $day      = $monday->addDays($i);
+                $sessions = $this->sessions->buildForDay($day);
+                $week[] = [
+                    'date'     => $day,
+                    'minutes'  => array_sum(array_column($sessions, 'duration_minutes')),
+                    'is_today' => $day->isSameDay($today),
+                ];
+            }
+
+            $latestEvent = ActivityEvent::orderByDesc('occurred_at')->first();
+            if ($latestEvent !== null
+                && abs($latestEvent->occurred_at->diffInMinutes(CarbonImmutable::now('UTC'))) >= 20) {
+                $trackerStaleSince = $latestEvent->occurred_at;
+            }
+
+            $insightsDigest = ModuleVisibility::enabled('insights')
+                ? $insights->forDay($today)
+                : null;
+
+            $heatmap = $this->heatmap($today);
+        }
 
         return view('dashboard.index', [
+            'trackingEnabled'   => $trackingEnabled,
             'week'              => $week,
             'insightsDigest'    => $insightsDigest,
-            'heatmap'           => $this->heatmap($today),
+            'heatmap'           => $heatmap,
             'latestEvent'       => $latestEvent,
             'recentNotes'       => Note::orderByDesc('updated_at')->limit(8)->get(),
             'doingTasks'        => Task::with('project')

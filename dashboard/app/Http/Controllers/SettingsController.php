@@ -38,9 +38,8 @@ class SettingsController extends Controller
         // `$modules` ya está compartido por AppServiceProvider via View::share,
         // pero pasarlo explícito documenta la dependencia del controller.
         return view('settings.general', [
-            'modules'          => ModuleVisibility::all(),
-            'userName'         => UserIdentity::name(),
-            'trackingEnabled'  => (bool) Setting::get('tracking.enabled', false),
+            'modules'  => ModuleVisibility::all(),
+            'userName' => UserIdentity::name(),
         ]);
     }
 
@@ -56,16 +55,17 @@ class SettingsController extends Controller
         $submitted = $request->input('modules', []);
         ModuleVisibility::saveAll(is_array($submitted) ? $submitted : []);
 
+        // Sincronizar el daemon con la visibilidad del módulo tracking.
+        $trackingModuleEnabled = isset($submitted['tracking']);
         $wasEnabled = (bool) Setting::get('tracking.enabled', false);
-        $nowEnabled = $request->boolean('tracking_enabled');
-        Setting::set('tracking.enabled', $nowEnabled);
+        Setting::set('tracking.enabled', $trackingModuleEnabled);
 
-        if ($nowEnabled && !$wasEnabled) {
+        if ($trackingModuleEnabled && !$wasEnabled) {
             try {
                 app(TrackerManager::class)->start();
                 app(SchedulerManager::class)->start();
             } catch (\Throwable) {}
-        } elseif (!$nowEnabled && $wasEnabled) {
+        } elseif (!$trackingModuleEnabled && $wasEnabled) {
             try {
                 app(TrackerManager::class)->stop();
                 app(SchedulerManager::class)->stop();

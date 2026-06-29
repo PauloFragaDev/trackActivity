@@ -22,6 +22,12 @@ class ModuleVisibility
      * @var array<string, array{label:string,description:string,icon:string,required?:bool}>
      */
     public const MODULES = [
+        'tracking' => [
+            'label'       => 'Tracking de actividad',
+            'description' => 'Timeline, informes e insights del tiempo en pantalla. Desactívalo si solo usas el Kanban y no necesitas el daemon de captura.',
+            'icon'        => 'clock',
+            'default'     => true,
+        ],
         'notes' => [
             'label'       => 'Notas',
             'description' => 'Carpetas, papelera y editor markdown. Si lo desactivas se ocultan también los favoritos del sidebar.',
