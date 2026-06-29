@@ -8,6 +8,7 @@ use App\Models\TeamMember;
 use App\Models\TeamProject;
 use App\Models\TeamTask;
 use App\Models\TeamTaskLabel;
+use App\Services\NotificationService;
 use App\Services\UserIdentity;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -74,8 +75,25 @@ class TeamTaskController extends Controller
         $labelIds = $data['label_ids'] ?? [];
         unset($data['label_ids']);
 
+        $oldAssigneeId = $task->assignee_id;
+
         $task->update($data);
         $task->labels()->sync($labelIds);
+
+        $actorId       = session('team_member_id') ? (int) session('team_member_id') : null;
+        $newAssigneeId = array_key_exists('assignee_id', $data) ? (int) $data['assignee_id'] : null;
+        if ($newAssigneeId && $newAssigneeId !== $oldAssigneeId && $newAssigneeId !== $actorId) {
+            NotificationService::create(
+                type:        'assignment',
+                taskId:      $task->id,
+                recipientId: $newAssigneeId,
+                actorId:     $actorId,
+                payload:     [
+                    'task_title' => $task->title,
+                    'actor_name' => session('team_member_name') ?: 'Alguien',
+                ],
+            );
+        }
 
         if ($request->wantsJson()) {
             $task->load(['labels', 'checkboxes', 'comments', 'project', 'assignee', 'createdBy']);
@@ -109,6 +127,25 @@ class TeamTaskController extends Controller
         $oldStatus  = $task->status->value;
         $task->status = TaskStatus::from($data['status']);
         $task->save();
+
+        $actorId = session('team_member_id') ? (int) session('team_member_id') : null;
+        if ($oldStatus !== $data['status']
+            && $task->assignee_id
+            && $task->assignee_id !== $actorId
+        ) {
+            NotificationService::create(
+                type:        'status_change',
+                taskId:      $task->id,
+                recipientId: $task->assignee_id,
+                actorId:     $actorId,
+                payload:     [
+                    'task_title' => $task->title,
+                    'old_status' => $oldStatus,
+                    'new_status' => $data['status'],
+                    'actor_name' => session('team_member_name') ?: 'Alguien',
+                ],
+            );
+        }
 
         $this->reindex($data['status'], $task->id, (int) $data['position']);
         if ($oldStatus !== $data['status']) {

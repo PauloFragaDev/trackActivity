@@ -59,4 +59,63 @@ class TeamTaskControllerTest extends TestCase
 
         $this->assertSoftDeleted('tasks', ['id' => $task->id], 'supabase');
     }
+
+    public function test_update_creates_assignment_notification(): void
+    {
+        $actor    = \App\Models\TeamMember::create(['name' => 'Ana',   'color' => '#aaa', 'position' => 0]);
+        $assignee = \App\Models\TeamMember::create(['name' => 'Paulo', 'color' => '#bbb', 'position' => 1]);
+        $task     = TeamTask::create(['title' => 'T', 'status' => 'todo', 'position' => 0]);
+        $label    = \App\Models\TeamTaskLabel::create(['title' => 'bug', 'color' => '#f00', 'position' => 0]);
+        session(['team_member_id' => $actor->id, 'team_member_name' => $actor->name]);
+
+        $this->patchJson("/team/tasks/{$task->id}", [
+            'title'       => 'T',
+            'status'      => 'todo',
+            'assignee_id' => $assignee->id,
+            'label_ids'   => [],
+        ])->assertOk();
+
+        $this->assertDatabaseHas('notifications', [
+            'recipient_id' => $assignee->id,
+            'actor_id'     => $actor->id,
+            'type'         => 'assignment',
+            'task_id'      => $task->id,
+        ], 'supabase');
+    }
+
+    public function test_update_does_not_notify_when_actor_assigns_self(): void
+    {
+        $actor = \App\Models\TeamMember::create(['name' => 'Ana', 'color' => '#aaa', 'position' => 0]);
+        $task  = TeamTask::create(['title' => 'T', 'status' => 'todo', 'position' => 0]);
+        session(['team_member_id' => $actor->id, 'team_member_name' => $actor->name]);
+
+        $this->patchJson("/team/tasks/{$task->id}", [
+            'title'       => 'T',
+            'status'      => 'todo',
+            'assignee_id' => $actor->id,
+            'label_ids'   => [],
+        ])->assertOk();
+
+        $this->assertDatabaseCount('notifications', 0, 'supabase');
+    }
+
+    public function test_move_creates_status_change_notification(): void
+    {
+        $actor    = \App\Models\TeamMember::create(['name' => 'Ana',   'color' => '#aaa', 'position' => 0]);
+        $assignee = \App\Models\TeamMember::create(['name' => 'Paulo', 'color' => '#bbb', 'position' => 1]);
+        $task     = TeamTask::create(['title' => 'T', 'status' => 'todo', 'position' => 0, 'assignee_id' => $assignee->id]);
+        session(['team_member_id' => $actor->id, 'team_member_name' => $actor->name]);
+
+        $this->patchJson("/team/tasks/{$task->id}/move", [
+            'status'   => 'doing',
+            'position' => 0,
+        ])->assertOk();
+
+        $this->assertDatabaseHas('notifications', [
+            'recipient_id' => $assignee->id,
+            'actor_id'     => $actor->id,
+            'type'         => 'status_change',
+            'task_id'      => $task->id,
+        ], 'supabase');
+    }
 }
