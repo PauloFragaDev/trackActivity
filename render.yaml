@@ -1,14 +1,13 @@
-# render.yaml
 services:
   - type: web
     name: trackactivity-team
-    env: php
-    rootDir: dashboard
-    buildCommand: >
-      composer install --no-dev --optimize-autoloader &&
-      npm ci && npm run build &&
-      php artisan migrate --database=supabase --path=database/migrations/team --force
-    startCommand: php -S 0.0.0.0:$PORT -t public/
+    env: docker
+    dockerfilePath: ./dashboard/Dockerfile
+    dockerContext: ./dashboard
+    startCommand: >-
+      sh -c "php artisan migrate --force &&
+      php artisan migrate --database=supabase --path=database/migrations/team --force &&
+      php -S 0.0.0.0:$PORT -t public/"
     envVars:
       - key: APP_ENV
         value: production
@@ -18,6 +17,8 @@ services:
         generateValue: true
       - key: APP_TIMEZONE
         value: UTC
+      - key: APP_MODE
+        value: team_only
       - key: DB_CONNECTION
         value: sqlite
       - key: DB_DATABASE
@@ -26,9 +27,9 @@ services:
         value: file
       - key: CACHE_STORE
         value: file
-      - key: APP_MODE
-        value: team_only
-      # Las siguientes se rellenan manualmente en el dashboard de Render:
+      - key: PHP_CLI_SERVER_WORKERS
+        value: 4
+      # Rellenar manualmente en el dashboard de Render:
       - key: SUPABASE_DB_HOST
         sync: false
       - key: SUPABASE_DB_PORT
