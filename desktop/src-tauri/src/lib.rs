@@ -83,9 +83,7 @@ fn start_stack(app: &AppHandle) {
             *state.serve.lock().unwrap() = Some(child);
         }
     }
-    artisan(&["tracker:start"]);
-    artisan(&["scheduler:start"]);
-    app.state::<Stack>().tracker_on.store(true, Ordering::SeqCst);
+    artisan(&["tracker:autostart"]);
 }
 
 /// Para el stack: tracker + scheduler + mata el hijo serve. Idempotente.
