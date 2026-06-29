@@ -6,6 +6,8 @@ use App\Models\Setting;
 use App\Services\AppearanceService;
 use App\Services\ModuleVisibility;
 use App\Services\PomodoroService;
+use App\Services\SchedulerManager;
+use App\Services\TrackerManager;
 use App\Services\UserIdentity;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -36,8 +38,9 @@ class SettingsController extends Controller
         // `$modules` ya está compartido por AppServiceProvider via View::share,
         // pero pasarlo explícito documenta la dependencia del controller.
         return view('settings.general', [
-            'modules'  => ModuleVisibility::all(),
-            'userName' => UserIdentity::name(),
+            'modules'          => ModuleVisibility::all(),
+            'userName'         => UserIdentity::name(),
+            'trackingEnabled'  => (bool) Setting::get('tracking.enabled', false),
         ]);
     }
 
@@ -52,6 +55,22 @@ class SettingsController extends Controller
         // "clave ausente" = desactivado, así que no validamos cada uno.
         $submitted = $request->input('modules', []);
         ModuleVisibility::saveAll(is_array($submitted) ? $submitted : []);
+
+        $wasEnabled = (bool) Setting::get('tracking.enabled', false);
+        $nowEnabled = $request->boolean('tracking_enabled');
+        Setting::set('tracking.enabled', $nowEnabled);
+
+        if ($nowEnabled && !$wasEnabled) {
+            try {
+                app(TrackerManager::class)->start();
+                app(SchedulerManager::class)->start();
+            } catch (\Throwable) {}
+        } elseif (!$nowEnabled && $wasEnabled) {
+            try {
+                app(TrackerManager::class)->stop();
+                app(SchedulerManager::class)->stop();
+            } catch (\Throwable) {}
+        }
 
         return redirect()
             ->route('settings.general')
