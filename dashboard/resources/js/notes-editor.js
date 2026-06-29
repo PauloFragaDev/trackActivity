@@ -104,6 +104,38 @@ export async function initNoteEditor() {
     }
 
     // Cambios en el título también disparan el autosave.
+    // After an image loads, the ImageViewer component sets img.style.height from
+    // the image's natural dimensions (layout shift). ProseMirror doesn't know
+    // about the change, so cursor coordinates for paragraphs below become stale.
+    // Dispatching a resize event triggers ProseMirror's requestMeasure(), which
+    // recalculates all positions and re-renders the cursor in the right place.
+    const remeasure = () => window.dispatchEvent(new Event('resize'));
+
+    const watchImgs = (root) => {
+        const imgs = root.nodeName === 'IMG' ? [root] : [...root.querySelectorAll('img')];
+        for (const img of imgs) {
+            if (!img.complete) {
+                // Load fires after Vue's onImageLoad (style.height already set)
+                img.addEventListener('load', remeasure, { once: true });
+            } else {
+                // Already loaded (cache): Vue's handler already ran — re-measure now
+                setTimeout(remeasure, 0);
+            }
+        }
+    };
+
+    // Images already in the editor when it initialized (opening an existing note)
+    watchImgs(mount);
+
+    // Images inserted later (after upload or paste)
+    new MutationObserver((mutations) => {
+        for (const { addedNodes } of mutations) {
+            for (const node of addedNodes) {
+                if (node.nodeType === 1) watchImgs(node);
+            }
+        }
+    }).observe(mount, { childList: true, subtree: true });
+
     form.querySelector('input[name="title"]')?.addEventListener('input', scheduleSave);
 
     // Guardado manual: sincroniza el textarea antes del submit.
