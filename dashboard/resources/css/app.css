@@ -899,8 +899,8 @@ html.dark ::-webkit-scrollbar-thumb:hover { background: rgb(71 85 105); }
 }
 [data-note-editor] .milkdown .milkdown-image-block .image-wrapper img {
     object-fit: contain;
-    min-height: 0;
-    height: auto;
+    min-height: 0 !important;
+    height: auto !important;
     border-radius: 6px;
 }
 /* Imágenes inline (markdown estándar ![alt](url) fuera de ImageBlock) */
