@@ -26,39 +26,20 @@ export async function initNoteEditor() {
     const textarea = form?.querySelector('textarea[name="body"]');
     if (!form || !mount || !textarea) return;
 
-    let crepe;
-    try {
-        await loadCrepeTheme();
-        crepe = new Crepe({ root: mount, defaultValue: textarea.value || '' });
-        await crepe.create();
-    } catch (err) {
-        // Fallback: el textarea sigue visible y usable.
-        console.error('Notas: no se pudo iniciar el editor; se usa el textarea.', err);
-        return;
-    }
-
-    // Editor montado: el textarea pasa a ser el campo oculto del formulario.
-    textarea.classList.add('hidden');
-    mount.removeAttribute('hidden');
-
     const status = document.querySelector('[data-autosave-status]');
     const setStatus = (txt) => { if (status) status.textContent = txt; };
 
-    const syncTextarea = () => {
-        try { textarea.value = crepe.getMarkdown(); } catch { /* noop */ }
-    };
-
-    // ── Autosave con debounce ──
+    let crepe;
     let timer;
+
     const scheduleSave = () => {
-        syncTextarea();
         setStatus('Sin guardar…');
         clearTimeout(timer);
         timer = setTimeout(save, 1200);
     };
 
     const save = async () => {
-        syncTextarea();
+        if (crepe) try { textarea.value = crepe.getMarkdown(); } catch { /* noop */ }
         setStatus('Guardando…');
         try {
             const res = await fetch(form.action, {
@@ -72,10 +53,36 @@ export async function initNoteEditor() {
         }
     };
 
-    // Cambios en el editor y en el título disparan el autosave.
-    mount.addEventListener('input', scheduleSave);
+    try {
+        await loadCrepeTheme();
+        crepe = new Crepe({ root: mount, defaultValue: textarea.value || '' });
+
+        // markdownUpdated fires on every editor change — must register before create()
+        crepe.on((api) => {
+            api.markdownUpdated((_ctx, markdown) => {
+                textarea.value = markdown;
+                scheduleSave();
+            });
+        });
+
+        // Show the editor div before create() so ProseMirror can measure its layout.
+        // If create() fails, we restore visibility below.
+        textarea.classList.add('hidden');
+        mount.removeAttribute('hidden');
+
+        await crepe.create();
+    } catch (err) {
+        console.error('Notas: no se pudo iniciar el editor; se usa el textarea.', err);
+        textarea.classList.remove('hidden');
+        mount.setAttribute('hidden', '');
+        return;
+    }
+
+    // Cambios en el título también disparan el autosave.
     form.querySelector('input[name="title"]')?.addEventListener('input', scheduleSave);
 
-    // Guardado manual (botón Guardar): asegura el textarea sincronizado.
-    form.addEventListener('submit', syncTextarea);
+    // Guardado manual: sincroniza el textarea antes del submit.
+    form.addEventListener('submit', () => {
+        if (crepe) try { textarea.value = crepe.getMarkdown(); } catch { /* noop */ }
+    });
 }
