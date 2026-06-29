@@ -892,6 +892,26 @@ html.dark ::-webkit-scrollbar-thumb:hover { background: rgb(71 85 105); }
     }
 }
 
+/* Notas · imágenes en el editor — corrige object-fit:cover del tema Crepe
+   (que recortaría la foto) y añade espacio vertical generoso. */
+[data-note-editor] .milkdown .milkdown-image-block {
+    margin: 1rem 0;
+}
+[data-note-editor] .milkdown .milkdown-image-block .image-wrapper img {
+    object-fit: contain;
+    min-height: 0;
+    height: auto;
+    border-radius: 6px;
+}
+/* Imágenes inline (markdown estándar ![alt](url) fuera de ImageBlock) */
+[data-note-editor] .milkdown .ProseMirror img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 6px;
+    display: block;
+    margin: 0.5rem auto;
+}
+
 /* Notas · las citas del editor se muestran como "callout" (caja destacada) */
 [data-note-editor] .milkdown blockquote {
     border-left: 3px solid #10b981;

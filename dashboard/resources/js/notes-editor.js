@@ -53,9 +53,34 @@ export async function initNoteEditor() {
         }
     };
 
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+
+    /** Sube un archivo de imagen al servidor y devuelve la URL persistente. */
+    const uploadImage = async (file) => {
+        const body = new FormData();
+        body.append('image', file);
+        body.append('_token', csrf);
+        const res = await fetch('/notes/images', { method: 'POST', body });
+        if (!res.ok) throw new Error('Upload failed');
+        const data = await res.json();
+        return data.url;
+    };
+
     try {
         await loadCrepeTheme();
-        crepe = new Crepe({ root: mount, defaultValue: textarea.value || '' });
+        crepe = new Crepe({
+            root: mount,
+            defaultValue: textarea.value || '',
+            featureConfigs: {
+                [Crepe.Feature.ImageBlock]: {
+                    onUpload: uploadImage,
+                    blockUploadButton: 'Subir imagen',
+                    blockUploadPlaceholderText: 'o pega la URL',
+                    inlineUploadButton: 'Subir',
+                    inlineUploadPlaceholderText: 'o pega la URL',
+                },
+            },
+        });
 
         // markdownUpdated fires on every editor change — must register before create()
         crepe.on((api) => {
