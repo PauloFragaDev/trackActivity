@@ -16,6 +16,9 @@ COPY . .
 
 RUN composer install --no-dev --optimize-autoloader \
     && npm ci && npm run build \
-    && chmod -R 775 storage bootstrap/cache
+    && chmod -R 775 storage bootstrap/cache \
+    && chmod +x start.sh
 
 EXPOSE 10000
+
+CMD ["sh", "start.sh"]
