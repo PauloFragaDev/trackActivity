@@ -52,4 +52,46 @@ class TeamTaskCommentControllerTest extends TestCase
 
         $this->assertDatabaseMissing('task_comments', ['id' => $comment->id], 'supabase');
     }
+
+    public function test_store_creates_mention_notification(): void
+    {
+        $author    = TeamMember::create(['name' => 'Ana',   'color' => '#aaa', 'position' => 0]);
+        $mentioned = TeamMember::create(['name' => 'Paulo', 'color' => '#bbb', 'position' => 1]);
+        $task      = TeamTask::create(['title' => 'Fix bug', 'status' => 'todo', 'position' => 0]);
+        session(['team_member_id' => $author->id, 'team_member_name' => $author->name]);
+
+        $this->postJson("/team/tasks/{$task->id}/comments", ['body' => 'Hey @Paulo please review'])
+            ->assertOk();
+
+        $this->assertDatabaseHas('notifications', [
+            'recipient_id' => $mentioned->id,
+            'actor_id'     => $author->id,
+            'type'         => 'mention',
+            'task_id'      => $task->id,
+        ], 'supabase');
+    }
+
+    public function test_store_does_not_notify_author_of_self_mention(): void
+    {
+        $author = TeamMember::create(['name' => 'Ana', 'color' => '#aaa', 'position' => 0]);
+        $task   = TeamTask::create(['title' => 'T', 'status' => 'todo', 'position' => 0]);
+        session(['team_member_id' => $author->id, 'team_member_name' => $author->name]);
+
+        $this->postJson("/team/tasks/{$task->id}/comments", ['body' => 'I @Ana did this'])
+            ->assertOk();
+
+        $this->assertDatabaseCount('notifications', 0, 'supabase');
+    }
+
+    public function test_store_does_not_notify_when_no_mention(): void
+    {
+        $author = TeamMember::create(['name' => 'Ana', 'color' => '#aaa', 'position' => 0]);
+        $task   = TeamTask::create(['title' => 'T', 'status' => 'todo', 'position' => 0]);
+        session(['team_member_id' => $author->id, 'team_member_name' => $author->name]);
+
+        $this->postJson("/team/tasks/{$task->id}/comments", ['body' => 'Normal comment'])
+            ->assertOk();
+
+        $this->assertDatabaseCount('notifications', 0, 'supabase');
+    }
 }
