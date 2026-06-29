@@ -52,6 +52,13 @@
             }
         })();
     </script>
+    @if (($modules['team']['enabled'] ?? false) && config('team.supabase_url'))
+    <script>
+        window.SUPABASE_URL      = '{{ config("team.supabase_url") }}';
+        window.SUPABASE_ANON_KEY = '{{ config("team.supabase_anon_key") }}';
+        window.MY_MEMBER_ID      = {{ session('team_member_id') ? (int)session('team_member_id') : 'null' }};
+    </script>
+    @endif
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body>
@@ -92,6 +99,15 @@
                     <span data-icon-collapse aria-hidden="true" class="inline-flex"><x-icon name="chevron-double-left" class="w-4 h-4" /></span>
                     <span data-icon-expand   aria-hidden="true" class="inline-flex"><x-icon name="chevron-double-right" class="w-4 h-4" /></span>
                 </button>
+                @if ($modules['team']['enabled'] ?? false)
+                <button id="notif-bell-collapsed" type="button"
+                        class="hidden btn-ghost shrink-0 relative"
+                        aria-label="Notificaciones" title="Notificaciones">
+                    <x-icon name="bell" class="w-4 h-4" />
+                    <span id="notif-dot"
+                          class="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-red-500 ring-1 ring-white dark:ring-ink-900"></span>
+                </button>
+                @endif
                 <a href="{{ route('dashboard') }}"
                    class="sidebar-full flex items-center gap-2 font-semibold tracking-tight whitespace-nowrap">
                     <img src="{{ url('/icon.svg') }}" alt="" class="w-5 h-5 rounded-md" aria-hidden="true">
@@ -124,6 +140,41 @@
                     <span>Buscar</span>
                     <x-kbd class="ml-auto">Ctrl K</x-kbd>
                 </button>
+
+                {{-- Campana de notificaciones (solo si el módulo equipo está activo) --}}
+                @if ($modules['team']['enabled'] ?? false)
+                <div class="relative">
+                    <button id="notif-bell-expanded" type="button"
+                            class="w-full flex items-center gap-1.5 px-2 py-1.5 rounded
+                                   text-ink-600 dark:text-ink-300 hover:bg-ink-100 dark:hover:bg-ink-800">
+                        <x-icon name="bell" class="w-4 h-4 shrink-0" />
+                        <span>Notificaciones</span>
+                        <span id="notif-badge"
+                              class="hidden ml-auto min-w-[1.1rem] h-[1.1rem] rounded-full
+                                     bg-red-500 text-white text-[10px] font-bold
+                                     flex items-center justify-center px-1 leading-none">0</span>
+                    </button>
+
+                    {{-- Panel dropdown (se muestra/oculta por JS) --}}
+                    <div id="notif-panel"
+                         class="hidden absolute left-0 top-full mt-1 w-80 z-50
+                                rounded-lg border divider shadow-lg
+                                bg-[var(--paper)] dark:bg-ink-900">
+                        <div class="flex items-center justify-between px-3 py-2 border-b divider">
+                            <span class="text-xs font-semibold uppercase tracking-wider text-muted">Notificaciones</span>
+                            <button id="notif-read-all" type="button"
+                                    class="text-xs text-muted hover:text-ink-900 dark:hover:text-ink-100">
+                                Marcar todas como leídas
+                            </button>
+                        </div>
+                        <ul id="notif-list" class="max-h-80 overflow-y-auto divide-y divide-ink-100 dark:divide-ink-800">
+                            <li class="px-3 py-4 text-sm text-muted text-center" data-empty>
+                                Sin notificaciones pendientes
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                @endif
 
                 {{-- Inicio --}}
                 <a href="{{ route('dashboard') }}"
@@ -242,6 +293,26 @@
                     <span>Tema</span>
                 </button>
             </div>
+            {{-- Speech bubble para el estado colapsado (position: fixed, gestionado por JS) --}}
+            @if ($modules['team']['enabled'] ?? false)
+            <div id="notif-bubble"
+                 class="notif-bubble hidden fixed z-[200] w-80
+                        rounded-lg border divider shadow-xl
+                        bg-[var(--paper)] dark:bg-ink-900">
+                <div class="flex items-center justify-between px-3 py-2 border-b divider">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-muted">Notificaciones</span>
+                    <button id="notif-bubble-read-all" type="button"
+                            class="text-xs text-muted hover:text-ink-900 dark:hover:text-ink-100">
+                        Marcar todas como leídas
+                    </button>
+                </div>
+                <ul id="notif-bubble-list" class="max-h-80 overflow-y-auto divide-y divide-ink-100 dark:divide-ink-800">
+                    <li class="px-3 py-4 text-sm text-muted text-center" data-empty>
+                        Sin notificaciones pendientes
+                    </li>
+                </ul>
+            </div>
+            @endif
         </aside>
 
         {{-- ─────────────── Contenido ─────────────── --}}
