@@ -1,40 +1,48 @@
 # 03 · Instalación
 
-Guía para dejar `trackActivity` operativo en Ubuntu 22.04+.
+Guía para dejar `trackActivity` operativo en Linux (Debian/Ubuntu) con sesión X11.
 
-> Si trabajas en otra distribución Linux, los comandos `apt` deberán adaptarse al gestor de paquetes correspondiente.
+> El dashboard se abre en el **navegador** (`http://localhost:8100`). No hay app de escritorio instalable todavía.
 
 ---
 
-## 1. Requisitos del sistema
+## Requisitos
 
-| Software | Versión mínima | Notas |
-|----------|---------------|-------|
-| Ubuntu | 22.04 LTS | Probado también en 24.04 |
-| Python | 3.11 | Para el daemon |
-| PHP | 8.2 | Requisito de Laravel 11 |
-| Composer | 2.6 | Gestor de dependencias PHP |
-| SQLite | 3.37 | Con soporte WAL |
-| Git | 2.34 | Necesario para el collector de Git |
-| systemd | — | Para gestión del daemon como servicio de usuario |
+| Software | Versión mínima |
+|----------|---------------|
+| PHP | 8.4 |
+| Composer | 2.x |
+| Node.js | 22.x |
+| Python | 3.11 |
+| SQLite | 3.37 |
+| Git | 2.34 |
+| X11 | — (Wayland no soportado) |
 
-### Dependencias del sistema operativo (X11)
+---
 
-El collector de ventana activa usa utilidades X11. **Wayland tiene soporte limitado** (ver sección al final).
+## 1. Dependencias del sistema
 
 ```bash
 sudo apt update
 sudo apt install -y \
-    xdotool \
-    wmctrl \
-    x11-utils \
-    libxss1 \
+    xdotool wmctrl x11-utils libxss1 \
     python3.11 python3.11-venv python3-pip \
-    php8.2 php8.2-cli php8.2-sqlite3 php8.2-mbstring \
-    php8.2-xml php8.2-curl php8.2-zip php8.2-intl \
-    composer \
-    sqlite3 \
-    git
+    sqlite3 git curl
+
+# PHP 8.4
+sudo apt install -y software-properties-common
+sudo add-apt-repository ppa:ondrej/php
+sudo apt update
+sudo apt install -y php8.4-cli php8.4-sqlite3 php8.4-mbstring \
+    php8.4-xml php8.4-curl php8.4-zip php8.4-pgsql
+
+# Composer
+curl -sS https://getcomposer.org/installer | php
+sudo mv composer.phar /usr/local/bin/composer
+
+# Node.js 22
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo bash -
+sudo apt install -y nodejs
 ```
 
 ---
@@ -42,32 +50,18 @@ sudo apt install -y \
 ## 2. Clonar el repositorio
 
 ```bash
-git clone <repo-url> trackActivity
+git clone https://github.com/PauloFragaDev/trackActivity.git
 cd trackActivity
-```
-
-Estructura esperada tras el clone:
-
-```
-trackActivity/
-├── README.md
-├── docs/
-├── tracker/      # daemon Python
-└── dashboard/    # app Laravel
 ```
 
 ---
 
-## 3. Preparar la base de datos
-
-La base de datos se crea desde Laravel (las migraciones viven allí).
+## 3. Crear la base de datos SQLite
 
 ```bash
 mkdir -p ~/.local/share/trackActivity
 touch ~/.local/share/trackActivity/activity.db
 ```
-
-> **Ubicación canónica**: `~/.local/share/trackActivity/activity.db` (sigue la [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html)).
 
 ---
 
@@ -80,51 +74,43 @@ cp .env.example .env
 php artisan key:generate
 ```
 
-Editar `.env` y apuntar a la BBDD compartida:
+Editar `.env` — mínimo necesario:
 
 ```env
-DB_CONNECTION=sqlite
 DB_DATABASE=/home/<tu-usuario>/.local/share/trackActivity/activity.db
-DB_FOREIGN_KEYS=true
-
-APP_URL=http://127.0.0.1:8000
-APP_ENV=local
-APP_DEBUG=true
 ```
 
-Ejecutar migraciones y seeders:
+Ejecutar migraciones y compilar assets:
 
 ```bash
-php artisan migrate --seed
+php artisan migrate
+npm install
+npm run build
 ```
 
-Esto crea todas las tablas (ver [`05-database-schema.md`](05-database-schema.md)) y carga el catálogo inicial de proyectos y mappings de ejemplo.
-
-Levantar el servidor local:
+Arrancar el servidor:
 
 ```bash
-php artisan serve
-# http://127.0.0.1:8000
+php artisan serve --port=8100
+# Abre http://localhost:8100
 ```
 
 ---
 
-## 5. Instalar el daemon (Python)
+## 5. Instalar el daemon Python (tracker)
 
 ### bash / zsh
-
 ```bash
 cd ../tracker
 python3.11 -m venv .venv
 source .venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
-pip install -e .                 # instala el paquete tracker (necesario para `tracker ...`)
+pip install -e .
 cp config.example.yml config.yml
 ```
 
 ### fish
-
 ```fish
 cd ../tracker
 python3.11 -m venv .venv
@@ -135,9 +121,7 @@ pip install -e .
 cp config.example.yml config.yml
 ```
 
-> **Importante**: `pip install -e .` instala el paquete `tracker` en el venv en modo editable. Sin él, `python -m tracker.cli` falla con `No module named tracker` y tendrías que recurrir al workaround `env PYTHONPATH=src python -m tracker.cli ...`.
-
-Editar `config.yml` (ver detalle en [`04-configuration.md`](04-configuration.md)). Mínimo:
+Editar `config.yml` — ajustar la ruta de la BBDD:
 
 ```yaml
 database:
@@ -152,40 +136,28 @@ collectors:
     interval_seconds: 240
     repositories_paths:
       - ~/Projects
-  browser:
-    enabled: false
-  thunderbird:
-    enabled: false
   idle:
     enabled: true
     threshold_seconds: 180
 ```
 
-Verificar que captura señales en primer plano:
+Verificar que captura señales:
 
 ```bash
-# Forma corta (tras pip install -e .)
-tracker doctor
 tracker run --foreground --log-level=DEBUG
-
-# Forma larga equivalente
-python -m tracker.cli run --foreground --log-level=DEBUG
+# Deberías ver "signal stored: window=..." cada 15 segundos. Ctrl+C para parar.
 ```
-
-Si ves líneas como `signal stored: window=...` y `signal stored: git=...`, está funcionando. Cortar con `Ctrl+C`.
 
 ---
 
-## 6. Registrar el daemon como servicio de usuario (systemd)
-
-Copiar el unit file que provee el repo:
+## 6. Registrar el daemon como servicio (systemd)
 
 ```bash
 mkdir -p ~/.config/systemd/user
 cp tracker/scripts/trackactivity.service ~/.config/systemd/user/
 ```
 
-Editar el archivo si tu ruta a `python` o al repo difiere:
+Editar el unit file con tus rutas:
 
 ```ini
 [Unit]
@@ -212,12 +184,6 @@ systemctl --user enable --now trackactivity.service
 systemctl --user status trackactivity.service
 ```
 
-Para que arranque sin necesidad de sesión gráfica activa:
-
-```bash
-sudo loginctl enable-linger $USER
-```
-
 Logs en tiempo real:
 
 ```bash
@@ -226,13 +192,13 @@ journalctl --user -u trackactivity.service -f
 
 ---
 
-## 7. Verificación post-instalación
+## 7. Verificación
 
-1. Trabaja unos minutos con normalidad (abrir VSCode en algún repo, terminal, navegador).
-2. Abre el dashboard: `http://127.0.0.1:8000`.
-3. Deberías ver señales acumulándose y, tras ~15 minutos, el primer bloque reconstruido.
+1. Trabaja unos minutos normalmente (abre VSCode, terminal, navegador).
+2. Abre `http://localhost:8100`.
+3. Tras ~15 minutos deberías ver bloques de tiempo acumulándose.
 
-Si quieres acelerar la verificación, fuerza la agregación manualmente:
+Para acelerar la verificación:
 
 ```bash
 cd dashboard
@@ -241,49 +207,57 @@ php artisan tracker:rebuild-blocks --since="1 hour ago"
 
 ---
 
-## 8. (Opcional) Filament admin
+## 8. Kanban de equipo (opcional, requiere Supabase)
 
-Si activaste Filament en el `.env` (`FILAMENT_ENABLED=true`):
+El Kanban de equipo usa Supabase (PostgreSQL en la nube). Para activarlo:
 
-```bash
-cd dashboard
-php artisan filament:install --panels
-php artisan make:filament-user
+1. Crea un proyecto en [supabase.com](https://supabase.com) (gratuito).
+2. Añade en `dashboard/.env`:
+
+```env
+SUPABASE_DB_HOST=db.<ref>.supabase.co
+SUPABASE_DB_PORT=5432
+SUPABASE_DB_DATABASE=postgres
+SUPABASE_DB_USERNAME=postgres
+SUPABASE_DB_PASSWORD=tu-password
+SUPABASE_DB_SSLMODE=require
+SUPABASE_URL=https://<ref>.supabase.co
+SUPABASE_ANON_KEY=eyJ...
+SUPABASE_SERVICE_ROLE_KEY=eyJ...
 ```
 
-Filament estará disponible en `http://127.0.0.1:8000/admin`.
+   Los valores se sacan de Supabase → Settings → **Database** (host y password) y Settings → **API** (URL y claves).
+
+3. Ejecutar las migraciones del equipo:
+
+```bash
+php artisan migrate --database=supabase --path=database/migrations/team
+```
+
+4. Reiniciar el servidor. El menú lateral mostrará la sección **Equipo**.
+
+> Todos los compañeros que quieran usar el Kanban de equipo necesitan configurar las mismas variables de Supabase en su `.env`.
 
 ---
 
-## 9. Desinstalación
+## Desinstalación
 
 ```bash
 systemctl --user disable --now trackactivity.service
 rm ~/.config/systemd/user/trackactivity.service
 rm -rf ~/trackActivity
-# Opcional, BORRA TODOS LOS DATOS:
+# Borra todos los datos (irreversible):
 rm -rf ~/.local/share/trackActivity
 ```
 
 ---
 
-## Notas sobre Wayland
-
-El collector de ventana activa basado en `xdotool`/`wmctrl` **no funciona bajo Wayland puro**. Alternativas previstas (fuera de v1):
-
-- GNOME shell extension que exponga la ventana activa por DBus.
-- Soporte experimental vía `swaymsg` para Sway.
-
-Para v1, se recomienda iniciar sesión con "Ubuntu on Xorg" en el selector de gdm3.
-
----
-
 ## Resolución de problemas
 
-| Síntoma | Causa probable | Solución |
-|---------|----------------|----------|
-| Daemon corre pero no captura ventanas | Wayland activo | Cambiar a sesión Xorg |
-| `xdotool: Can't open display` en logs | `DISPLAY` no exportada al servicio | Verificar `Environment=DISPLAY=:0` en el unit file |
-| `database is locked` | Modo WAL no habilitado | Ejecutar `sqlite3 activity.db "PRAGMA journal_mode=WAL;"` |
-| Dashboard no muestra datos | Ruta de BBDD distinta | Confirmar que `tracker/config.yml` y `dashboard/.env` apuntan al **mismo archivo** |
-| Daemon consume CPU | Intervalos demasiado bajos | Subir `interval_seconds` en `config.yml` |
+| Síntoma | Causa | Solución |
+|---------|-------|----------|
+| Daemon no captura ventanas | Wayland activo | Iniciar sesión con "Ubuntu on Xorg" |
+| `xdotool: Can't open display` | `DISPLAY` no exportada | Verificar `Environment=DISPLAY=:0` en el unit file |
+| `database is locked` | WAL no habilitado | `sqlite3 activity.db "PRAGMA journal_mode=WAL;"` |
+| Dashboard sin datos | Ruta de BBDD distinta en tracker y dashboard | Comprobar que `config.yml` y `.env` apuntan al mismo archivo |
+| Error 500 al arrancar | `APP_KEY` vacío | `php artisan key:generate` |
