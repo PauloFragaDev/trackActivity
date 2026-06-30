@@ -154,6 +154,26 @@ function toggleBubble() {
     bubble.classList.contains('hidden') ? openBubble() : closeBubble();
 }
 
+// ── Desktop notifications (Web Notifications API) ────────
+
+function requestDesktopPermission() {
+    if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+    }
+}
+
+function showDesktopNotification(n) {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    if (document.visibilityState === 'visible') return; // only when page not focused
+    const body = notifText(n).replace(/<\/?em>/g, '"').replace(/<[^>]*>/g, '');
+    const notif = new Notification('trackActivity', { body, icon: '/favicon.svg' });
+    notif.onclick = () => {
+        window.focus();
+        window.location.href = `/team/tasks#task-${n.task_id}`;
+        notif.close();
+    };
+}
+
 // ── Init ─────────────────────────────────────────────────
 
 export function initNotifications() {
@@ -183,6 +203,8 @@ export function initNotifications() {
 
     // Fetch + realtime require member identity and Supabase
     if (!window.MY_MEMBER_ID || !window.SUPABASE_URL) return;
+
+    requestDesktopPermission();
 
     // Load initial notifications
     fetch('/team/notifications')
@@ -217,6 +239,7 @@ export function initNotifications() {
                     className: 'toast',
                     onClick:   () => { window.location.href = `/team/tasks#task-${n.task_id}`; },
                 }).showToast();
+                showDesktopNotification(n);
             })
             .subscribe();
     }
