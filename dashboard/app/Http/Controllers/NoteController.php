@@ -239,6 +239,18 @@ class NoteController extends Controller
             ->with('status', $note->pinned ? 'Nota fijada.' : 'Nota desfijada.');
     }
 
+    /** Mueve una nota a otra carpeta (o a la raíz). */
+    public function move(Request $request, Note $note): JsonResponse
+    {
+        $data = $request->validate([
+            'folder_id' => ['nullable', 'integer', 'exists:note_folders,id'],
+        ]);
+
+        $note->update(['folder_id' => $data['folder_id'] ?? null]);
+
+        return response()->json(['ok' => true]);
+    }
+
     /** Sube una imagen adjunta a una nota y devuelve su URL pública. */
     public function uploadImage(Request $request): JsonResponse
     {

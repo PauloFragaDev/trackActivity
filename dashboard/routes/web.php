@@ -100,11 +100,13 @@ Route::patch('/notes/{note}/pin',    [NoteController::class, 'togglePin'])->name
 Route::patch('/notes/{id}/restore',  [NoteController::class, 'restore'])->name('notes.restore');
 Route::delete('/notes/{note}',       [NoteController::class, 'destroy'])->name('notes.destroy');
 
-Route::post('/notes/images', [NoteController::class, 'uploadImage'])->name('notes.images.upload');
+Route::post('/notes/images',           [NoteController::class, 'uploadImage'])->name('notes.images.upload');
+Route::post('/notes/{note}/move',      [NoteController::class, 'move'])->name('notes.move');
 
-Route::post('/note-folders',                [NoteFolderController::class, 'store'])->name('note-folders.store');
-Route::patch('/note-folders/{noteFolder}',  [NoteFolderController::class, 'update'])->name('note-folders.update');
-Route::delete('/note-folders/{noteFolder}', [NoteFolderController::class, 'destroy'])->name('note-folders.destroy');
+Route::post('/note-folders',                  [NoteFolderController::class, 'store'])->name('note-folders.store');
+Route::patch('/note-folders/{noteFolder}',    [NoteFolderController::class, 'update'])->name('note-folders.update');
+Route::delete('/note-folders/{noteFolder}',   [NoteFolderController::class, 'destroy'])->name('note-folders.destroy');
+Route::post('/note-folders/{noteFolder}/move', [NoteFolderController::class, 'move'])->name('note-folders.move');
 
 // ─────────────────── Tareas (Kanban) ───────────────────
 Route::get('/tasks',                [TaskController::class, 'index'])->name('tasks.index');

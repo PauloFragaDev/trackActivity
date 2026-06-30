@@ -35,9 +35,9 @@
                            placeholder="Buscar notas…" class="input text-sm">
                 </form>
             </div>
-            {{-- Cabecera: carpeta actual o resultados de búsqueda --}}
-            <div class="panel-full p-3 border-b divider flex items-center justify-between gap-2">
-                @if ($isTrash)
+            {{-- Cabecera limpia ──────────────────────── --}}
+            @if ($isTrash)
+                <div class="panel-full px-3 py-2.5 border-b divider flex items-center justify-between gap-2">
                     <span class="text-sm font-medium inline-flex items-center gap-1.5"><x-icon name="trash" class="w-4 h-4" />Papelera</span>
                     @if ($trashCount > 0)
                         <form method="POST" action="{{ route('notes.trash.empty') }}" class="shrink-0"
@@ -47,34 +47,38 @@
                             <button type="submit" class="btn-ghost text-xs text-rose-600 dark:text-rose-400">Vaciar</button>
                         </form>
                     @endif
-                @elseif ($search !== '')
+                </div>
+            @elseif ($search !== '')
+                <div class="panel-full px-3 py-2.5 border-b divider flex items-center justify-between gap-2">
                     <span class="text-sm font-medium truncate">Búsqueda: «{{ $search }}»</span>
                     <a href="{{ route('notes.index', ['folder' => $folderId]) }}"
                        class="btn-ghost text-xs shrink-0">limpiar</a>
-                @else
-                    <div class="flex flex-col min-w-0 flex-1">
-                        @if (isset($parentFolder) && $parentFolder)
-                            <a href="{{ route('notes.index', ['folder' => $parentFolder->id, 'back' => 1]) }}"
-                               class="text-xs text-muted hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center gap-1 mb-0.5">
-                                ← {{ $parentFolder->name }}
-                            </a>
-                        @endif
-                        <span class="text-sm font-medium truncate">{{ $currentFolder?->name ?? 'Notas' }}</span>
+                </div>
+            @else
+                <div class="panel-full px-3 pt-2.5 pb-2 border-b divider">
+                    @if (isset($parentFolder) && $parentFolder)
+                        <a href="{{ route('notes.index', ['folder' => $parentFolder->id, 'back' => 1]) }}"
+                           class="text-xs text-muted hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center gap-1 mb-1">
+                            ‹ {{ $parentFolder->name }}
+                        </a>
+                    @endif
+                    @if ($currentFolder)
+                        <span class="folder-title-inline block text-sm font-semibold truncate cursor-default select-none"
+                              data-folder-id="{{ $currentFolder->id }}"
+                              title="Doble clic para renombrar">{{ $currentFolder->name }}</span>
+                    @else
+                        <span class="text-sm font-semibold">Notas</span>
+                    @endif
+                    <div class="flex gap-1.5 mt-2">
+                        <button type="button"
+                                class="flex-1 btn-ghost text-xs py-1.5"
+                                data-modal-open="#subfolder-new">+ Carpeta</button>
+                        <button type="button"
+                                class="flex-1 btn text-xs py-1.5"
+                                data-modal-open="#note-new">+ Nota</button>
                     </div>
-                    <div class="flex items-center gap-1 shrink-0">
-                        @if ($currentFolder)
-                            <button type="button" class="btn-ghost text-xs" data-modal-open="#folder-edit" title="Renombrar carpeta" aria-label="Renombrar carpeta"><x-icon name="edit" class="w-3.5 h-3.5" /></button>
-                            <form method="POST" action="{{ route('note-folders.destroy', $currentFolder) }}" class="inline"
-                                  data-confirm="¿Eliminar la carpeta «{{ $currentFolder->name }}»? Sus notas y subcarpetas pasarán a la raíz.">
-                                @csrf @method('DELETE')
-                                <button type="submit" class="btn-ghost text-xs text-rose-600 dark:text-rose-400" title="Eliminar carpeta" aria-label="Eliminar carpeta"><x-icon name="trash" class="w-3.5 h-3.5" /></button>
-                            </form>
-                        @endif
-                        <button type="button" class="btn-ghost text-xs" data-modal-open="#subfolder-new">+ Carpeta</button>
-                        <button type="button" class="btn text-xs" data-modal-open="#note-new">+ Nota</button>
-                    </div>
-                @endif
-            </div>
+                </div>
+            @endif
             {{-- Lista --}}
             @php
                 $animClass = $navBack ? 'notes-nav-back' : ($folderId ? 'notes-nav-forward' : '');
@@ -103,9 +107,12 @@
                     @if (isset($subfolders) && $subfolders->isNotEmpty())
                         @foreach ($subfolders as $sf)
                             <a href="{{ route('notes.index', ['folder' => $sf->id]) }}"
-                               class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-ink-100 dark:hover:bg-ink-800 group">
+                               class="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-ink-100 dark:hover:bg-ink-800 group"
+                               data-subfolder-id="{{ $sf->id }}"
+                               data-subfolder-name="{{ $sf->name }}"
+                               data-subfolder-parent="{{ $sf->parent_id }}">
                                 <span class="text-base leading-none">{{ $sf->icon ?: '📁' }}</span>
-                                <span class="text-sm font-medium truncate flex-1">{{ $sf->name }}</span>
+                                <span class="subfolder-name-text text-sm font-medium truncate flex-1">{{ $sf->name }}</span>
                                 <span class="text-faint text-xs group-hover:text-muted">›</span>
                             </a>
                         @endforeach
@@ -121,7 +128,10 @@
                             $preview = $n->preview();
                         @endphp
                         <div class="flex items-start rounded
-                                    {{ $currentNote && $currentNote->id === $n->id ? 'surface-soft' : 'hover:bg-ink-100 dark:hover:bg-ink-800' }}">
+                                    {{ $currentNote && $currentNote->id === $n->id ? 'surface-soft' : 'hover:bg-ink-100 dark:hover:bg-ink-800' }}"
+                             data-note-id="{{ $n->id }}"
+                             data-note-title="{{ $n->title }}"
+                             data-note-folder="{{ $n->folder_id }}">
                             <a href="{{ $noteLink }}" class="flex-1 min-w-0 px-2 py-1.5">
                                 <div class="text-sm font-medium truncate">
                                     <span class="mr-1">{{ $n->icon ?: '📄' }}</span>{{ $n->title }}
@@ -350,4 +360,10 @@
             </form>
         </dialog>
     @endif
+
+    <script>
+        window.__NOTE_FOLDERS = {!! json_encode(
+            $folderOptions->map(fn ($fo) => ['id' => $fo['id'], 'name' => $fo['name']])->values()
+        ) !!};
+    </script>
 @endsection

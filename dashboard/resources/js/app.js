@@ -284,7 +284,10 @@ window.addEventListener('DOMContentLoaded', () => {
         openModal('#manual-add');
     }
 
-    // Editor de notas: Crepe se carga de forma diferida solo en /notes.
+    // Editor de notas + UI de contexto/mover: carga diferida solo en /notes.
+    if (document.getElementById('notes-list')) {
+        import('./notes-ui.js').then((m) => m.initNotesUI());
+    }
     if (document.querySelector('[data-note-editor]')) {
         import('./notes-editor.js').then((m) => m.initNoteEditor());
     }

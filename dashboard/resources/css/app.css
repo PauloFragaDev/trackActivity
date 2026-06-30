@@ -1030,6 +1030,62 @@ html.dark ::-webkit-scrollbar-thumb:hover { background: rgb(71 85 105); }
 .notes-nav-forward { animation: notesSlideRight 0.22s ease-out; }
 .notes-nav-back    { animation: notesSlideLeft  0.22s ease-out; }
 
+/* Notas · menú contextual */
+.ctx-menu {
+    position: fixed;
+    z-index: 9999;
+    min-width: 168px;
+    background: var(--paper);
+    border: 1px solid var(--color-divider);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgb(0 0 0 / 0.13), 0 2px 6px rgb(0 0 0 / 0.07);
+    padding: 4px;
+    user-select: none;
+}
+html.dark .ctx-menu {
+    box-shadow: 0 8px 24px rgb(0 0 0 / 0.38), 0 2px 6px rgb(0 0 0 / 0.22);
+}
+.ctx-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    font-size: 13px;
+    border-radius: 5px;
+    cursor: pointer;
+    color: inherit;
+    background: none;
+    border: none;
+    width: 100%;
+    text-align: left;
+    white-space: nowrap;
+    transition: background 0.1s;
+}
+.ctx-item:hover { background: rgb(0 0 0 / 0.06); }
+html.dark .ctx-item:hover { background: rgb(255 255 255 / 0.08); }
+.ctx-item.ctx-danger { color: #e11d48; }
+html.dark .ctx-item.ctx-danger { color: #fb7185; }
+.ctx-item.ctx-danger:hover { background: rgb(225 29 72 / 0.08); }
+html.dark .ctx-item.ctx-danger:hover { background: rgb(251 113 133 / 0.1); }
+.ctx-sep {
+    height: 1px;
+    background: var(--color-divider);
+    margin: 3px 0;
+}
+
+/* Inline rename: input dentro del header de carpetas */
+.folder-title-input {
+    font-size: 0.875rem;
+    font-weight: 600;
+    background: transparent;
+    border: none;
+    border-bottom: 1.5px solid #10b981;
+    outline: none;
+    padding: 0;
+    width: 100%;
+    color: inherit;
+}
+
 /* ─────────────── Accesibilidad ─────────────── */
 
 /* Indicador de foco visible para navegación por teclado. Los inputs ya
