@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Insights')
+@section('title', __('insights.title'))
 
 @section('content')
     @php
@@ -14,20 +14,20 @@
 
     <div class="mb-5 flex items-center justify-between gap-3 flex-wrap">
         <div>
-            <h1 class="text-xl font-semibold tracking-tight">Insights</h1>
+            <h1 class="text-xl font-semibold tracking-tight">{{ __('insights.title') }}</h1>
             <p class="text-sm text-muted mt-1">{{ $heading }}</p>
         </div>
         <div class="flex items-center gap-2">
             {{-- Día / Semana --}}
             <div class="inline-flex rounded-lg border divider overflow-hidden text-sm">
                 <a href="{{ route('insights.index', ['period' => 'day'] + ($dateParam ? ['date' => $dateParam] : [])) }}"
-                   class="px-3 py-1.5 {{ $period === 'day' ? 'bg-ink-100 dark:bg-ink-800 font-medium' : 'hover:bg-ink-50 dark:hover:bg-ink-800/40' }}">Día</a>
+                   class="px-3 py-1.5 {{ $period === 'day' ? 'bg-ink-100 dark:bg-ink-800 font-medium' : 'hover:bg-ink-50 dark:hover:bg-ink-800/40' }}">{{ __('insights.period_day') }}</a>
                 <a href="{{ route('insights.index', ['period' => 'week'] + ($dateParam ? ['date' => $dateParam] : [])) }}"
-                   class="px-3 py-1.5 border-l divider {{ $period === 'week' ? 'bg-ink-100 dark:bg-ink-800 font-medium' : 'hover:bg-ink-50 dark:hover:bg-ink-800/40' }}">Semana</a>
+                   class="px-3 py-1.5 border-l divider {{ $period === 'week' ? 'bg-ink-100 dark:bg-ink-800 font-medium' : 'hover:bg-ink-50 dark:hover:bg-ink-800/40' }}">{{ __('insights.period_week') }}</a>
             </div>
             {{-- Anterior / siguiente --}}
-            <a class="btn-ghost" href="{{ route('insights.index', ['period' => $period, 'date' => $prev]) }}" title="Anterior">←</a>
-            <a class="btn-ghost" href="{{ route('insights.index', ['period' => $period, 'date' => $next]) }}" title="Siguiente">→</a>
+            <a class="btn-ghost" href="{{ route('insights.index', ['period' => $period, 'date' => $prev]) }}" title="{{ __('insights.prev') }}">←</a>
+            <a class="btn-ghost" href="{{ route('insights.index', ['period' => $period, 'date' => $next]) }}" title="{{ __('insights.next') }}">→</a>
         </div>
     </div>
 
@@ -40,11 +40,11 @@
     <div class="grid gap-3 mb-4" style="grid-template-columns: repeat(auto-fill, minmax(min(11rem, 100%), 1fr));">
         @php
             $stats = [
-                ['Tiempo activo', $fmt($metrics['active_minutes'])],
-                ['Inactivo', $fmt($metrics['idle_minutes'])],
-                ['Racha de foco', $fmt($metrics['longest_focus_minutes'])],
-                ['Cambios de contexto', (string) $metrics['context_switches']],
-                ['Deep-work', $metrics['deep_work_pct'] . '%'],
+                [__('insights.active_time'), $fmt($metrics['active_minutes'])],
+                [__('insights.idle_time'), $fmt($metrics['idle_minutes'])],
+                [__('insights.longest_focus'), $fmt($metrics['longest_focus_minutes'])],
+                [__('insights.context_switches'), (string) $metrics['context_switches']],
+                [__('insights.deep_work'), $metrics['deep_work_pct'] . '%'],
             ];
         @endphp
         @foreach ($stats as [$label, $value])
@@ -58,7 +58,7 @@
     <div class="grid gap-4" style="grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 1fr));">
         {{-- Reparto por proyecto --}}
         <div class="card p-4">
-            <h2 class="text-sm font-semibold mb-3">Reparto por proyecto</h2>
+            <h2 class="text-sm font-semibold mb-3">{{ __('insights.by_project') }}</h2>
             @forelse ($metrics['by_project'] as $p)
                 @if ($p['minutes'] > 0)
                     <div class="mb-2">
@@ -76,20 +76,20 @@
                     </div>
                 @endif
             @empty
-                <p class="text-sm text-faint">Sin actividad en este periodo.</p>
+                <p class="text-sm text-faint">{{ __('insights.by_project_empty') }}</p>
             @endforelse
         </div>
 
         {{-- Tendencias por proyecto (últimas 8 semanas) --}}
         <div class="card p-4">
-            <h2 class="text-sm font-semibold mb-3">Tendencia por proyecto · 8 semanas</h2>
+            <h2 class="text-sm font-semibold mb-3">{{ __('insights.trend_title') }}</h2>
             @if (count($trend['series']) > 0)
                 <div class="relative h-64">
                     <canvas id="insights-trend" aria-label="Tendencia por proyecto"></canvas>
                 </div>
                 <script id="insights-data" type="application/json">@json($trend)</script>
             @else
-                <p class="text-sm text-faint">Aún no hay suficientes datos para una tendencia.</p>
+                <p class="text-sm text-faint">{{ __('insights.no_trend') }}</p>
             @endif
         </div>
     </div>

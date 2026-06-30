@@ -1,14 +1,12 @@
 @extends('layouts.settings')
 
-@section('title', 'Ajustes generales')
+@section('title', __('settings.general_title'))
 
 @section('settings-content')
     <div class="mb-5">
-        <h1 class="text-xl font-semibold tracking-tight">Ajustes generales</h1>
+        <h1 class="text-xl font-semibold tracking-tight">{{ __('settings.general_title') }}</h1>
         <p class="text-sm text-muted mt-1">
-            Activa o desactiva los módulos opcionales. Los que ocultes
-            desaparecen del sidebar global; sus rutas siguen vivas para
-            no romper bookmarks.
+            {{ __('settings.general_desc') }}
         </p>
     </div>
 
@@ -18,22 +16,21 @@
 
         <div class="space-y-2">
             <div>
-                <h2 class="text-sm font-semibold">Tu nombre</h2>
+                <h2 class="text-sm font-semibold">{{ __('settings.user_name') }}</h2>
                 <p class="text-xs text-faint mt-0.5">
-                    Aparece como autor de los comentarios de las tareas. Solo el
-                    nombre; el sistema te identifica internamente de forma automática.
+                    {{ __('settings.user_name_hint') }}
                 </p>
             </div>
             <input type="text" name="user_name" maxlength="80"
-                   value="{{ $userName }}" placeholder="Cómo quieres que aparezcas"
+                   value="{{ $userName }}" placeholder="{{ __('settings.user_name_ph') }}"
                    class="input text-sm max-w-xs">
         </div>
 
         <div class="space-y-3 pt-4 border-t divider">
             <div>
-                <h2 class="text-sm font-semibold">Módulos visibles</h2>
+                <h2 class="text-sm font-semibold">{{ __('settings.visible_modules') }}</h2>
                 <p class="text-xs text-faint mt-0.5">
-                    Los módulos desactivados desaparecen del sidebar. Desactivar Tracking también detiene el daemon de captura.
+                    {{ __('settings.modules_desc') }}
                 </p>
             </div>
 
@@ -55,11 +52,24 @@
             </div>
         </div>
 
+        <div class="space-y-2 pt-4 border-t divider">
+            <div>
+                <h2 class="text-sm font-semibold">{{ __('settings.language') }}</h2>
+                <p class="text-xs text-faint mt-0.5">
+                    {{ __('settings.language_desc') }}
+                </p>
+            </div>
+            <select name="locale" class="select mt-1">
+                <option value="es" @selected(Setting::get('app.locale', 'es') === 'es')>{{ __('common.spanish') }}</option>
+                <option value="ca" @selected(Setting::get('app.locale', 'es') === 'ca')>{{ __('common.catalan') }}</option>
+            </select>
+        </div>
+
         <div class="pt-3 flex items-center justify-between border-t divider">
             <p class="text-xs text-faint">
-                Los cambios se aplican al siguiente refresco de cualquier página.
+                {{ __('settings.save_hint') }}
             </p>
-            <button type="submit" class="btn">Guardar</button>
+            <button type="submit" class="btn">{{ __('settings.save') }}</button>
         </div>
     </form>
 @endsection

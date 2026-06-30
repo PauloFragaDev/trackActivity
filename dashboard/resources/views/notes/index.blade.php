@@ -1,12 +1,12 @@
 @extends('layouts.app')
 
-@section('title', 'Notas')
+@section('title', __('notes.title'))
 {{-- Notas usa todo el ancho del área de contenido (sin el cap max-w-6xl) --}}
 @section('container', '')
 
 @section('content')
     <div class="mb-4">
-        <h1 class="text-xl font-semibold tracking-tight">Notas</h1>
+        <h1 class="text-xl font-semibold tracking-tight">{{ __('notes.title') }}</h1>
         <p class="text-sm text-muted mt-1">
             {{ $folders->count() }} {{ Str::plural('carpeta', $folders->count()) }}
         </p>
@@ -26,33 +26,33 @@
         <div id="notes-list" class="w-64 shrink-0 border-r divider flex flex-col">
             <div class="flex items-center gap-1 p-2 border-b divider">
                 <button type="button" class="btn-ghost shrink-0" data-panel-toggle="list"
-                        title="Plegar / desplegar notas" aria-label="Plegar notas">
+                        title="Plegar / desplegar notas" aria-label="{{ __('notes.collapse') }}">
                     <span data-pc-collapse aria-hidden="true">«</span>
                     <span data-pc-expand   aria-hidden="true">»</span>
                 </button>
                 <form method="GET" action="{{ route('notes.index') }}" class="panel-full flex-1 min-w-0">
                     <input type="search" name="q" value="{{ $search }}"
-                           placeholder="Buscar notas…" class="input text-sm">
+                           placeholder="{{ __('notes.search_ph') }}" class="input text-sm">
                 </form>
             </div>
             {{-- Cabecera limpia ──────────────────────── --}}
             @if ($isTrash)
                 <div class="panel-full px-3 py-2.5 border-b divider flex items-center justify-between gap-2">
-                    <span class="text-sm font-medium inline-flex items-center gap-1.5"><x-icon name="trash" class="w-4 h-4" />Papelera</span>
+                    <span class="text-sm font-medium inline-flex items-center gap-1.5"><x-icon name="trash" class="w-4 h-4" />{{ __('notes.trash') }}</span>
                     @if ($trashCount > 0)
                         <form method="POST" action="{{ route('notes.trash.empty') }}" class="shrink-0"
-                              data-confirm="¿Vaciar la papelera? Se eliminarán definitivamente {{ $trashCount }} nota(s). No se puede deshacer."
-                              data-confirm-button="Sí, vaciar">
+                              data-confirm="{{ __('notes.empty_trash_confirm', ['count' => $trashCount]) }}"
+                              data-confirm-button="{{ __('notes.empty_trash_btn') }}">
                             @csrf @method('DELETE')
-                            <button type="submit" class="btn-ghost text-xs text-rose-600 dark:text-rose-400">Vaciar</button>
+                            <button type="submit" class="btn-ghost text-xs text-rose-600 dark:text-rose-400">{{ __('notes.empty_trash_label') }}</button>
                         </form>
                     @endif
                 </div>
             @elseif ($search !== '')
                 <div class="panel-full px-3 py-2.5 border-b divider flex items-center justify-between gap-2">
-                    <span class="text-sm font-medium truncate">Búsqueda: «{{ $search }}»</span>
+                    <span class="text-sm font-medium truncate">{{ __('notes.search_results', ['query' => $search]) }}</span>
                     <a href="{{ route('notes.index', ['folder' => $folderId]) }}"
-                       class="btn-ghost text-xs shrink-0">limpiar</a>
+                       class="btn-ghost text-xs shrink-0">{{ __('notes.search_clear') }}</a>
                 </div>
             @else
                 <div class="panel-full px-3 pt-2.5 pb-2 border-b divider">
@@ -72,10 +72,10 @@
                     <div class="flex gap-1.5 mt-2">
                         <button type="button"
                                 class="flex-1 btn-ghost text-xs py-1.5"
-                                data-modal-open="#subfolder-new">+ Carpeta</button>
+                                data-modal-open="#subfolder-new">{{ __('notes.new_subfolder') }}</button>
                         <button type="button"
                                 class="flex-1 btn text-xs py-1.5"
-                                data-modal-open="#note-new">+ Nota</button>
+                                data-modal-open="#note-new">{{ __('notes.new_note') }}</button>
                     </div>
                 </div>
             @endif
@@ -91,16 +91,16 @@
                                 <div class="text-sm font-medium truncate">
                                     <span class="mr-1">{{ $n->icon ?: '📄' }}</span>{{ $n->title }}
                                 </div>
-                                <div class="text-xs text-faint">Eliminada {{ $n->deleted_at->diffForHumans() }}</div>
+                                <div class="text-xs text-faint">{{ __('notes.deleted_ago', ['ago' => $n->deleted_at->diffForHumans()]) }}</div>
                             </div>
                             <form method="POST" action="{{ route('notes.restore', $n->id) }}" class="shrink-0">
                                 @csrf
                                 @method('PATCH')
-                                <button type="submit" class="btn-ghost text-xs">Restaurar</button>
+                                <button type="submit" class="btn-ghost text-xs">{{ __('notes.restore') }}</button>
                             </form>
                         </div>
                     @empty
-                        <p class="text-sm text-muted text-center py-6">La papelera está vacía.</p>
+                        <p class="text-sm text-muted text-center py-6">{{ __('notes.empty_trash_msg') }}</p>
                     @endforelse
                 @else
                     {{-- Subcarpetas --}}
@@ -151,7 +151,7 @@
                         </div>
                     @empty
                         <p class="text-sm text-muted text-center py-6">
-                            {{ $search !== '' ? 'Sin resultados.' : 'Sin notas en esta carpeta.' }}
+                            {{ $search !== '' ? __('notes.no_search_results') : __('notes.no_notes') }}
                         </p>
                     @endforelse
                 @endif
@@ -185,13 +185,13 @@
                             </div>
                         </details>
                         <input type="text" name="title" required maxlength="200"
-                               value="{{ old('title', $currentNote->title) }}" placeholder="Título" aria-label="Título de la nota"
+                               value="{{ old('title', $currentNote->title) }}" placeholder="{{ __('notes.title_ph') }}" aria-label="{{ __('notes.title_ph') }}"
                                class="flex-1 min-w-0 bg-transparent border-0 px-0 py-1 text-2xl font-bold tracking-tight rounded
                                       placeholder:text-ink-300 dark:placeholder:text-ink-600">
                     </div>
                     <textarea name="body" rows="18" data-note-body
                               class="textarea font-mono flex-1 min-h-0"
-                              placeholder="Escribe en Markdown…">{{ old('body', $currentNote->body) }}</textarea>
+                              placeholder="{{ __('notes.body_ph') }}">{{ old('body', $currentNote->body) }}</textarea>
                     {{-- El editor WYSIWYG (Tiptap) se monta aquí; ver resources/js/notes-editor.js.
                          El skeleton se retira cuando Tiptap termina de inicializar. --}}
                     <div data-note-editor class="flex-1 min-h-0">
@@ -210,9 +210,9 @@
                     </div>
                     <div class="border-t divider pt-3 mt-1 shrink-0 flex items-center gap-4 flex-wrap">
                         <label class="flex flex-col gap-0.5">
-                            <span class="text-xs text-muted font-medium">Carpeta</span>
+                            <span class="text-xs text-muted font-medium">{{ __('notes.folder_select') }}</span>
                             <select name="folder_id" style="min-width: 15rem" class="select">
-                                <option value="">Sin carpeta</option>
+                                <option value="">{{ __('notes.folder_root') }}</option>
                                 @foreach ($folderOptions as $fo)
                                     <option value="{{ $fo['id'] }}"
                                         @selected((int) old('folder_id', $currentNote->folder_id) === $fo['id'])>
@@ -310,8 +310,8 @@
             <input type="hidden" name="folder_id" value="{{ $folderId }}">
             @include('layouts.partials.modal-header', ['title' => 'Nueva nota'])
             <label class="label">
-                <span>Título</span>
-                <input type="text" name="title" required maxlength="200" class="input mt-1" placeholder="Título de la nota">
+                <span>{{ __('notes.title_ph') }}</span>
+                <input type="text" name="title" required maxlength="200" class="input mt-1" placeholder="{{ __('notes.title_ph') }}">
             </label>
             <label class="label">
                 <span>Icono</span>

@@ -166,7 +166,7 @@ class NoteController extends Controller
 
         return redirect()
             ->route('notes.index', ['folder' => $note->folder_id, 'note' => $note->id])
-            ->with('status', 'Nota creada.');
+            ->with('status', __('notes.status_created'));
     }
 
     public function update(Request $request, Note $note): RedirectResponse|Response
@@ -195,7 +195,7 @@ class NoteController extends Controller
 
         return redirect()
             ->route('notes.index', ['folder' => $note->folder_id, 'note' => $note->id])
-            ->with('status', 'Nota guardada.');
+            ->with('status', __('notes.status_updated'));
     }
 
     public function destroy(Note $note): RedirectResponse
@@ -205,7 +205,7 @@ class NoteController extends Controller
 
         return redirect()
             ->route('notes.index', ['folder' => $folderId])
-            ->with('status', 'Nota movida a la papelera.');
+            ->with('status', __('notes.status_trashed'));
     }
 
     /** Restaura una nota desde la papelera. */
@@ -216,7 +216,7 @@ class NoteController extends Controller
 
         return redirect()
             ->route('notes.index', ['folder' => $note->folder_id, 'note' => $note->id])
-            ->with('status', 'Nota restaurada.');
+            ->with('status', __('notes.status_restored'));
     }
 
     /** Vacía la papelera: borra definitivamente las notas eliminadas. */
@@ -226,7 +226,7 @@ class NoteController extends Controller
 
         return redirect()
             ->route('notes.index')
-            ->with('status', 'Papelera vaciada.');
+            ->with('status', __('notes.status_emptied'));
     }
 
     /** Fija/desfija una nota (acción rápida desde la lista). */
@@ -236,7 +236,7 @@ class NoteController extends Controller
 
         return redirect()
             ->route('notes.index', ['folder' => $note->folder_id, 'note' => $note->id])
-            ->with('status', $note->pinned ? 'Nota fijada.' : 'Nota desfijada.');
+            ->with('status', $note->pinned ? __('notes.status_pinned') : __('notes.status_unpinned'));
     }
 
     /** Mueve una nota a otra carpeta (o a la raíz). */

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Inicio')
+@section('title', __('dashboard.title'))
 
 @section('content')
     @php
@@ -9,7 +9,7 @@
     @endphp
 
     <div class="mb-5">
-        <h1 class="text-xl font-semibold tracking-tight">Inicio</h1>
+        <h1 class="text-xl font-semibold tracking-tight">{{ __('dashboard.title') }}</h1>
         <p class="text-sm text-muted mt-1">{{ ucfirst($now->locale('es')->isoFormat('dddd, D [de] MMMM')) }}</p>
     </div>
 
@@ -21,17 +21,17 @@
                 <span>
                     El tracker no registra actividad desde
                     <x-timestamp :at="$trackerStaleSince" class="text-amber-900 dark:text-amber-200 cursor-help" />.
-                    Comprueba que el daemon esté en marcha.
+                    {{ __('dashboard.check_daemon') }}
                 </span>
             </div>
         @endif
 
         @if ($latestEvent)
             <div class="card p-3 mb-5 flex items-center gap-2 text-sm">
-                <span class="text-muted shrink-0">Ahora mismo</span>
+                <span class="text-muted shrink-0">{{ __('dashboard.now') }}</span>
                 <span class="flex-1 min-w-0 truncate">
                     @if ($latestEvent->source === 'idle')
-                        <span class="text-muted">Inactivo</span>
+                        <span class="text-muted">{{ __('dashboard.idle') }}</span>
                     @else
                         @php
                             $cwdHint = data_get($latestEvent->metadata, 'cwd_hint');
@@ -61,22 +61,22 @@
                class="card p-4 mb-5 block hover:bg-ink-50 dark:hover:bg-ink-800/40 transition">
                 <div class="flex items-center justify-between gap-2 mb-1">
                     <h2 class="text-sm font-semibold flex items-center gap-1.5">
-                        <x-icon name="sparkles" class="w-3.5 h-3.5 text-emerald-500" /> Resumen de hoy
+                        <x-icon name="sparkles" class="w-3.5 h-3.5 text-emerald-500" /> {{ __('dashboard.insights_digest') }}
                     </h2>
-                    <span class="text-xs text-faint shrink-0">Ver insights →</span>
+                    <span class="text-xs text-faint shrink-0">{{ __('dashboard.view_insights') }}</span>
                 </div>
                 <p class="text-sm leading-relaxed">{{ $insightsDigest['narrative'] }}</p>
                 <div class="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-muted">
-                    <span>Activo <span class="font-medium text-ink-700 dark:text-ink-200">{{ $fmt($insightsDigest['active_minutes']) }}</span></span>
-                    <span>Racha de foco <span class="font-medium text-ink-700 dark:text-ink-200">{{ $fmt($insightsDigest['longest_focus_minutes']) }}</span></span>
-                    <span>Inactivo <span class="font-medium text-ink-700 dark:text-ink-200">{{ $fmt($insightsDigest['idle_minutes']) }}</span></span>
+                    <span>{{ __('dashboard.active_time') }} <span class="font-medium text-ink-700 dark:text-ink-200">{{ $fmt($insightsDigest['active_minutes']) }}</span></span>
+                    <span>{{ __('dashboard.longest_focus') }} <span class="font-medium text-ink-700 dark:text-ink-200">{{ $fmt($insightsDigest['longest_focus_minutes']) }}</span></span>
+                    <span>{{ __('dashboard.idle_time') }} <span class="font-medium text-ink-700 dark:text-ink-200">{{ $fmt($insightsDigest['idle_minutes']) }}</span></span>
                 </div>
             </a>
         @endif
 
         {{-- Semana actual --}}
         <section class="mb-6">
-            <h2 class="text-xs font-medium uppercase tracking-wider text-muted mb-2">Esta semana</h2>
+            <h2 class="text-xs font-medium uppercase tracking-wider text-muted mb-2">{{ __('dashboard.this_week') }}</h2>
             <div class="grid grid-cols-7 gap-2">
                 @foreach ($week as $d)
                     <a href="{{ route('timeline.day', ['date' => $d['date']->format('Y-m-d')]) }}"
@@ -94,7 +94,7 @@
 
         {{-- Heatmap de actividad del último año --}}
         <section class="mb-6">
-            <h2 class="text-xs font-medium uppercase tracking-wider text-muted mb-2">Actividad del último año</h2>
+            <h2 class="text-xs font-medium uppercase tracking-wider text-muted mb-2">{{ __('dashboard.heatmap') }}</h2>
             @php
                 $heatLevel = fn ($m) => $m === null ? -1
                     : ($m == 0 ? 0 : ($m < 90 ? 1 : ($m < 210 ? 2 : ($m < 360 ? 3 : 4))));
@@ -125,13 +125,13 @@
                 </div>
             </div>
             <div class="flex items-center justify-end gap-1.5 mt-2 text-[11px] text-faint">
-                <span>menos</span>
+                <span>{{ __('dashboard.less') }}</span>
                 <span class="w-2.5 h-2.5 rounded-sm {{ $heatClass[0] }}"></span>
                 <span class="w-2.5 h-2.5 rounded-sm {{ $heatClass[1] }}"></span>
                 <span class="w-2.5 h-2.5 rounded-sm {{ $heatClass[2] }}"></span>
                 <span class="w-2.5 h-2.5 rounded-sm {{ $heatClass[3] }}"></span>
                 <span class="w-2.5 h-2.5 rounded-sm {{ $heatClass[4] }}"></span>
-                <span>más</span>
+                <span>{{ __('dashboard.more') }}</span>
             </div>
         </section>
     @endif
@@ -139,7 +139,7 @@
     {{-- Últimas notas + Tareas en curso --}}
     <div class="grid gap-4 md:grid-cols-2">
         <section class="card p-4">
-            <h2 class="text-sm font-semibold mb-3">Últimas notas</h2>
+            <h2 class="text-sm font-semibold mb-3">{{ __('dashboard.recent_notes') }}</h2>
             <div class="space-y-0.5">
                 @forelse ($recentNotes as $n)
                     <a href="{{ route('notes.index', ['note' => $n->id]) }}"
@@ -149,15 +149,15 @@
                         <x-timestamp :at="$n->updated_at" class="shrink-0 text-xs" />
                     </a>
                 @empty
-                    <p class="text-sm text-muted">Tus notas recientes aparecerán aquí. Crea la primera desde Notas.</p>
+                    <p class="text-sm text-muted">{{ __('dashboard.no_recent_notes') }}</p>
                 @endforelse
             </div>
         </section>
 
         <section class="card p-4">
             <div class="flex items-center justify-between mb-3">
-                <h2 class="text-sm font-semibold">Tareas en curso</h2>
-                <a href="{{ route('tasks.index') }}" class="text-xs text-muted hover:underline">Ver tablero</a>
+                <h2 class="text-sm font-semibold">{{ __('dashboard.tasks_in_progress') }}</h2>
+                <a href="{{ route('tasks.index') }}" class="text-xs text-muted hover:underline">{{ __('dashboard.view_board') }}</a>
             </div>
             <div class="space-y-0.5">
                 @forelse ($doingTasks as $t)
@@ -169,7 +169,7 @@
                         @endif
                     </a>
                 @empty
-                    <p class="text-sm text-muted">Nada en curso ahora mismo. Mueve una tarea a “En curso” en el tablero.</p>
+                    <p class=”text-sm text-muted”>{{ __('dashboard.no_tasks_in_progress') }}</p>
                 @endforelse
             </div>
         </section>

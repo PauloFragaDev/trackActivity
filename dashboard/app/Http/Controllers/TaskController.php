@@ -62,7 +62,7 @@ class TaskController extends Controller
             ]);
         }
 
-        return redirect()->route('tasks.index')->with('status', 'Tarea creada.');
+        return redirect()->route('tasks.index')->with('status', __('tasks.status_created'));
     }
 
     public function update(Request $request, Task $task): JsonResponse|RedirectResponse
@@ -82,7 +82,7 @@ class TaskController extends Controller
             ]);
         }
 
-        return redirect()->route('tasks.index')->with('status', 'Tarea actualizada.');
+        return redirect()->route('tasks.index')->with('status', __('tasks.status_updated'));
     }
 
     /**
@@ -97,7 +97,7 @@ class TaskController extends Controller
             return response()->json(['ok' => true]);
         }
 
-        return redirect()->route('tasks.index')->with('status', 'Tarea archivada.');
+        return redirect()->route('tasks.index')->with('status', __('tasks.status_archived'));
     }
 
     /**
@@ -150,7 +150,7 @@ class TaskController extends Controller
             // Si era Done, mantenemos completed_at; nada que tocar.
         }
 
-        return redirect()->route('tasks.archived')->with('status', 'Tarea restaurada.');
+        return redirect()->route('tasks.archived')->with('status', __('tasks.status_restored'));
     }
 
     /** Borra definitivamente una tarea ya archivada. */
@@ -159,7 +159,7 @@ class TaskController extends Controller
         $t = Task::onlyTrashed()->findOrFail($task);
         $t->forceDelete();
 
-        return redirect()->route('tasks.archived')->with('status', 'Tarea borrada para siempre.');
+        return redirect()->route('tasks.archived')->with('status', __('tasks.status_deleted'));
     }
 
     /** Restaura en lote las tareas archivadas seleccionadas. */
@@ -170,7 +170,7 @@ class TaskController extends Controller
         $n = Task::onlyTrashed()->whereIn('id', $ids)->restore();
 
         return redirect()->route('tasks.archived')
-            ->with('status', $n === 1 ? 'Tarea restaurada.' : "{$n} tareas restauradas.");
+            ->with('status', $n === 1 ? __('tasks.status_restored') : __('tasks.status_restored_n', ['count' => $n]));
     }
 
     /** Borra definitivamente en lote las tareas archivadas seleccionadas. */
@@ -183,7 +183,7 @@ class TaskController extends Controller
         $n = Task::onlyTrashed()->whereIn('id', $ids)->forceDelete();
 
         return redirect()->route('tasks.archived')
-            ->with('status', $n === 1 ? 'Tarea borrada para siempre.' : "{$n} tareas borradas para siempre.");
+            ->with('status', $n === 1 ? __('tasks.status_deleted') : __('tasks.status_deleted_n', ['count' => $n]));
     }
 
     /** Valida el array `ids[]` de los endpoints en lote y lo devuelve. */

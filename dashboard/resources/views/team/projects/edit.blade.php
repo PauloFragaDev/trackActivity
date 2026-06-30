@@ -1,11 +1,11 @@
 @extends('layouts.settings')
 
-@section('title', $isNew ? 'Nuevo proyecto de equipo' : ('Editar · ' . $project->code))
+@section('title', $isNew ? __('projects.team_new') : __('projects.team_title'))
 
 @section('settings-content')
     <div class="flex items-center justify-between mb-6">
         <h1 class="text-xl font-semibold tracking-tight">
-            {{ $isNew ? 'Nuevo proyecto de equipo' : 'Editar ' . $project->code }}
+            {{ $isNew ? __('projects.team_new') : __('projects.team_title') }}
         </h1>
         <a href="{{ route('team.projects.index') }}" class="btn-ghost">← Volver</a>
     </div>
@@ -20,7 +20,7 @@
 
         <div class="grid grid-cols-2 gap-4">
             <label class="label">
-                <span>Code (mayúsculas)</span>
+                <span>{{ __('common.code') }}</span>
                 <input type="text" name="code" required
                        value="{{ old('code', $project->code) }}"
                        pattern="[A-Z0-9_\-]+"
@@ -30,7 +30,7 @@
                 <x-field-error name="code" />
             </label>
             <label class="label">
-                <span>Nombre</span>
+                <span>{{ __('common.name') }}</span>
                 <input type="text" name="name" required
                        value="{{ old('name', $project->name) }}"
                        maxlength="128"
@@ -42,7 +42,7 @@
 
         <div class="grid grid-cols-2 gap-4 items-end">
             <label class="label">
-                <span>Color (hex #RRGGBB)</span>
+                <span>{{ __('common.color') }}</span>
                 <div class="flex items-center gap-2">
                     <input type="color" name="color"
                            value="{{ old('color', $project->color ?? '#10b981') }}"
@@ -68,9 +68,9 @@
         <div class="pt-2 border-t divider flex items-center justify-between">
             <div class="flex items-center gap-2">
                 <button type="submit" class="btn">
-                    {{ $isNew ? 'Crear' : 'Guardar cambios' }}
+                    {{ $isNew ? 'Crear' : __('common.save') }}
                 </button>
-                <a href="{{ route('team.projects.index') }}" class="btn-ghost">Cancelar</a>
+                <a href="{{ route('team.projects.index') }}" class="btn-ghost">{{ __('common.cancel') }}</a>
             </div>
             @unless ($isNew)
                 <button type="button"

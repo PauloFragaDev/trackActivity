@@ -1,21 +1,21 @@
 @extends('layouts.app')
 
-@section('title', 'Tareas archivadas')
+@section('title', __('tasks.archived_title'))
 
 @section('content')
     <div class="mb-5 flex items-center justify-between gap-3 flex-wrap">
         <div>
-            <h1 class="text-xl font-semibold tracking-tight">Tareas archivadas</h1>
-            <p class="text-sm text-muted mt-1">Tareas que retiraste del tablero. Puedes restaurarlas o borrarlas definitivamente.</p>
+            <h1 class="text-xl font-semibold tracking-tight">{{ __('tasks.archived_title') }}</h1>
+            <p class="text-sm text-muted mt-1">{{ __('tasks.archived_desc') }}</p>
         </div>
-        <a href="{{ route('tasks.index') }}" class="btn-ghost text-sm">← Volver al tablero</a>
+        <a href="{{ route('tasks.index') }}" class="btn-ghost text-sm">{{ __('tasks.archived_back') }}</a>
     </div>
 
     @if ($tasks->isEmpty())
         <x-empty-state
             icon="trash"
-            title="No has archivado nada"
-            text="Las tareas que archives desde el tablero aparecerán aquí, listas para restaurar o borrar." />
+            :title="__('tasks.archived_empty_title')"
+            :text="__('tasks.archived_empty_text')" />
 
     @else
         <div data-archived>
@@ -25,16 +25,16 @@
             <div class="flex items-center justify-between gap-3 mb-3 min-h-8">
                 <label class="flex items-center gap-2 text-sm text-muted cursor-pointer select-none">
                     <input type="checkbox" class="accent-emerald-500" data-select-all
-                           aria-label="Seleccionar todas">
-                    <span data-bulk-count>Seleccionar todas</span>
+                           aria-label="{{ __('tasks.archived_select_all') }}">
+                    <span data-bulk-count>{{ __('tasks.archived_select_all') }}</span>
                 </label>
                 <div class="flex items-center gap-2 hidden" data-bulk-actions>
                     <button type="submit" form="bulk-restore-form" class="btn-ghost text-sm">
-                        Restaurar
+                        {{ __('tasks.archived_bulk_restore') }}
                     </button>
                     <button type="submit" form="bulk-force-form"
                             class="btn-ghost text-sm text-rose-600 dark:text-rose-400">
-                        Borrar para siempre
+                        {{ __('tasks.archived_bulk_delete') }}
                     </button>
                 </div>
             </div>
@@ -46,8 +46,8 @@
                 @csrf
             </form>
             <form method="POST" id="bulk-force-form" action="{{ route('tasks.bulk-force-destroy') }}" class="hidden"
-                  data-confirm="¿Borrar definitivamente las tareas seleccionadas? Esta acción no se puede deshacer."
-                  data-confirm-button="Sí, borrar para siempre">
+                  data-confirm="{{ __('tasks.archived_delete_confirm') }}"
+                  data-confirm-button="{{ __('tasks.archived_delete_btn') }}">
                 @csrf
                 @method('DELETE')
             </form>
@@ -69,7 +69,7 @@
                                 <span class="text-sm font-medium truncate">{{ $task->title }}</span>
                             </div>
                             <div class="flex items-center gap-2 text-xs mt-1">
-                                <span class="text-faint">Archivada</span>
+                                <span class="text-faint">{{ __('tasks.archived_label') }}</span>
                                 @if ($task->deleted_at)
                                     <x-timestamp :at="$task->deleted_at" />
                                 @endif
@@ -86,15 +86,15 @@
                             <form method="POST" action="{{ route('tasks.restore', $task->id) }}">
                                 @csrf
                                 <button type="submit" class="btn-ghost text-xs"
-                                        title="Restaurar al tablero">Restaurar</button>
+                                        title="{{ __('tasks.archived_restore_btn') }}">{{ __('tasks.archived_bulk_restore') }}</button>
                             </form>
                             <form method="POST" action="{{ route('tasks.force-destroy', $task->id) }}"
-                                  data-confirm="¿Borrar «{{ $task->title }}» definitivamente? Esta acción no se puede deshacer."
-                                  data-confirm-button="Sí, borrar para siempre">
+                                  data-confirm="{{ __('tasks.archived_delete_single_confirm', ['title' => $task->title]) }}"
+                                  data-confirm-button="{{ __('tasks.archived_delete_btn') }}">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn-ghost text-xs text-rose-600 dark:text-rose-400"
-                                        title="Borrar definitivamente">
+                                        title="{{ __('tasks.archived_force_btn') }}">
                                     <x-icon name="trash" class="w-3.5 h-3.5" />
                                 </button>
                             </form>

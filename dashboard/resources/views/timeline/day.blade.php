@@ -21,9 +21,9 @@
         </div>
 
         <div class="flex items-center gap-1">
-            <a class="btn-ghost" href="{{ route('timeline.day', ['date' => $prevDay]) }}" title="Día anterior">←</a>
-            <a class="btn-ghost" href="{{ route('timeline.today') }}">Hoy</a>
-            <a class="btn-ghost" href="{{ route('timeline.day', ['date' => $nextDay]) }}" title="Día siguiente">→</a>
+            <a class="btn-ghost" href="{{ route('timeline.day', ['date' => $prevDay]) }}" title="{{ __('timeline.prev_day') }}">←</a>
+            <a class="btn-ghost" href="{{ route('timeline.today') }}">{{ __('timeline.today') }}</a>
+            <a class="btn-ghost" href="{{ route('timeline.day', ['date' => $nextDay]) }}" title="{{ __('timeline.next_day') }}">→</a>
         </div>
     </div>
 
@@ -67,7 +67,7 @@
 
     @if ($totals->isNotEmpty())
         <div class="card p-4 mb-6">
-            <h2 class="text-xs uppercase tracking-wider text-muted mb-3">Totales por proyecto</h2>
+            <h2 class="text-xs uppercase tracking-wider text-muted mb-3">{{ __('timeline.totals_by_project') }}</h2>
             <div class="flex flex-wrap gap-2">
                 @foreach ($totals as $row)
                     <div class="surface-soft flex items-center gap-2 px-3 py-1.5 rounded">
@@ -77,7 +77,7 @@
                             <span class="text-sm font-medium">{{ $row['project']->code }}</span>
                         @else
                             <span class="inline-block w-2 h-2 rounded-full bg-ink-400 dark:bg-ink-500"></span>
-                            <span class="text-sm font-medium text-muted">Sin proyecto</span>
+                            <span class="text-sm font-medium text-muted">{{ __('timeline.no_project') }}</span>
                         @endif
                         <span class="text-xs font-mono text-muted">
                             {{ intdiv($row['minutes'], 60) }}h {{ $row['minutes'] % 60 }}m
@@ -90,11 +90,11 @@
 
     @if (empty($timeline))
         <div class="card p-8 text-center text-muted">
-            <p class="text-base">Sin actividad reconstruida este día.</p>
+            <p class="text-base">{{ __('timeline.no_activity') }}</p>
             <p class="mt-2 text-xs">
-                Si el daemon está corriendo y deberías tener actividad,
-                ejecuta <code class="chip">php artisan tracker:rebuild-blocks --day={{ $day->toDateString() }}</code>
-                — o añade una entrada manual abajo.
+                {{ __('timeline.rebuild_hint') }}
+                <code class="chip">php artisan tracker:rebuild-blocks --day={{ $day->toDateString() }}</code>
+                — {{ __('timeline.add_manual') }}
             </p>
         </div>
     @else
@@ -128,13 +128,23 @@
                                     {{ $session['project']->code }}
                                 </span>
                             @elseif ($session['is_idle'])
-                                <span class="chip">idle</span>
+                                <span class="chip">{{ __('timeline.session_idle') }}</span>
                             @else
-                                <span class="chip">sin proyecto</span>
+                                <span class="chip">{{ __('timeline.session_no_project') }}</span>
                             @endif
                             @if ($session['confidence_label'] !== 'idle' && $session['confidence_label'] !== 'n/a')
                                 <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] uppercase tracking-wider border {{ $confColor }}">
-                                    {{ $session['confidence_label'] }}
+                                    @if ($session['confidence_label'] === 'Alta')
+                                        {{ __('timeline.confidence_high') }}
+                                    @elseif ($session['confidence_label'] === 'Media')
+                                        {{ __('timeline.confidence_medium') }}
+                                    @elseif ($session['confidence_label'] === 'Baja')
+                                        {{ __('timeline.confidence_low') }}
+                                    @elseif ($session['confidence_label'] === 'editado')
+                                        {{ __('timeline.confidence_edited') }}
+                                    @else
+                                        {{ $session['confidence_label'] }}
+                                    @endif
                                     @if ($session['confidence_label'] !== 'editado' && $session['confidence'] !== null)
                                         <span class="font-mono opacity-70">{{ number_format($session['confidence'], 2) }}</span>
                                     @endif
@@ -151,8 +161,8 @@
                             <details class="group">
                                 <summary class="cursor-pointer text-xs text-muted hover:opacity-100 opacity-80 select-none">
                                     {{ $session['evidence']->count() }} señal{{ $session['evidence']->count() === 1 ? '' : 'es' }}
-                                    {{ $session['project'] === null ? 'sin atribuir' : 'en evidencia' }} ·
-                                    <span class="underline-offset-2 group-hover:underline">expandir</span>
+                                    {{ $session['project'] === null ? __('timeline.evidence_unattr') : __('timeline.evidence_in') }} ·
+                                    <span class="underline-offset-2 group-hover:underline">{{ __('timeline.evidence_expand') }}</span>
                                 </summary>
                                 <ul class="mt-2 space-y-1 text-xs font-mono text-muted border-l divider pl-3">
                                     @foreach ($session['evidence']->take(30) as $event)
@@ -195,7 +205,7 @@
                                         </li>
                                     @endforeach
                                     @if ($session['evidence']->count() > 30)
-                                        <li class="text-faint">… y {{ $session['evidence']->count() - 30 }} más</li>
+                                        <li class="text-faint">{{ __('timeline.evidence_more', ['count' => $session['evidence']->count() - 30]) }}</li>
                                     @endif
                                 </ul>
                             </details>
@@ -203,7 +213,7 @@
                             @unless ($session['is_idle'])
                                 <details class="group">
                                     <summary class="cursor-pointer text-xs text-muted hover:opacity-100 opacity-80 select-none">
-                                        <span class="underline-offset-2 group-hover:underline">editar sesión</span>
+                                        <span class="underline-offset-2 group-hover:underline">{{ __('timeline.session_edit') }}</span>
                                     </summary>
 
                                     <form method="POST" action="{{ route('blocks.update') }}"

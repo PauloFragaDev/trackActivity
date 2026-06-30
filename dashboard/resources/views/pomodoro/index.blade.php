@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Pomodoro')
+@section('title', __('pomodoro.title'))
 
 @section('content')
     {{-- Una sola sección: timer grande + controles + contador de ciclos.
@@ -13,9 +13,9 @@
          data-cycles-until-long="{{ $config['pomodoro_cycles_until_long'] }}">
 
         <header class="pomodoro-header">
-            <h1 class="text-xl font-semibold tracking-tight">Pomodoro</h1>
+            <h1 class="text-xl font-semibold tracking-tight">{{ __('pomodoro.title') }}</h1>
             <a href="{{ route('settings.pomodoro') }}" class="text-xs text-faint hover:underline">
-                Ajustes
+                {{ __('pomodoro.settings') }}
             </a>
         </header>
 
@@ -23,7 +23,7 @@
             {{-- Badge fase --}}
             <div class="pomodoro-phase" data-pomodoro-phase>
                 <span class="pomodoro-phase__dot" aria-hidden="true"></span>
-                <span data-pomodoro-phase-label>Listo</span>
+                <span data-pomodoro-phase-label>{{ __('pomodoro.phase_ready') }}</span>
             </div>
 
             {{-- Display mm:ss --}}
@@ -33,33 +33,32 @@
 
             {{-- Ciclos de foco completados en la ronda actual --}}
             <p class="pomodoro-cycles text-sm text-muted">
-                Ciclos: <span data-pomodoro-cycle-count>0</span> / {{ $config['pomodoro_cycles_until_long'] }}
+                {!! __('pomodoro.cycles', ['current' => '<span data-pomodoro-cycle-count>0</span>', 'total' => $config['pomodoro_cycles_until_long']]) !!}
             </p>
 
             {{-- Controles --}}
             <div class="pomodoro-controls">
                 <button type="button" class="btn pomodoro-btn-primary"
                         data-pomodoro-action="primary"
-                        data-label-idle="Empezar foco"
-                        data-label-running="Pausar"
-                        data-label-paused="Reanudar"
-                        data-label-awaiting-break="Empezar pausa"
-                        data-label-awaiting-focus="Empezar foco">
-                    Empezar foco
+                        data-label-idle="{{ __('pomodoro.start_focus') }}"
+                        data-label-running="{{ __('pomodoro.pause') }}"
+                        data-label-paused="{{ __('pomodoro.resume') }}"
+                        data-label-awaiting-break="{{ __('pomodoro.start_break') }}"
+                        data-label-awaiting-focus="{{ __('pomodoro.start_focus') }}">
+                    {{ __('pomodoro.start_focus') }}
                 </button>
                 <button type="button" class="btn-ghost"
-                        data-pomodoro-action="skip" title="Saltar a la siguiente fase">
-                    Saltar
+                        data-pomodoro-action="skip" title="{{ __('pomodoro.skip_tip') }}">
+                    {{ __('pomodoro.skip') }}
                 </button>
                 <button type="button" class="btn-ghost text-rose-600 dark:text-rose-400"
-                        data-pomodoro-action="reset" title="Reiniciar ciclo">
-                    Reiniciar
+                        data-pomodoro-action="reset" title="{{ __('pomodoro.reset_tip') }}">
+                    {{ __('pomodoro.reset') }}
                 </button>
             </div>
 
             <p class="pomodoro-hint text-xs text-faint">
-                Tras el foco aparece una pausa. Cada {{ $config['pomodoro_cycles_until_long'] }} ciclos
-                la pausa es larga ({{ $config['pomodoro_long_break_min'] }} min).
+                {{ __('pomodoro.hint', ['cycles' => $config['pomodoro_cycles_until_long'], 'long' => $config['pomodoro_long_break_min']]) }}
             </p>
         </section>
     </div>

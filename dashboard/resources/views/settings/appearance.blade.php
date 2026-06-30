@@ -1,13 +1,12 @@
 @extends('layouts.settings')
 
-@section('title', 'Apariencia')
+@section('title', __('settings.appearance_title'))
 
 @section('settings-content')
     <div class="mb-5">
-        <h1 class="text-xl font-semibold tracking-tight">Apariencia</h1>
+        <h1 class="text-xl font-semibold tracking-tight">{{ __('settings.appearance_title') }}</h1>
         <p class="text-sm text-muted mt-1">
-            Elige una paleta. El modo claro/oscuro lo sigues controlando con el botón
-            del sidebar — el tema funciona en los dos.
+            {{ __('settings.appearance_desc') }}
         </p>
     </div>
 
@@ -42,7 +41,6 @@
     </div>
 
     <p class="text-xs text-faint mt-4">
-        El cambio se aplica al instante en este navegador y se persiste para el resto
-        de tus sesiones.
+        {{ __('settings.theme_instant') }}
     </p>
 @endsection

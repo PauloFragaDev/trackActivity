@@ -1,0 +1,22 @@
+<?php
+return [
+    'title'         => 'Pomodoro',
+    'settings'      => 'Ajustes',
+    'phase_ready'   => 'Listo',
+    'phase_focus'   => 'Foco',
+    'phase_break'   => 'Pausa',
+    'start_focus'   => 'Empezar foco',
+    'pause'         => 'Pausar',
+    'resume'        => 'Reanudar',
+    'start_break'   => 'Empezar pausa',
+    'skip'          => 'Saltar',
+    'skip_tip'      => 'Saltar a la siguiente fase',
+    'reset'         => 'Reiniciar',
+    'reset_tip'     => 'Reiniciar ciclo',
+    'hint'          => 'Tras el foco aparece una pausa. Cada :cycles ciclos la pausa es larga (:long min).',
+    'sidebar_btn'   => 'Volver a mostrar el temporizador flotante',
+    'sidebar_tip'   => 'Volver a mostrar el temporizador',
+    'dock_tip'      => 'Abrir Pomodoro',
+    'minimize_tip'  => 'Minimizar al menú',
+    'cycles'        => 'Ciclos: :current / :total',
+];

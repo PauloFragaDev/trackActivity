@@ -1,26 +1,26 @@
 @extends('layouts.app')
 
-@section('title', "Calendario {$year}-" . str_pad($month, 2, '0', STR_PAD_LEFT))
+@section('title', __('nav.month'))
 
 @section('content')
     <div class="flex items-center justify-between mb-6">
         <div>
             <h1 class="text-xl font-semibold tracking-tight">
-                {{ ucfirst($firstDay->locale('es')->isoFormat('MMMM YYYY')) }}
+                {{ __('nav.month') }}
             </h1>
             <p class="text-sm text-muted mt-1">
                 @if ($monthTotal > 0)
                     {{ intdiv($monthTotal, 60) }}h {{ $monthTotal % 60 }}m en el mes
                 @else
-                    Sin actividad registrada
+                    {{ __('calendar.no_activity') }}
                 @endif
             </p>
         </div>
 
         <div class="flex items-center gap-1">
-            <a class="btn-ghost" href="{{ route('calendar.month', ['ym' => $prevMonth]) }}">←</a>
-            <a class="btn-ghost" href="{{ route('calendar.current') }}">Hoy</a>
-            <a class="btn-ghost" href="{{ route('calendar.month', ['ym' => $nextMonth]) }}">→</a>
+            <a class="btn-ghost" href="{{ route('calendar.month', ['ym' => $prevMonth]) }}">{{ __('calendar.prev_month') }}</a>
+            <a class="btn-ghost" href="{{ route('calendar.current') }}">{{ __('calendar.today') }}</a>
+            <a class="btn-ghost" href="{{ route('calendar.month', ['ym' => $nextMonth]) }}">{{ __('calendar.next_month') }}</a>
         </div>
     </div>
 
@@ -37,7 +37,7 @@
     <div class="card overflow-hidden">
         {{-- Cabecera dias semana --}}
         <div class="grid grid-cols-7 border-b divider">
-            @foreach (['lun','mar','mié','jue','vie','sáb','dom'] as $d)
+            @foreach (__('calendar.days') as $d)
                 <div class="px-3 py-2 text-xs uppercase tracking-wider text-muted text-center">{{ $d }}</div>
             @endforeach
         </div>
@@ -95,17 +95,17 @@
     {{-- ─────── Añadir entrada manual a un día ─────── --}}
     <div class="mt-6">
         <button type="button" class="btn" data-modal-open="#manual-add">
-            + Añadir entrada manual
+            {{ __('calendar.add_manual') }}
         </button>
     </div>
 
     <dialog id="manual-add" class="modal">
         <form method="POST" action="{{ route('manual-entries.store') }}" class="space-y-3">
             @csrf
-            @include('layouts.partials.modal-header', ['title' => 'Nueva entrada manual'])
+            @include('layouts.partials.modal-header', ['title' => __('calendar.modal_title')])
             <input type="hidden" name="return" value="calendar">
             <label class="label">
-                <span>Día</span>
+                <span>{{ __('calendar.modal_date') }}</span>
                 <input type="date" name="date" required class="input mt-1"
                        value="{{ old('date', $formDate) }}">
             </label>

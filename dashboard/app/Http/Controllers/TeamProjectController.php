@@ -41,7 +41,7 @@ class TeamProjectController extends Controller
 
         return redirect()
             ->route('team.projects.edit', $project)
-            ->with('status', "Proyecto {$project->code} creado.");
+            ->with('status', __('projects.status_created', ['code' => $project->code]));
     }
 
     public function edit(TeamProject $project): View
@@ -56,7 +56,7 @@ class TeamProjectController extends Controller
 
         return redirect()
             ->route('team.projects.edit', $project)
-            ->with('status', "Proyecto {$project->code} actualizado.");
+            ->with('status', __('projects.status_updated', ['code' => $project->code]));
     }
 
     public function destroy(TeamProject $project): RedirectResponse
@@ -66,7 +66,7 @@ class TeamProjectController extends Controller
 
         return redirect()
             ->route('team.projects.index')
-            ->with('status', "Proyecto {$code} eliminado.");
+            ->with('status', __('projects.status_deleted', ['code' => $code]));
     }
 
     public function board(Request $request, TeamProject $project): View

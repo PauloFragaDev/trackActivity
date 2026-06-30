@@ -1,0 +1,23 @@
+<?php
+return [
+    'no_activity'       => 'Sense activitat reconstruïda aquest dia.',
+    'rebuild_hint'      => 'Si el dimoni està corrent i hauries de tenir activitat, executa:',
+    'add_manual'        => 'Afegir una entrada manual a baix.',
+    'session_idle'      => 'inactiu',
+    'session_no_project'=> 'sense projecte',
+    'confidence_high'   => 'Alta',
+    'confidence_medium' => 'Mitjana',
+    'confidence_low'    => 'Baixa',
+    'confidence_edited' => 'editat',
+    'evidence_expand'   => 'expandir',
+    'evidence_unattr'   => 'sense atribuir',
+    'evidence_in'       => 'en evidència',
+    'evidence_more'     => '… i :count més',
+    'session_edit'      => 'Editar sessió',
+    'error_rebuild'     => 'Error en reconstruir blocs',
+    'totals_by_project' => 'Totals per projecte',
+    'no_project'        => 'Sense projecte',
+    'prev_day'          => 'Dia anterior',
+    'next_day'          => 'Dia següent',
+    'today'             => 'Avui',
+];

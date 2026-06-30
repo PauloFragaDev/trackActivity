@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', isset($project) ? $project->code . ' · ' . $project->name : 'Tareas')
+@section('title', isset($project) ? $project->code . ' · ' . $project->name : __('tasks.title'))
 @section('container', '')
 
 @section('content')
@@ -9,7 +9,7 @@
     <div class="mb-4 flex items-center justify-between gap-3 flex-wrap">
         <div class="flex items-center gap-3 min-w-0">
             <nav class="flex items-center gap-1.5 text-sm min-w-0">
-                <a href="{{ route('team.projects.index') }}" class="text-faint hover:text-default shrink-0">Proyectos</a>
+                <a href="{{ route('team.projects.index') }}" class="text-faint hover:text-default shrink-0">{{ __('tasks.projects_back') }}</a>
                 <span class="text-faint">/</span>
                 <span class="flex items-center gap-1.5 font-semibold truncate">
                     <span class="w-2.5 h-2.5 rounded-sm shrink-0 inline-block" style="background:{{ $project->color ?? '#999' }}"></span>
@@ -24,7 +24,7 @@
         <form method="GET" action="{{ route('team.projects.board', $project) }}">
             <div class="w-44">
                 <select name="assignee" class="select text-sm" onchange="this.form.submit()">
-                    <option value="">Todo el equipo</option>
+                    <option value="">{{ __('tasks.all_team') }}</option>
                     @foreach($members as $member)
                         <option value="{{ $member->id }}" @selected(isset($assigneeId) && $assigneeId === $member->id)>
                             {{ $member->name }}
@@ -39,19 +39,19 @@
     {{-- ── Cabecera: Kanban global (personal / equipo) ────────────────── --}}
     <div class="mb-4 flex items-center justify-between gap-3 flex-wrap">
         <div class="flex items-center gap-3">
-            <h1 class="text-xl font-semibold tracking-tight">Tareas</h1>
+            <h1 class="text-xl font-semibold tracking-tight">{{ __('tasks.title') }}</h1>
             <a href="{{ route('tasks.archived') }}" class="text-xs text-faint hover:underline">
-                Archivadas
+                {{ __('tasks.archived_link') }}
             </a>
             @if(config('team.db_host') && env('APP_MODE') !== 'team_only' && \App\Services\ModuleVisibility::enabled('team'))
             <div class="flex items-center gap-1 bg-surface-2 rounded-lg p-0.5 text-sm">
                 <a href="{{ route('tasks.index') }}" data-tab-link
                    class="px-3 py-1 rounded-md transition-colors {{ $mode === 'personal' ? 'bg-surface-1 shadow-sm font-medium' : 'text-faint hover:text-default' }}">
-                    Personal
+                    {{ __('tasks.personal') }}
                 </a>
                 <a href="{{ route('team.tasks.index') }}" data-tab-link
                    class="px-3 py-1 rounded-md transition-colors {{ $mode === 'team' ? 'bg-surface-1 shadow-sm font-medium' : 'text-faint hover:text-default' }}">
-                    Equipo
+                    {{ __('tasks.team') }}
                 </a>
             </div>
             @endif
@@ -66,7 +66,7 @@
             <form method="GET" action="{{ $mode === 'team' ? route('team.tasks.index') : route('tasks.index') }}" class="flex gap-2">
                 <div class="w-56">
                     <select name="project" class="select text-sm" onchange="this.form.submit()">
-                        <option value="">Todos los proyectos</option>
+                        <option value="">{{ __('tasks.all_projects') }}</option>
                         @foreach ($projects as $pr)
                             <option value="{{ $pr->id }}" @selected($projectId === $pr->id)>{{ $pr->code }} · {{ $pr->name }}</option>
                         @endforeach
@@ -74,7 +74,7 @@
                 </div>
                 <div class="w-44">
                     <select name="priority" class="select text-sm" onchange="this.form.submit()">
-                        <option value="">Toda prioridad</option>
+                        <option value="">{{ __('tasks.all_priority') }}</option>
                         @foreach ($priorities as $p)
                             <option value="{{ $p->value }}" @selected($priority === $p->value)>{{ $p->label() }}</option>
                         @endforeach
@@ -83,7 +83,7 @@
                 @if(isset($mode) && $mode === 'team' && isset($members) && $members->isNotEmpty())
                 <div class="w-44">
                     <select name="assignee" class="select text-sm" onchange="this.form.submit()">
-                        <option value="">Todo el equipo</option>
+                        <option value="">{{ __('tasks.all_team') }}</option>
                         @foreach($members as $member)
                             <option value="{{ $member->id }}" @selected(isset($assigneeId) && $assigneeId === $member->id)>
                                 {{ $member->name }}
@@ -102,10 +102,10 @@
         <div class="input-group flex-1 min-w-[14rem] max-w-md">
             <span class="input-group__prefix"><x-icon name="search" class="w-4 h-4" /></span>
             <input type="search" data-task-search class="input text-sm"
-                   placeholder="Buscar por título…" autocomplete="off" aria-label="Buscar tareas">
+                   placeholder="{{ __('tasks.search_placeholder') }}" autocomplete="off" aria-label="Buscar tareas">
             <span class="input-group__suffix hidden" data-task-search-clear-wrap>
                 <button type="button" class="icon-btn w-7 h-7"
-                        data-task-search-clear aria-label="Limpiar búsqueda" title="Limpiar">
+                        data-task-search-clear aria-label="{{ __('tasks.clear_search') }}" title="{{ __('tasks.clear_search') }}">
                     <x-icon name="close" class="w-3.5 h-3.5" />
                 </button>
             </span>
@@ -119,7 +119,7 @@
                         {{ $label->title }}
                     </button>
                 @endforeach
-                <button type="button" class="btn-ghost text-xs hidden" data-label-filters-clear>Limpiar</button>
+                <button type="button" class="btn-ghost text-xs hidden" data-label-filters-clear>{{ __('tasks.clear_filters') }}</button>
             </div>
         @endif
         <span class="text-xs text-faint" data-filter-summary></span>
@@ -135,12 +135,12 @@
                      {!! isset($columnDraggable) && $columnDraggable ? 'data-column="'.$col->value.'"' : '' !!}
                      style="min-height: 60vh">
                 <header class="task-column__header flex items-center justify-between gap-1 p-3 border-b divider cursor-pointer select-none"
-                        data-task-column-toggle title="Plegar columna">
+                        data-task-column-toggle title="{{ __('tasks.collapse_column') }}">
                     <span class="task-column__title text-sm font-medium flex items-center gap-1.5">
                         @if(isset($columnDraggable) && $columnDraggable)
                         <span data-column-handle
                               class="text-faint hover:text-default cursor-grab active:cursor-grabbing touch-none shrink-0"
-                              onclick="event.stopPropagation()" title="Arrastrar columna">
+                              onclick="event.stopPropagation()" title="{{ __('tasks.drag_column') }}">
                             <x-icon name="grip" class="w-3.5 h-3.5" />
                         </span>
                         @endif
@@ -150,15 +150,15 @@
                     </span>
                     <span class="flex items-center gap-0.5 shrink-0">
                         <button type="button" class="icon-btn text-faint task-column__sort"
-                                data-task-column-sort title="Ordenar A-Z (toggle)"
-                                aria-label="Ordenar columna alfabéticamente"
+                                data-task-column-sort title="{{ __('tasks.sort_az') }}"
+                                aria-label="{{ __('tasks.sort_column') }}"
                                 onclick="event.stopPropagation()">
                             <x-icon name="sort-asc" class="w-3.5 h-3.5" />
                         </button>
                         <button type="button" class="icon-btn" data-modal-open="#task-new"
                                 data-add-status="{{ $col->value }}"
                                 onclick="event.stopPropagation()"
-                                aria-label="Nueva tarea en {{ $col->label() }}" title="Nueva tarea">
+                                aria-label="{{ __('tasks.new_in_column', ['column' => $col->label()]) }}" title="{{ __('tasks.new_task') }}">
                             <x-icon name="plus" class="w-3.5 h-3.5" />
                         </button>
                     </span>
@@ -178,7 +178,7 @@
                         <input type="hidden" name="status" value="{{ $col->value }}">
                         <input type="text" name="title" maxlength="200" required
                                class="input text-sm bg-transparent border-dashed"
-                               placeholder="+ Añadir tarea — Enter">
+                               placeholder="{{ __('tasks.add_task_inline') }}">
                     </form>
                 </div>
             </section>
@@ -187,19 +187,19 @@
 
     {{-- ─────────────── Modales ─────────────── --}}
     <dialog id="task-new" class="modal">
-        @include('layouts.partials.modal-header', ['title' => 'Nueva tarea'])
+        @include('layouts.partials.modal-header', ['title' => __('tasks.modal_new')])
         <form method="POST" action="{{ $mode === 'team' ? route('team.tasks.store') : route('tasks.store') }}" class="space-y-3">
             @csrf
             @include('tasks.partials.form-fields')
             <div class="modal-footer flex justify-end gap-2">
-                <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
-                <button type="submit" class="btn">Crear</button>
+                <button type="button" class="btn-ghost" data-modal-close>{{ __('tasks.cancel') }}</button>
+                <button type="submit" class="btn">{{ __('tasks.create') }}</button>
             </div>
         </form>
     </dialog>
 
     <dialog id="task-edit" class="modal modal-lg">
-        @include('layouts.partials.modal-header', ['title' => 'Editar tarea'])
+        @include('layouts.partials.modal-header', ['title' => __('tasks.modal_edit')])
 
         @if($mode === 'team')
         <div id="modal-creator-info" class="flex items-center gap-2 px-1 pb-2 text-sm text-faint empty:hidden"></div>
@@ -214,8 +214,8 @@
 
         {{-- Form 1: borrado (Archivar). Oculto, lo dispara el botón con form="task-delete-form". --}}
         <form method="POST" id="task-delete-form" data-task-delete-form
-              data-confirm="¿Archivar esta tarea? La podrás restaurar desde /tasks/archived."
-              data-confirm-button="Sí, archivar">
+              data-confirm="{{ __('tasks.archive_confirm') }}"
+              data-confirm-button="{{ __('tasks.archive_confirm_btn') }}">
             @csrf
             @method('DELETE')
         </form>
@@ -235,16 +235,16 @@
                 <section data-task-subtasks class="pt-4 mt-4 border-t divider">
                     <div class="flex items-center justify-between mb-2">
                         <h4 class="text-sm font-semibold flex items-center gap-1.5">
-                            <x-icon name="check" class="w-3.5 h-3.5 text-emerald-500" /> Subtareas
+                            <x-icon name="check" class="w-3.5 h-3.5 text-emerald-500" /> {{ __('tasks.subtasks') }}
                         </h4>
                         <span class="text-xs text-faint font-mono" data-subtasks-progress></span>
                     </div>
                     <ul data-subtasks-list class="space-y-1 text-sm mb-2"></ul>
                     <form data-subtasks-add class="input-group">
                         <input type="text" name="title" required maxlength="200"
-                               class="input text-sm" placeholder="Nueva subtarea — Enter para añadir">
+                               class="input text-sm" placeholder="{{ __('tasks.subtask_add_ph') }}">
                         <span class="input-group__suffix">
-                            <button type="submit" class="icon-btn" aria-label="Añadir subtarea" title="Añadir">
+                            <button type="submit" class="icon-btn" aria-label="{{ __('tasks.subtask_add_btn') }}" title="{{ __('tasks.subtask_add_btn') }}">
                                 <x-icon name="plus" class="w-3.5 h-3.5" />
                             </button>
                         </span>
@@ -256,14 +256,14 @@
                  compositor fijado abajo. Gestionado por AJAX desde kanban.js. --}}
             <aside data-task-comments class="task-edit-chat">
                 <h4 class="text-sm font-semibold mb-2 flex items-center gap-1.5 shrink-0">
-                    <x-icon name="chat" class="w-3.5 h-3.5 text-sky-500" /> Comentarios
+                    <x-icon name="chat" class="w-3.5 h-3.5 text-sky-500" /> {{ __('tasks.comments') }}
                 </h4>
                 <ul data-comments-list class="task-chat__list"></ul>
                 <form data-comments-add class="task-chat__compose">
                     <textarea name="body" data-mention required maxlength="5000" rows="1"
-                              class="textarea text-sm w-full" placeholder="Escribe un comentario…"></textarea>
+                              class="textarea text-sm w-full" placeholder="{{ __('tasks.comment_ph') }}"></textarea>
                     <button type="submit" class="icon-btn task-chat__send"
-                            aria-label="Publicar comentario" title="Publicar">
+                            aria-label="{{ __('tasks.comment_send') }}" title="{{ __('tasks.comment_send') }}">
                         <x-icon name="chevron-right" class="w-4 h-4" />
                     </button>
                 </form>
@@ -276,20 +276,20 @@
             <div class="flex items-center gap-2">
                 <button type="button" id="btn-modal-archive"
                         class="btn-ghost text-rose-600 dark:text-rose-400 text-sm inline-flex items-center gap-1">
-                    <x-icon name="trash" class="w-3.5 h-3.5" /> Archivar
+                    <x-icon name="trash" class="w-3.5 h-3.5" /> {{ __('tasks.archive_btn') }}
                 </button>
                 @if($mode === 'personal' && config('team.db_host') && \App\Services\ModuleVisibility::enabled('team'))
                 <button type="button" id="btn-transfer-to-team"
                         class="btn-ghost text-blue-600 dark:text-blue-400"
                         data-task-id="">
-                    Transferir al equipo
+                    {{ __('tasks.transfer_team') }}
                 </button>
                 @endif
             </div>
             <div class="flex gap-2">
-                <button type="button" id="btn-modal-edit" class="btn">Editar</button>
-                <button type="button" id="btn-modal-cancel-edit" class="btn-ghost hidden">Cancelar</button>
-                <button type="submit" form="task-edit-main-form" id="btn-modal-save" class="btn hidden">Guardar</button>
+                <button type="button" id="btn-modal-edit" class="btn">{{ __('tasks.edit_btn') }}</button>
+                <button type="button" id="btn-modal-cancel-edit" class="btn-ghost hidden">{{ __('tasks.cancel_edit') }}</button>
+                <button type="submit" form="task-edit-main-form" id="btn-modal-save" class="btn hidden">{{ __('tasks.save') }}</button>
             </div>
         </div>
     </dialog>
@@ -297,8 +297,8 @@
 @if($mode === 'team' && isset($members) && $members->isNotEmpty())
 @php $activeMemberId = session('team_member_id') ? (int) session('team_member_id') : null @endphp
 <dialog id="identity-modal" class="modal">
-    @include('layouts.partials.modal-header', ['title' => '¿Quién eres tú?', 'hint' => false])
-    <p class="text-sm text-faint mb-4">Selecciona tu perfil para que el equipo sepa quién hace cada cosa.</p>
+    @include('layouts.partials.modal-header', ['title' => __('tasks.who_are_you'), 'hint' => false])
+    <p class="text-sm text-faint mb-4">{{ __('tasks.select_profile') }}</p>
     <div class="space-y-1.5" id="identity-list">
         @foreach($members as $member)
         @php $isActive = $activeMemberId === $member->id @endphp
@@ -313,7 +313,7 @@
             <span class="font-medium flex-1">{{ $member->name }}</span>
             @if($isActive)
             <span class="text-xs font-semibold px-2 py-0.5 rounded-full text-white"
-                  style="background-color: {{ $member->color }}">Tú</span>
+                  style="background-color: {{ $member->color }}">{{ __('tasks.you_badge') }}</span>
             @endif
         </button>
         @endforeach

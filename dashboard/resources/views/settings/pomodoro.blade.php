@@ -1,11 +1,11 @@
 @extends('layouts.settings')
 
-@section('title', 'Pomodoro')
+@section('title', __('settings.pomodoro_title'))
 
 @section('settings-content')
     <div class="mb-5">
-        <h1 class="text-xl font-semibold tracking-tight">Pomodoro</h1>
-        <p class="text-sm text-muted mt-1">Duración de las fases y cuántos ciclos hasta la pausa larga.</p>
+        <h1 class="text-xl font-semibold tracking-tight">{{ __('settings.pomodoro_title') }}</h1>
+        <p class="text-sm text-muted mt-1">{{ __('settings.pomodoro_desc') }}</p>
     </div>
 
     <form method="POST" action="{{ route('settings.pomodoro.save') }}" class="card p-5 max-w-xl space-y-4">
@@ -13,28 +13,28 @@
 
         <div class="grid grid-cols-2 gap-4">
             <label class="block">
-                <span class="text-sm font-medium">Foco (min)</span>
+                <span class="text-sm font-medium">{{ __('settings.pomodoro_focus') }}</span>
                 <input type="number" name="pomodoro_focus_min" min="5" max="120"
                        value="{{ old('pomodoro_focus_min', $config['pomodoro_focus_min']) }}"
                        class="input mt-1 w-full @error('pomodoro_focus_min') is-invalid @enderror" required>
                 <x-field-error name="pomodoro_focus_min" />
             </label>
             <label class="block">
-                <span class="text-sm font-medium">Pausa corta (min)</span>
+                <span class="text-sm font-medium">{{ __('settings.pomodoro_short') }}</span>
                 <input type="number" name="pomodoro_short_break_min" min="1" max="30"
                        value="{{ old('pomodoro_short_break_min', $config['pomodoro_short_break_min']) }}"
                        class="input mt-1 w-full @error('pomodoro_short_break_min') is-invalid @enderror" required>
                 <x-field-error name="pomodoro_short_break_min" />
             </label>
             <label class="block">
-                <span class="text-sm font-medium">Pausa larga (min)</span>
+                <span class="text-sm font-medium">{{ __('settings.pomodoro_long') }}</span>
                 <input type="number" name="pomodoro_long_break_min" min="5" max="60"
                        value="{{ old('pomodoro_long_break_min', $config['pomodoro_long_break_min']) }}"
                        class="input mt-1 w-full @error('pomodoro_long_break_min') is-invalid @enderror" required>
                 <x-field-error name="pomodoro_long_break_min" />
             </label>
             <label class="block">
-                <span class="text-sm font-medium">Ciclos hasta pausa larga</span>
+                <span class="text-sm font-medium">{{ __('settings.pomodoro_cycles') }}</span>
                 <input type="number" name="pomodoro_cycles_until_long" min="2" max="10"
                        value="{{ old('pomodoro_cycles_until_long', $config['pomodoro_cycles_until_long']) }}"
                        class="input mt-1 w-full @error('pomodoro_cycles_until_long') is-invalid @enderror" required>
@@ -44,9 +44,9 @@
 
         <div class="pt-3 flex items-center justify-between border-t divider">
             <p class="text-xs text-faint">
-                El timer corre en tu navegador y se sincroniza entre pestañas.
+                {{ __('settings.pomodoro_hint') }}
             </p>
-            <button type="submit" class="btn">Guardar</button>
+            <button type="submit" class="btn">{{ __('settings.save') }}</button>
         </div>
     </form>
 @endsection

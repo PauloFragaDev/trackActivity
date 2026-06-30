@@ -1,10 +1,10 @@
 @extends('layouts.settings')
 
-@section('title', 'Integraciones')
+@section('title', __('nav.settings_integrations'))
 
 @section('settings-content')
     <div class="mb-5">
-        <h1 class="text-xl font-semibold tracking-tight">Integraciones</h1>
+        <h1 class="text-xl font-semibold tracking-tight">{{ __('settings.integrations_title') }}</h1>
         <p class="text-sm text-muted mt-1">
             Conexiones con servicios externos: Supabase (Kanban de equipo) y CRM Base44.
         </p>
@@ -120,7 +120,7 @@
                     @enderror
                 </div>
                 <div class="pt-1">
-                    <button type="submit" class="btn">Guardar</button>
+                    <button type="submit" class="btn">{{ __('settings.save') }}</button>
                 </div>
             </form>
         </section>

@@ -1,0 +1,21 @@
+<?php
+return [
+    'title'             => 'Exportar timesheet',
+    'from'              => 'Desde',
+    'to'                => 'Hasta',
+    'projects'          => 'Proyectos (vacío = todos)',
+    'min_confidence'    => 'Confianza mínima',
+    'conf_low'          => 'Baja (incluye todas)',
+    'conf_medium'       => 'Media',
+    'conf_high'         => 'Alta',
+    'group_by'          => 'Agrupar por',
+    'group_session'     => 'Sesión',
+    'group_project_day' => 'Proyecto · día',
+    'format'            => 'Formato',
+    'format_txt'        => 'Texto plano (.txt)',
+    'format_md'         => 'Markdown (.md)',
+    'format_csv'        => 'CSV (.csv)',
+    'include_idle'      => 'Incluir bloques idle',
+    'download'          => 'Descargar',
+    'cancel'            => 'Cancelar',
+];

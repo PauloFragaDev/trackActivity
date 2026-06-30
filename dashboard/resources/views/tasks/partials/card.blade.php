@@ -28,7 +28,7 @@
         <p class="text-sm font-medium leading-snug {{ $task->status === \App\Enums\TaskStatus::Done ? 'line-through text-muted' : '' }}">{{ $task->title }}</p>
         <div class="flex items-center gap-0.5 shrink-0 -mr-1 -mt-1">
             <button type="button" data-task-edit class="icon-btn"
-                    title="Editar tarea" aria-label="Editar tarea">
+                    title="{{ __('tasks.edit_btn') }}" aria-label="{{ __('tasks.edit_btn') }}">
                 <x-icon name="edit" class="w-3.5 h-3.5" />
             </button>
         </div>

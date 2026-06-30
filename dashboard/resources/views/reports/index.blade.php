@@ -1,20 +1,20 @@
 @extends('layouts.app')
 
-@section('title', 'Informes')
+@section('title', __('reports.title'))
 
 @section('content')
     @php
         $fmt = fn (int $m) => $m <= 0
             ? '0m'
             : ($m >= 60 ? intdiv($m, 60) . 'h ' . ($m % 60) . 'm' : $m . 'm');
-        $periodLabels = ['week' => 'Esta semana', 'month' => 'Este mes', '30d' => 'Últimos 30 días'];
+        $periodLabels = ['week' => __('reports.this_week'), 'month' => __('reports.this_month'), '30d' => __('reports.last_30d')];
         $avgDaily = count($byDay) ? (int) round($totalMinutes / count($byDay)) : 0;
         $maxProjectMinutes = ! empty($byProject) ? max(array_column($byProject, 'minutes')) : 1;
     @endphp
 
     <div class="mb-4 flex items-center justify-between gap-3 flex-wrap">
         <div>
-            <h1 class="text-xl font-semibold tracking-tight">Informes</h1>
+            <h1 class="text-xl font-semibold tracking-tight">{{ __('reports.title') }}</h1>
             <p class="text-sm text-muted mt-1">
                 {{ $start->locale('es')->isoFormat('D MMM') }}
                 →
@@ -35,22 +35,22 @@
     {{-- Resumen: el total es el heroe; el resto, secundario y compacto. --}}
     <div class="grid gap-3 md:grid-cols-3 mb-6">
         <div class="card p-5 flex flex-col justify-center">
-            <div class="text-xs text-muted uppercase tracking-wider">Total trackeado</div>
+            <div class="text-xs text-muted uppercase tracking-wider">{{ __('reports.total') }}</div>
             <div class="text-4xl font-medium mt-1 font-mono tabular-nums">{{ $fmt($totalMinutes) }}</div>
         </div>
         <div class="md:col-span-2 grid gap-3 sm:grid-cols-3">
             <div class="card p-4">
-                <div class="text-[11px] text-muted uppercase tracking-wider">Proyectos</div>
+                <div class="text-[11px] text-muted uppercase tracking-wider">{{ __('reports.projects') }}</div>
                 <div class="text-xl font-medium mt-1 font-mono tabular-nums">{{ $projectCount }}</div>
             </div>
             <div class="card p-4">
-                <div class="text-[11px] text-muted uppercase tracking-wider">Días activos</div>
+                <div class="text-[11px] text-muted uppercase tracking-wider">{{ __('reports.active_days') }}</div>
                 <div class="text-xl font-medium mt-1 font-mono tabular-nums">
                     {{ $daysActive }}<span class="text-sm font-normal text-muted"> / {{ count($byDay) }}</span>
                 </div>
             </div>
             <div class="card p-4">
-                <div class="text-[11px] text-muted uppercase tracking-wider">Media diaria</div>
+                <div class="text-[11px] text-muted uppercase tracking-wider">{{ __('reports.daily_avg') }}</div>
                 <div class="text-xl font-medium mt-1 font-mono tabular-nums">{{ $fmt($avgDaily) }}</div>
             </div>
         </div>
@@ -59,13 +59,13 @@
     @if ($totalMinutes === 0)
         <x-empty-state
             icon="clock"
-            title="Nada que medir todavía"
-            text="Cuando el tracker registre actividad en este periodo, aquí verás el desglose. ¿Está en marcha?" />
+            title="{{ __('reports.no_data') }}"
+            text="{{ __('reports.no_data_text') }}" />
     @else
         <div class="grid gap-4 md:grid-cols-2 mb-6">
             {{-- Por proyecto (CSS bars) --}}
             <div class="card p-4">
-                <h2 class="text-xs font-medium uppercase tracking-wider text-muted mb-3">Por proyecto</h2>
+                <h2 class="text-xs font-medium uppercase tracking-wider text-muted mb-3">{{ __('reports.by_project') }}</h2>
                 <div class="space-y-3">
                     @foreach ($byProject as $r)
                         <div>
@@ -87,7 +87,7 @@
 
             {{-- Por día (Chart.js) --}}
             <div class="card p-4">
-                <h2 class="text-xs font-medium uppercase tracking-wider text-muted mb-3">Por día</h2>
+                <h2 class="text-xs font-medium uppercase tracking-wider text-muted mb-3">{{ __('reports.by_day') }}</h2>
                 <div class="relative h-48">
                     <canvas id="chart-by-day"></canvas>
                 </div>
@@ -96,7 +96,7 @@
 
         @if (! empty($topApps))
             <div class="card p-4">
-                <h2 class="text-xs font-medium uppercase tracking-wider text-muted mb-3">Top apps</h2>
+                <h2 class="text-xs font-medium uppercase tracking-wider text-muted mb-3">{{ __('reports.top_apps') }}</h2>
                 <div class="space-y-1.5">
                     @foreach ($topApps as $app)
                         <div class="flex items-baseline justify-between text-sm">
@@ -105,7 +105,7 @@
                         </div>
                     @endforeach
                 </div>
-                <p class="text-xs text-faint mt-3">Aproximación: 15 s por muestra de ventana activa.</p>
+                <p class="text-xs text-faint mt-3">{{ __('reports.apps_approx') }}</p>
             </div>
         @endif
 

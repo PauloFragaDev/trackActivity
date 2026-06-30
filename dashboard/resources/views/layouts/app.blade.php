@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -59,6 +59,7 @@
         window.MY_MEMBER_ID      = {{ session('team_member_id') ? (int)session('team_member_id') : 'null' }};
     </script>
     @endif
+    <script>window.TRANSLATIONS = @json(__('js'));</script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body>
@@ -76,13 +77,13 @@
     <a href="#main-content"
        class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50
               focus:px-3 focus:py-2 focus:rounded focus:bg-ink-900 focus:text-white focus:shadow-lg">
-        Saltar al contenido
+        {{ __('nav.skip_to_content') }}
     </a>
 
     {{-- Botón hamburguesa (solo móvil) + overlay del drawer. --}}
     <button id="mobile-menu-btn" type="button"
             class="icon-btn bg-[var(--paper)] dark:bg-ink-900 border divider shadow"
-            aria-label="Abrir menú">
+            aria-label="{{ __('nav.open_menu') }}">
         <x-icon name="bars" class="w-5 h-5" />
     </button>
     <div id="mobile-sidebar-overlay" aria-hidden="true"></div>
@@ -95,14 +96,14 @@
             {{-- Cabecera: plegar/desplegar + marca --}}
             <div class="flex items-center gap-2 p-2 border-b divider">
                 <button id="sidebar-toggle" type="button" class="btn-ghost shrink-0"
-                        aria-label="Plegar o desplegar el menú" title="Plegar / desplegar menú">
+                        aria-label="{{ __('nav.collapse_sidebar') }}" title="{{ __('nav.collapse_sidebar') }}">
                     <span data-icon-collapse aria-hidden="true" class="inline-flex"><x-icon name="chevron-double-left" class="w-4 h-4" /></span>
                     <span data-icon-expand   aria-hidden="true" class="inline-flex"><x-icon name="chevron-double-right" class="w-4 h-4" /></span>
                 </button>
                 @if ($modules['team']['enabled'] ?? false)
                 <button id="notif-bell-collapsed" type="button"
                         class="hidden btn-ghost shrink-0 relative"
-                        aria-label="Notificaciones" title="Notificaciones">
+                        aria-label="{{ __('nav.notifications') }}" title="{{ __('nav.notifications') }}">
                     <x-icon name="bell" class="w-4 h-4" />
                     <span id="notif-dot"
                           class="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-red-500 ring-1 ring-white dark:ring-ink-900"></span>
@@ -127,7 +128,7 @@
                                    disabled:opacity-60 disabled:cursor-wait"
                             aria-label="{{ $running ? 'Detener tracker' : 'Iniciar tracker' }}">
                         <span class="inline-block w-2 h-2 rounded-full {{ $running ? 'bg-emerald-500 animate-pulse' : 'bg-ink-300 dark:bg-ink-700' }}"></span>
-                        <span class="flex-1 text-left">{{ $running ? 'Tracker activo' : 'Tracker detenido' }}</span>
+                        <span class="flex-1 text-left">{{ $running ? __('nav.tracker_active') : __('nav.tracker_inactive') }}</span>
                         <span class="text-xs text-muted">{{ $running ? 'parar' : 'iniciar' }}</span>
                     </button>
                 </form>
@@ -137,7 +138,7 @@
                         class="w-full flex items-center gap-1.5 px-2 py-1.5 rounded
                                text-ink-600 dark:text-ink-300 hover:bg-ink-100 dark:hover:bg-ink-800">
                     <x-icon name="search" class="w-4 h-4" />
-                    <span>Buscar</span>
+                    <span>{{ __('common.search') }}</span>
                     <x-kbd class="ml-auto">Ctrl K</x-kbd>
                 </button>
 
@@ -148,7 +149,7 @@
                             class="w-full flex items-center gap-1.5 px-2 py-1.5 rounded
                                    text-ink-600 dark:text-ink-300 hover:bg-ink-100 dark:hover:bg-ink-800">
                         <x-icon name="bell" class="w-4 h-4 shrink-0" />
-                        <span>Notificaciones</span>
+                        <span>{{ __('nav.notifications') }}</span>
                         <span id="notif-badge"
                               class="hidden ml-auto min-w-[1.1rem] h-[1.1rem] rounded-full
                                      bg-red-500 text-white text-[10px] font-bold
@@ -160,12 +161,12 @@
                         <div class="flex items-center justify-between px-2 py-1">
                             <button id="notif-read-all" type="button"
                                     class="text-xs text-muted hover:text-ink-900 dark:hover:text-ink-100 ml-auto">
-                                Marcar todas
+                                {{ __('nav.mark_all_read') }}
                             </button>
                         </div>
                         <ul id="notif-list" class="max-h-48 overflow-y-auto space-y-0.5">
                             <li class="px-2 py-3 text-xs text-muted text-center" data-empty>
-                                Sin notificaciones pendientes
+                                {{ __('nav.no_notifications') }}
                             </li>
                         </ul>
                     </div>
@@ -174,7 +175,7 @@
 
                 {{-- Inicio --}}
                 <a href="{{ route('dashboard') }}"
-                   class="block px-2 py-1.5 rounded {{ $navItem(['dashboard']) }}">Inicio</a>
+                   class="block px-2 py-1.5 rounded {{ $navItem(['dashboard']) }}">{{ __('nav.dashboard') }}</a>
 
                 {{-- Tracking. Oculto si el módulo está desactivado en ajustes generales. --}}
                 @if ($modules['tracking']['enabled'] ?? true)
@@ -182,24 +183,24 @@
                     <summary class="flex items-center gap-1.5 px-2 py-1.5 rounded cursor-pointer select-none list-none
                                     text-[11px] uppercase tracking-wider text-muted hover:bg-ink-100 dark:hover:bg-ink-800">
                         <span class="transition-transform group-open:rotate-90 inline-flex" aria-hidden="true"><x-icon name="chevron-right" class="w-2.5 h-2.5" /></span>
-                        Tracking
+                        {{ __('nav.tracking') }}
                     </summary>
                     <div class="mt-0.5 ml-2 space-y-0.5">
                         <a href="{{ route('timeline.today') }}"
-                           class="block px-2 py-1.5 rounded {{ $navItem(['timeline.today', 'timeline.day']) }}">Hoy</a>
+                           class="block px-2 py-1.5 rounded {{ $navItem(['timeline.today', 'timeline.day']) }}">{{ __('nav.today') }}</a>
                         <a href="{{ route('timeline.this_week') }}"
-                           class="block px-2 py-1.5 rounded {{ $navItem(['timeline.this_week', 'timeline.week']) }}">Semana</a>
+                           class="block px-2 py-1.5 rounded {{ $navItem(['timeline.this_week', 'timeline.week']) }}">{{ __('nav.week') }}</a>
                         @if ($modules['calendar']['enabled'] ?? true)
                             <a href="{{ route('calendar.current') }}"
-                               class="block px-2 py-1.5 rounded {{ $navItem(['calendar.current', 'calendar.month']) }}">Mes</a>
+                               class="block px-2 py-1.5 rounded {{ $navItem(['calendar.current', 'calendar.month']) }}">{{ __('nav.month') }}</a>
                         @endif
                         @if ($modules['reports']['enabled'] ?? true)
                             <a href="{{ route('reports.index') }}"
-                               class="block px-2 py-1.5 rounded {{ $navItem(['reports.*']) }}">Informes</a>
+                               class="block px-2 py-1.5 rounded {{ $navItem(['reports.*']) }}">{{ __('nav.reports') }}</a>
                         @endif
                         @if ($modules['insights']['enabled'] ?? true)
                             <a href="{{ route('insights.index') }}"
-                               class="block px-2 py-1.5 rounded {{ $navItem(['insights.*']) }}">Insights</a>
+                               class="block px-2 py-1.5 rounded {{ $navItem(['insights.*']) }}">{{ __('nav.insights') }}</a>
                         @endif
                     </div>
                 </details>
@@ -211,7 +212,7 @@
                     <summary class="flex items-center gap-1.5 px-2 py-1.5 rounded cursor-pointer select-none list-none
                                     text-[11px] uppercase tracking-wider text-muted hover:bg-ink-100 dark:hover:bg-ink-800">
                         <span class="transition-transform group-open:rotate-90 inline-flex" aria-hidden="true"><x-icon name="chevron-right" class="w-2.5 h-2.5" /></span>
-                        Notas
+                        {{ __('nav.notes') }}
                     </summary>
                     <div class="mt-0.5 ml-2 space-y-0.5">
                         {{-- Favoritos: notas fijadas (★) --}}
@@ -234,11 +235,11 @@
 
                         <a href="{{ route('notes.index', ['trash' => 1]) }}"
                            class="block px-2 py-1.5 rounded {{ request()->boolean('trash') ? 'bg-ink-100 dark:bg-ink-800 text-ink-900 dark:text-ink-50 font-medium' : 'text-ink-600 dark:text-ink-300 hover:bg-ink-100 dark:hover:bg-ink-800' }}">
-                            <x-icon name="trash" class="w-4 h-4 inline-block align-text-bottom" /> Papelera
+                            <x-icon name="trash" class="w-4 h-4 inline-block align-text-bottom" /> {{ __('nav.trash') }}
                         </a>
                         <button type="button" data-modal-open="#folder-new"
                                 class="w-full text-left block px-2 py-1.5 rounded text-ink-600 dark:text-ink-300 hover:bg-ink-100 dark:hover:bg-ink-800">
-                            + Nueva carpeta
+                            {{ __('nav.new_folder') }}
                         </button>
                     </div>
                 </details>
@@ -247,25 +248,25 @@
                 {{-- Tareas --}}
                 @if ($modules['tasks']['enabled'] ?? true)
                     <a href="{{ route('tasks.index') }}"
-                       class="block px-2 py-1.5 rounded {{ $navItem(['tasks.*']) }}">Tareas</a>
+                       class="block px-2 py-1.5 rounded {{ $navItem(['tasks.*']) }}">{{ __('nav.tasks') }}</a>
                 @endif
 
                 {{-- Pomodoro: timer independiente, una sola página. --}}
                 @if ($modules['pomodoro']['enabled'] ?? true)
                     <a href="{{ route('pomodoro.index') }}"
-                       class="block px-2 py-1.5 rounded {{ $navItem(['pomodoro.*']) }}">Pomodoro</a>
+                       class="block px-2 py-1.5 rounded {{ $navItem(['pomodoro.*']) }}">{{ __('nav.pomodoro') }}</a>
                 @endif
 
                 {{-- Configuración: una sola entrada. El layout `settings`
                      pinta un mini-sidebar con las subsecciones. --}}
                 <a href="{{ route('settings.index') }}"
                    class="block px-2 py-1.5 rounded {{ $navItem(['settings.*', 'projects.*', 'task-labels.*', 'export.*', 'data.*']) }}">
-                    Configuración
+                    {{ __('nav.settings') }}
                 </a>
 
                 {{-- Ayuda --}}
                 <a href="{{ route('help') }}"
-                   class="block px-2 py-1.5 rounded {{ $navItem(['help']) }}">Ayuda</a>
+                   class="block px-2 py-1.5 rounded {{ $navItem(['help']) }}">{{ __('nav.help') }}</a>
             </nav>
 
 
@@ -275,10 +276,10 @@
                      pomodoro.js (clase .pomodoro-sidebar--visible). --}}
                 <button type="button" id="pomodoro-sidebar" data-pomodoro-sidebar
                         class="pomodoro-sidebar w-full items-center gap-2 px-2 py-1.5 rounded mb-1 text-sm hover:bg-ink-100 dark:hover:bg-ink-800"
-                        aria-label="Volver a mostrar el temporizador flotante"
-                        title="Volver a mostrar el temporizador">
+                        aria-label="{{ __('pomodoro.sidebar_btn') }}"
+                        title="{{ __('pomodoro.sidebar_tip') }}">
                     <span class="pomodoro-dock__dot" aria-hidden="true"></span>
-                    <span class="text-[11px] uppercase tracking-wider text-muted" data-pomodoro-sidebar-phase>Foco</span>
+                    <span class="text-[11px] uppercase tracking-wider text-muted" data-pomodoro-sidebar-phase>{{ __('pomodoro.phase_focus') }}</span>
                     <span class="font-mono tabular-nums ml-auto" data-pomodoro-sidebar-time>00:00</span>
                 </button>
                 <button id="theme-toggle" type="button"
@@ -299,12 +300,12 @@
                     <span class="text-xs font-semibold uppercase tracking-wider text-muted">Notificaciones</span>
                     <button id="notif-bubble-read-all" type="button"
                             class="text-xs text-muted hover:text-ink-900 dark:hover:text-ink-100">
-                        Marcar todas como leídas
+                        {{ __('nav.mark_all_read') }}
                     </button>
                 </div>
                 <ul id="notif-bubble-list" class="max-h-80 overflow-y-auto divide-y divide-ink-100 dark:divide-ink-800">
                     <li class="px-3 py-4 text-sm text-muted text-center" data-empty>
-                        Sin notificaciones pendientes
+                        {{ __('nav.no_notifications') }}
                     </li>
                 </ul>
             </div>
@@ -350,7 +351,7 @@
             @csrf
             @include('layouts.partials.modal-header', ['title' => 'Nueva carpeta'])
             <label class="label">
-                <span>Nombre</span>
+                <span>{{ __('common.name') }}</span>
                 <input type="text" name="name" required maxlength="120" class="input mt-1" placeholder="Ideas, Trabajo…">
             </label>
             <label class="label">
@@ -360,15 +361,15 @@
             <label class="label">
                 <span>Dentro de</span>
                 <select name="parent_id" class="select mt-1">
-                    <option value="">— Carpeta raíz —</option>
+                    <option value="">{{ __('notes.folder_root') }}</option>
                     @foreach ($sidebarFolders->sortBy('name') as $f)
                         <option value="{{ $f->id }}">{{ $f->name }}</option>
                     @endforeach
                 </select>
             </label>
             <div class="modal-footer flex justify-end gap-2">
-                <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
-                <button type="submit" class="btn">Crear</button>
+                <button type="button" class="btn-ghost" data-modal-close>{{ __('common.cancel') }}</button>
+                <button type="submit" class="btn">{{ __('common.create') }}</button>
             </div>
         </form>
     </dialog>
@@ -387,12 +388,12 @@
            data-short-break-min="{{ $pomCfg['pomodoro_short_break_min'] }}"
            data-long-break-min="{{ $pomCfg['pomodoro_long_break_min'] }}"
            data-cycles-until-long="{{ $pomCfg['pomodoro_cycles_until_long'] }}"
-           title="Abrir Pomodoro">
+           title="{{ __('pomodoro.dock_tip') }}">
             <span class="pomodoro-dock__dot" aria-hidden="true"></span>
-            <span class="pomodoro-dock__phase text-[11px] uppercase tracking-wider" data-pomodoro-dock-phase>Foco</span>
+            <span class="pomodoro-dock__phase text-[11px] uppercase tracking-wider" data-pomodoro-dock-phase>{{ __('pomodoro.phase_focus') }}</span>
             <span class="pomodoro-dock__time font-mono tabular-nums" data-pomodoro-dock-time>00:00</span>
             <button type="button" class="pomodoro-dock__min icon-btn"
-                    data-pomodoro-dock-min aria-label="Minimizar al menú" title="Minimizar al menú">
+                    data-pomodoro-dock-min aria-label="{{ __('pomodoro.minimize_tip') }}" title="{{ __('pomodoro.minimize_tip') }}">
                 <x-icon name="minus" class="w-3.5 h-3.5" />
             </button>
             <button type="button" class="pomodoro-dock__pause icon-btn"

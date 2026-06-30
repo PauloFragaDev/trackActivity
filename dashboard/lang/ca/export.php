@@ -1,0 +1,21 @@
+<?php
+return [
+    'title'             => 'Exportar full de temps',
+    'from'              => 'Des de',
+    'to'                => 'Fins a',
+    'projects'          => 'Projectes (buit = tots)',
+    'min_confidence'    => 'Confiança mínima',
+    'conf_low'          => 'Baixa (inclou totes)',
+    'conf_medium'       => 'Mitjana',
+    'conf_high'         => 'Alta',
+    'group_by'          => 'Agrupa per',
+    'group_session'     => 'Sessió',
+    'group_project_day' => 'Projecte · dia',
+    'format'            => 'Format',
+    'format_txt'        => 'Text pla (.txt)',
+    'format_md'         => 'Markdown (.md)',
+    'format_csv'        => 'CSV (.csv)',
+    'include_idle'      => 'Incloure blocs inactius',
+    'download'          => 'Descarregar',
+    'cancel'            => 'Cancel·lar',
+];

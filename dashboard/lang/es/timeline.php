@@ -1,0 +1,23 @@
+<?php
+return [
+    'no_activity'       => 'Sin actividad reconstruida este día.',
+    'rebuild_hint'      => 'Si el daemon está corriendo y deberías tener actividad, ejecuta:',
+    'add_manual'        => 'Añadir una entrada manual abajo.',
+    'session_idle'      => 'idle',
+    'session_no_project'=> 'sin proyecto',
+    'confidence_high'   => 'Alta',
+    'confidence_medium' => 'Media',
+    'confidence_low'    => 'Baja',
+    'confidence_edited' => 'editado',
+    'evidence_expand'   => 'expandir',
+    'evidence_unattr'   => 'sin atribuir',
+    'evidence_in'       => 'en evidencia',
+    'evidence_more'     => '… y :count más',
+    'session_edit'      => 'Editar sesión',
+    'error_rebuild'     => 'Error al reconstruir bloques',
+    'totals_by_project' => 'Totales por proyecto',
+    'no_project'        => 'Sin proyecto',
+    'prev_day'          => 'Día anterior',
+    'next_day'          => 'Día siguiente',
+    'today'             => 'Hoy',
+];

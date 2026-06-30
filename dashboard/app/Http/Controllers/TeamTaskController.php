@@ -79,7 +79,7 @@ class TeamTaskController extends Controller
             ]);
         }
 
-        return redirect()->route('team.tasks.index')->with('status', 'Tarea creada.');
+        return redirect()->route('team.tasks.index')->with('status', __('tasks.status_created'));
     }
 
     public function update(Request $request, TeamTask $task): JsonResponse|RedirectResponse
@@ -116,7 +116,7 @@ class TeamTaskController extends Controller
             ]);
         }
 
-        return redirect()->route('team.tasks.index')->with('status', 'Tarea actualizada.');
+        return redirect()->route('team.tasks.index')->with('status', __('tasks.status_updated'));
     }
 
     public function destroy(Request $request, TeamTask $task): JsonResponse|RedirectResponse
@@ -127,7 +127,7 @@ class TeamTaskController extends Controller
             return response()->json(['ok' => true]);
         }
 
-        return redirect()->route('team.tasks.index')->with('status', 'Tarea archivada.');
+        return redirect()->route('team.tasks.index')->with('status', __('tasks.status_archived'));
     }
 
     public function move(Request $request, TeamTask $task): JsonResponse

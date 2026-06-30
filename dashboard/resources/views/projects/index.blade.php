@@ -1,14 +1,14 @@
 @extends('layouts.settings')
 
-@section('title', 'Proyectos')
+@section('title', __('projects.title'))
 
 @section('settings-content')
     <div class="flex items-center justify-between mb-6">
         <div>
-            <h1 class="text-xl font-semibold tracking-tight">Proyectos</h1>
+            <h1 class="text-xl font-semibold tracking-tight">{{ __('projects.title') }}</h1>
             <p class="text-sm text-muted mt-1">{{ $projects->count() }} proyectos definidos.</p>
         </div>
-        <a href="{{ route('projects.create') }}" class="btn">Nuevo proyecto</a>
+        <a href="{{ route('projects.create') }}" class="btn">{{ __('projects.new') }}</a>
     </div>
 
     @if ($projects->isEmpty())
@@ -16,10 +16,10 @@
             <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-ink-100 dark:bg-ink-800 text-ink-500 mb-3">
                 <x-icon name="folder" class="w-6 h-6" />
             </div>
-            <h3 class="text-base font-semibold mb-1">Aún no hay proyectos</h3>
-            <p class="text-sm text-muted mb-4">Los proyectos te permiten clasificar la actividad rastreada.</p>
+            <h3 class="text-base font-semibold mb-1">{{ __('projects.empty_title') }}</h3>
+            <p class="text-sm text-muted mb-4">{{ __('projects.empty_desc') }}</p>
             <a href="{{ route('projects.create') }}" class="btn inline-flex items-center gap-1">
-                <x-icon name="plus" class="w-4 h-4" /> Crear el primer proyecto
+                <x-icon name="plus" class="w-4 h-4" /> {{ __('projects.create_first') }}
             </a>
         </div>
     @else
@@ -27,11 +27,11 @@
             <table class="w-full text-sm">
                 <thead class="surface-soft text-xs uppercase tracking-wider text-muted">
                     <tr>
-                        <th class="text-left px-4 py-3">Code</th>
-                        <th class="text-left px-4 py-3">Nombre</th>
-                        <th class="text-left px-4 py-3">Color</th>
-                        <th class="text-right px-4 py-3">Mappings</th>
-                        <th class="text-right px-4 py-3">Bloques</th>
+                        <th class="text-left px-4 py-3">{{ __('projects.col_code') }}</th>
+                        <th class="text-left px-4 py-3">{{ __('projects.col_name') }}</th>
+                        <th class="text-left px-4 py-3">{{ __('projects.col_color') }}</th>
+                        <th class="text-right px-4 py-3">{{ __('projects.col_mappings') }}</th>
+                        <th class="text-right px-4 py-3">{{ __('projects.col_blocks') }}</th>
                         <th class="px-4 py-3"></th>
                     </tr>
                 </thead>
@@ -49,7 +49,7 @@
                             <td class="px-4 py-3 text-right font-mono">{{ $p->mappings_count }}</td>
                             <td class="px-4 py-3 text-right font-mono">{{ $p->time_blocks_count }}</td>
                             <td class="px-4 py-3 text-right">
-                                <a href="{{ route('projects.edit', $p) }}" class="btn-ghost">Editar</a>
+                                <a href="{{ route('projects.edit', $p) }}" class="btn-ghost">{{ __('projects.edit_btn') }}</a>
                             </td>
                         </tr>
                     @endforeach

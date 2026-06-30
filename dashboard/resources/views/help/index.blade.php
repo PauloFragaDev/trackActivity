@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'Guía de uso')
+@section('title', __('help.title'))
 
 @section('content')
     <div class="mb-8">
-        <h1 class="text-2xl font-semibold tracking-tight">Guía de uso</h1>
+        <h1 class="text-2xl font-semibold tracking-tight">{{ __('help.title') }}</h1>
         <p class="text-sm text-muted mt-2 max-w-2xl">
             trackActivity reconstruye automáticamente lo que has trabajado durante el día
             agrupando señales pasivas (ventana activa, repos Git, idle). Esta guía cubre

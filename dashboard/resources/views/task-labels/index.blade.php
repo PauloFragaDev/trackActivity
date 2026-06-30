@@ -1,28 +1,28 @@
 @extends('layouts.settings')
 
-@section('title', 'Etiquetas')
+@section('title', __('task_labels.title'))
 
 @section('settings-content')
     <div class="mb-5">
-        <h1 class="text-xl font-semibold tracking-tight">Etiquetas</h1>
-        <p class="text-sm text-muted mt-1">Paleta global de etiquetas para las tareas del tablero.</p>
+        <h1 class="text-xl font-semibold tracking-tight">{{ __('task_labels.title') }}</h1>
+        <p class="text-sm text-muted mt-1">{{ __('task_labels.desc') }}</p>
     </div>
 
     {{-- Crear --}}
     <form method="POST" action="{{ route('task-labels.store') }}" class="card p-4 mb-5">
         @csrf
-        <h2 class="text-base font-semibold mb-3">Nueva etiqueta</h2>
+        <h2 class="text-base font-semibold mb-3">{{ __('task_labels.create_title') }}</h2>
         <div class="flex items-end gap-3 flex-wrap">
             <label class="label flex-1 min-w-[12rem]">
-                <span>Título</span>
+                <span>{{ __('task_labels.field_title') }}</span>
                 <input type="text" name="title" required maxlength="60"
                        value="{{ old('title') }}"
                        class="input mt-1 @error('title') is-invalid @enderror"
-                       placeholder="ej. urgente, frontend, revisión">
+                       placeholder="{{ __('task_labels.field_title_ph') }}">
                 <x-field-error name="title" />
             </label>
             <label class="label">
-                <span>Color</span>
+                <span>{{ __('task_labels.field_color') }}</span>
                 <select name="color" class="select mt-1 @error('color') is-invalid @enderror">
                     @foreach ($colors as $c)
                         <option value="{{ $c['hex'] }}" @selected(old('color') === $c['hex']) style="background-color: {{ $c['hex'] }}1a; color: {{ $c['hex'] }}">{{ $c['name'] }}</option>
@@ -30,7 +30,7 @@
                 </select>
                 <x-field-error name="color" />
             </label>
-            <button type="submit" class="btn">Crear</button>
+            <button type="submit" class="btn">{{ __('task_labels.create_btn') }}</button>
         </div>
     </form>
 
@@ -40,8 +40,8 @@
             <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-ink-100 dark:bg-ink-800 text-ink-500 mb-3">
                 <x-icon name="filter" class="w-6 h-6" />
             </div>
-            <h3 class="text-base font-semibold mb-1">Sin etiquetas todavía</h3>
-            <p class="text-sm text-muted">Crea la primera con el formulario de arriba.</p>
+            <h3 class="text-base font-semibold mb-1">{{ __('task_labels.empty_title') }}</h3>
+            <p class="text-sm text-muted">{{ __('task_labels.empty_desc') }}</p>
         </div>
     @else
         <div class="card divide-y divider">
@@ -64,12 +64,12 @@
                             @endforeach
                         </select>
                     </div>
-                    <button type="submit" class="btn-ghost text-sm">Guardar</button>
-                    <button type="submit" form="del-{{ $label->id }}" class="btn-ghost text-sm text-rose-600 dark:text-rose-400">Eliminar</button>
+                    <button type="submit" class="btn-ghost text-sm">{{ __('task_labels.save') }}</button>
+                    <button type="submit" form="del-{{ $label->id }}" class="btn-ghost text-sm text-rose-600 dark:text-rose-400">{{ __('task_labels.delete') }}</button>
                 </form>
                 <form method="POST" action="{{ route('task-labels.destroy', $label) }}" id="del-{{ $label->id }}"
-                      data-confirm="¿Eliminar la etiqueta «{{ $label->title }}»? Desaparecerá de todas las tareas que la tengan."
-                      data-confirm-button="Sí, eliminar" class="hidden">
+                      data-confirm="{{ __('task_labels.delete_confirm', ['title' => $label->title]) }}"
+                      data-confirm-button="{{ __('task_labels.delete_btn') }}" class="hidden">
                     @csrf @method('DELETE')
                 </form>
             @endforeach

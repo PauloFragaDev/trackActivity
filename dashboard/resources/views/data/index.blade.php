@@ -1,6 +1,6 @@
 @extends('layouts.settings')
 
-@section('title', 'Datos')
+@section('title', __('data.title'))
 
 @section('settings-content')
     @php
@@ -11,8 +11,8 @@
     @endphp
 
     <div class="mb-5">
-        <h1 class="text-xl font-semibold tracking-tight">Datos</h1>
-        <p class="text-sm text-muted mt-1">Copias de seguridad y exportación.</p>
+        <h1 class="text-xl font-semibold tracking-tight">{{ __('data.title') }}</h1>
+        <p class="text-sm text-muted mt-1">{{ __('data.desc') }}</p>
     </div>
 
     @if ($errors->any())
@@ -26,18 +26,18 @@
     {{-- ─── Copias de seguridad ─── --}}
     <section class="card p-5 mb-5">
         <div class="flex items-center justify-between gap-3 mb-1">
-            <h2 class="text-base font-semibold">Copias de seguridad</h2>
+            <h2 class="text-base font-semibold">{{ __('data.backups_title') }}</h2>
             <form method="POST" action="{{ route('data.backup') }}">
                 @csrf
-                <button type="submit" class="btn text-sm">Crear copia ahora</button>
+                <button type="submit" class="btn text-sm">{{ __('data.create_backup') }}</button>
             </form>
         </div>
         <p class="text-sm text-muted mb-4">
-            Se crea una copia automática a diario; se conservan las 14 más recientes.
+            {{ __('data.backup_hint') }}
         </p>
 
         @if (empty($snapshots))
-            <p class="text-sm text-muted">Todavía no hay copias.</p>
+            <p class="text-sm text-muted">{{ __('data.no_backups') }}</p>
         @else
             <div class="divide-y divider">
                 @foreach ($snapshots as $s)
@@ -50,13 +50,13 @@
                             </div>
                         </div>
                         <div class="flex items-center gap-1 shrink-0">
-                            <a href="{{ route('data.backup.download', $s['name']) }}" class="btn-ghost text-xs">Descargar</a>
+                            <a href="{{ route('data.backup.download', $s['name']) }}" class="btn-ghost text-xs">{{ __('data.download') }}</a>
                             <form method="POST" action="{{ route('data.restore') }}"
-                                  data-confirm="¿Restaurar la base de datos desde «{{ $s['name'] }}»? Se sobrescribirá la BBDD actual — se guarda una copia previa automáticamente."
-                                  data-confirm-button="Sí, restaurar">
+                                  data-confirm="{{ __('data.restore_confirm', ['name' => $s['name']]) }}"
+                                  data-confirm-button="{{ __('data.restore_btn') }}">
                                 @csrf
                                 <input type="hidden" name="snapshot" value="{{ $s['name'] }}">
-                                <button type="submit" class="btn-ghost text-xs text-rose-600 dark:text-rose-400">Restaurar</button>
+                                <button type="submit" class="btn-ghost text-xs text-rose-600 dark:text-rose-400">{{ __('data.restore') }}</button>
                             </form>
                         </div>
                     </div>
@@ -66,22 +66,22 @@
 
         <form method="POST" action="{{ route('data.restore') }}" enctype="multipart/form-data"
               class="mt-4 pt-4 border-t divider flex items-center gap-2 flex-wrap"
-              data-confirm="¿Restaurar la base de datos desde el archivo elegido? Se sobrescribirá la BBDD actual — se guarda una copia previa automáticamente."
-              data-confirm-button="Sí, restaurar">
+              data-confirm="{{ __('data.restore_confirm', ['name' => __('data.select_file')]) }}"
+              data-confirm-button="{{ __('data.restore_btn') }}">
             @csrf
-            <span class="text-sm text-muted">Restaurar desde un archivo:</span>
+            <span class="text-sm text-muted">{{ __('data.restore_file') }}</span>
             <input type="file" name="file" accept=".db,.sqlite" required class="text-sm">
-            <button type="submit" class="btn-ghost text-sm">Restaurar</button>
+            <button type="submit" class="btn-ghost text-sm">{{ __('data.restore') }}</button>
         </form>
     </section>
 
     {{-- ─── Exportar ─── --}}
     <section class="card p-5">
-        <h2 class="text-base font-semibold mb-1">Exportar</h2>
-        <p class="text-sm text-muted mb-4">Saca tus datos en formatos abiertos, sin depender de la aplicación.</p>
+        <h2 class="text-base font-semibold mb-1">{{ __('data.export_title') }}</h2>
+        <p class="text-sm text-muted mb-4">{{ __('data.export_desc') }}</p>
         <div class="flex gap-2 flex-wrap">
-            <a href="{{ route('data.export.notes') }}" class="btn-ghost text-sm">Exportar notas (.md)</a>
-            <a href="{{ route('data.export.data') }}" class="btn-ghost text-sm">Exportar datos (JSON)</a>
+            <a href="{{ route('data.export.notes') }}" class="btn-ghost text-sm">{{ __('data.export_notes') }}</a>
+            <a href="{{ route('data.export.data') }}" class="btn-ghost text-sm">{{ __('data.export_data') }}</a>
         </div>
     </section>
 @endsection

@@ -42,7 +42,7 @@ class ProjectController extends Controller
 
         return redirect()
             ->route('projects.edit', $project)
-            ->with('status', "Proyecto {$project->code} creado.");
+            ->with('status', __('projects.status_created', ['code' => $project->code]));
     }
 
     public function edit(Project $project): View
@@ -62,7 +62,7 @@ class ProjectController extends Controller
 
         return redirect()
             ->route('projects.edit', $project)
-            ->with('status', "Proyecto {$project->code} actualizado.");
+            ->with('status', __('projects.status_updated', ['code' => $project->code]));
     }
 
     public function destroy(Project $project): RedirectResponse
@@ -72,7 +72,7 @@ class ProjectController extends Controller
 
         return redirect()
             ->route('projects.index')
-            ->with('status', "Proyecto {$code} eliminado.");
+            ->with('status', __('projects.status_deleted', ['code' => $code]));
     }
 
     // ─────────────────── Mappings inline ───────────────────
@@ -98,7 +98,7 @@ class ProjectController extends Controller
 
         return redirect()
             ->route('projects.edit', $project)
-            ->with('status', "Mapping {$data['type']}='{$data['pattern']}' guardado.");
+            ->with('status', __('projects.status_mapping_saved', ['type' => $data['type'], 'pattern' => $data['pattern']]));
     }
 
     public function destroyMapping(Project $project, ProjectMapping $mapping): RedirectResponse
@@ -108,7 +108,7 @@ class ProjectController extends Controller
 
         return redirect()
             ->route('projects.edit', $project)
-            ->with('status', 'Mapping eliminado.');
+            ->with('status', __('projects.status_mapping_deleted'));
     }
 
     public function toggleMapping(Project $project, ProjectMapping $mapping): RedirectResponse
@@ -118,7 +118,7 @@ class ProjectController extends Controller
 
         return redirect()
             ->route('projects.edit', $project)
-            ->with('status', $mapping->enabled ? 'Mapping activado.' : 'Mapping desactivado.');
+            ->with('status', $mapping->enabled ? __('projects.status_mapping_enabled') : __('projects.status_mapping_disabled'));
     }
 
     // ──────────────────────────────────────────────

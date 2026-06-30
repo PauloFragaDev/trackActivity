@@ -18,14 +18,14 @@
 
         <div class="flex items-center gap-1">
             <a class="btn-ghost" href="{{ route('timeline.week', ['week' => $prevWeek]) }}">←</a>
-            <a class="btn-ghost" href="{{ route('timeline.this_week') }}">Esta</a>
+            <a class="btn-ghost" href="{{ route('timeline.this_week') }}">{{ __('timeline.today') }}</a>
             <a class="btn-ghost" href="{{ route('timeline.week', ['week' => $nextWeek]) }}">→</a>
         </div>
     </div>
 
     @if ($totals->isNotEmpty())
         <div class="card p-4 mb-6">
-            <h2 class="text-xs uppercase tracking-wider text-muted mb-3">Totales por proyecto · semana</h2>
+            <h2 class="text-xs uppercase tracking-wider text-muted mb-3">{{ __('timeline.totals_by_project') }} · {{ __('nav.week') }}</h2>
             <div class="flex flex-wrap gap-2">
                 @foreach ($totals as $row)
                     <div class="surface-soft flex items-center gap-2 px-3 py-1.5 rounded">
@@ -34,7 +34,7 @@
                             <span class="text-sm font-medium">{{ $row['project']->code }}</span>
                         @else
                             <span class="inline-block w-2 h-2 rounded-full bg-ink-400 dark:bg-ink-500"></span>
-                            <span class="text-sm font-medium text-muted">Sin proyecto</span>
+                            <span class="text-sm font-medium text-muted">{{ __('timeline.no_project') }}</span>
                         @endif
                         <span class="text-xs font-mono text-muted">
                             {{ intdiv($row['minutes'], 60) }}h {{ $row['minutes'] % 60 }}m

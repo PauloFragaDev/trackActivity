@@ -55,6 +55,11 @@ class SettingsController extends Controller
         $submitted = $request->input('modules', []);
         ModuleVisibility::saveAll(is_array($submitted) ? $submitted : []);
 
+        $locale = $request->input('locale', 'es');
+        if (in_array($locale, ['es', 'ca'])) {
+            Setting::set('app.locale', $locale);
+        }
+
         // Sincronizar el daemon con la visibilidad del módulo tracking.
         $trackingModuleEnabled = isset($submitted['tracking']);
         $wasEnabled = (bool) Setting::get('tracking.enabled', false);
@@ -74,7 +79,7 @@ class SettingsController extends Controller
 
         return redirect()
             ->route('settings.general')
-            ->with('status', 'Ajustes guardados.');
+            ->with('status', __('settings.status_saved'));
     }
 
     public function appearance(): View
@@ -117,7 +122,7 @@ class SettingsController extends Controller
         $this->pomodoro->saveConfig($data);
         return redirect()
             ->route('settings.pomodoro')
-            ->with('status', 'Pomodoro actualizado.');
+            ->with('status', __('settings.status_pomodoro'));
     }
 
     public function integrations(): View
@@ -147,7 +152,7 @@ class SettingsController extends Controller
             Setting::set('base44.token', $data['base44_token']);
         }
 
-        return redirect()->route('settings.integrations')->with('status', 'Ajustes de integración guardados.');
+        return redirect()->route('settings.integrations')->with('status', __('settings.status_integrations'));
     }
 
     public function sync(): View
@@ -165,6 +170,6 @@ class SettingsController extends Controller
 
         return redirect()
             ->route('settings.sync')
-            ->with('status', 'Ajustes de sincronización guardados.');
+            ->with('status', __('settings.status_sync'));
     }
 }

@@ -1,10 +1,10 @@
 @extends('layouts.settings')
 
-@section('title', 'Sincronización')
+@section('title', __('nav.settings_sync'))
 
 @section('settings-content')
     <div class="mb-5">
-        <h1 class="text-xl font-semibold tracking-tight">Sincronización</h1>
+        <h1 class="text-xl font-semibold tracking-tight">{{ __('settings.sync_title') }}</h1>
         <p class="text-sm text-muted mt-1">
             Activa o desactiva las sincronizaciones con sistemas externos.
         </p>
@@ -45,7 +45,7 @@
         </div>
 
         <div class="pt-3 flex items-center justify-end border-t divider">
-            <button type="submit" class="btn">Guardar</button>
+            <button type="submit" class="btn">{{ __('settings.save') }}</button>
         </div>
     </form>
 @endsection
