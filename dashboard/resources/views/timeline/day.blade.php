@@ -44,7 +44,7 @@
                         $left  = ($beg / 1440) * 100;
                         $width = max(0.25, (($end - $beg) / 1440) * 100);
                         $color = $s['project']?->color ?? '#94a3b8';
-                        $label = sprintf('%s–%s · %s', $st->format('H:i'), $en->format('H:i'), $s['project']?->code ?? 'Sin proyecto');
+                        $label = sprintf('%s–%s · %s', $st->format('H:i'), $en->format('H:i'), $s['project']?->code ?? __('timeline.no_project_label'));
                     @endphp
                     <div class="absolute top-0 h-full rounded-sm transition hover:brightness-110"
                          style="left: {{ $left }}%; width: {{ $width }}%;
@@ -160,7 +160,8 @@
                         <div class="mt-2 flex items-center gap-4">
                             <details class="group">
                                 <summary class="cursor-pointer text-xs text-muted hover:opacity-100 opacity-80 select-none">
-                                    {{ $session['evidence']->count() }} señal{{ $session['evidence']->count() === 1 ? '' : 'es' }}
+                                    @php $count = $session['evidence']->count(); @endphp
+                    {{ $count }} {{ $count === 1 ? __('timeline.signal') : __('timeline.signals') }}
                                     {{ $session['project'] === null ? __('timeline.evidence_unattr') : __('timeline.evidence_in') }} ·
                                     <span class="underline-offset-2 group-hover:underline">{{ __('timeline.evidence_expand') }}</span>
                                 </summary>
@@ -201,7 +202,7 @@
                                                     data-cwd="{{ $cwdHint }}"
                                                     data-cmd="{{ $cmdHint }}"
                                                     data-project-id="{{ $event->project_id }}"
-                                                    title="Editar evento" aria-label="Editar evento"><x-icon name="edit" class="w-3.5 h-3.5" /></button>
+                                                    title="{{ __('timeline.edit_event_tooltip') }}" aria-label="{{ __('timeline.edit_event_tooltip') }}"><x-icon name="edit" class="w-3.5 h-3.5" /></button>
                                         </li>
                                     @endforeach
                                     @if ($session['evidence']->count() > 30)
@@ -226,9 +227,9 @@
                                         @endforeach
 
                                         <label class="label">
-                                            <span>Proyecto</span>
+                                            <span>{{ __('timeline.project_label') }}</span>
                                             <select name="project_id" class="select mt-1">
-                                                <option value="">— Sin proyecto —</option>
+                                                <option value="">{{ __('timeline.no_project_option') }}</option>
                                                 @foreach ($projects as $p)
                                                     <option value="{{ $p->id }}"
                                                         @selected($session['project'] && $session['project']->id === $p->id)>
@@ -280,7 +281,7 @@
                                                 <button type="submit"
                                                         class="btn-ghost"
                                                         formaction="{{ route('blocks.reset') }}"
-                                                        title="Devuelve la sesión a modo automático">
+                                                        title="{{ __('timeline.revert_tooltip') }}">
                                                     {{ __('timeline.revert_automatic') }}
                                                 </button>
                                             @endif

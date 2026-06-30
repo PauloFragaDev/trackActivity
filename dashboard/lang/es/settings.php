@@ -36,4 +36,6 @@ return [
     'sync_desc'             => 'Activa o desactiva las sincronizaciones con sistemas externos.',
     'sync_kanban_desc'      => 'Sincronización bidireccional del tablero con la extensión de VSCode (API <code class="chip">/api/sync/kanban</code>). Si la desactivas, la extensión no podrá empujar ni recibir cambios.',
     'sync_crm_desc'         => 'Importar clientes/proyectos/tareas desde el CRM de empresa. Se aplicará cuando exista la API de Base44.',
+    'team_members_desc'   => 'Los miembros se gestionan directamente en Supabase (tabla <code class="chip">team_members</code>).',
+    'identity_team_link'  => 'board del equipo',
 ];

@@ -58,4 +58,11 @@ return [
     'total_label'           => 'totales',
     'last_7_days'           => 'últimos 7 días',
     'last_30_days'          => 'últimos 30 días',
+    'no_project_label'    => 'Sin proyecto',
+    'edit_event_tooltip'  => 'Editar evento',
+    'project_label'       => 'Proyecto',
+    'no_project_option'   => '— Sin proyecto —',
+    'revert_tooltip'      => 'Devuelve la sesión a modo automático',
+    'signal'              => 'señal',
+    'signals'             => 'señales',
 ];

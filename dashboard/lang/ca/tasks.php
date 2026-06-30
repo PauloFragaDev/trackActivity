@@ -77,4 +77,7 @@ return [
     'status_restored_n'     => ':count tasques restaurades.',
     'status_deleted'        => 'Tasca esborrada per sempre.',
     'status_deleted_n'      => ':count tasques esborrades per sempre.',
+    'tracked_time'      => 'Temps registrat',
+    'subtasks_label'    => 'Subtasques',
+    'comments_label'    => 'Comentaris',
 ];

@@ -73,4 +73,9 @@ return [
     'project_label'         => 'Projecte',
     'no_project'            => '— Sense projecte —',
     'pinned_label'          => 'Fixada',
+    'dblclick_rename'   => 'Doble clic per reanomenar',
+    'unpin_note'        => 'Desancorar nota',
+    'pin_note'          => 'Ancorar nota',
+    'change_icon'       => 'Canviar icona',
+    'trash_label'       => 'Paperera',
 ];

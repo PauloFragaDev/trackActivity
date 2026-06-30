@@ -58,4 +58,11 @@ return [
     'total_label'           => 'totals',
     'last_7_days'           => 'darrers 7 dies',
     'last_30_days'          => 'darrers 30 dies',
+    'no_project_label'    => 'Sense projecte',
+    'edit_event_tooltip'  => 'Editar esdeveniment',
+    'project_label'       => 'Projecte',
+    'no_project_option'   => '— Sense projecte —',
+    'revert_tooltip'      => 'Torna la sessió a mode automàtic',
+    'signal'              => 'senyal',
+    'signals'             => 'senyals',
 ];

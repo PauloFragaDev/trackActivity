@@ -42,7 +42,7 @@
 
             @if($supConnected)
                 <h3 class="text-sm font-semibold mb-3">{{ __('projects.team_members_title') }}</h3>
-                <p class="text-xs text-faint mb-3">Los miembros se gestionan directamente en Supabase (tabla <code class="chip">team_members</code>).</p>
+                <p class="text-xs text-faint mb-3">{!! __('settings.team_members_desc') !!}</p>
 
                 @if($members->isEmpty())
                     <p class="text-sm text-muted">{{ __('projects.team_no_members') }}</p>
@@ -81,7 +81,7 @@
                         <p class="text-xs text-faint mt-2">{{ __('settings.identity_unlink_hint') }}</p>
                         @endif
                     @else
-                        <p class="text-sm text-muted">{{ __('settings.identity_no_link') }} Ve al <a href="{{ route('team.tasks.index') }}" class="underline">board del equipo</a> para seleccionar tu perfil.</p>
+                        <p class="text-sm text-muted">{{ __('settings.identity_no_link') }} Ve al <a href="{{ route('team.tasks.index') }}" class="underline">{{ __('settings.identity_team_link') }}</a> para seleccionar tu perfil.</p>
                     @endif
                 </div>
             @endif

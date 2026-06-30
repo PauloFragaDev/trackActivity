@@ -77,4 +77,7 @@ return [
     'status_restored_n'     => ':count tareas restauradas.',
     'status_deleted'        => 'Tarea borrada para siempre.',
     'status_deleted_n'      => ':count tareas borradas para siempre.',
+    'tracked_time'      => 'Tiempo registrado',
+    'subtasks_label'    => 'Subtareas',
+    'comments_label'    => 'Comentarios',
 ];

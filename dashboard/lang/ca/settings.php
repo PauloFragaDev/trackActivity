@@ -36,4 +36,6 @@ return [
     'sync_desc'             => 'Activa o desactiva les sincronitzacions amb sistemes externs.',
     'sync_kanban_desc'      => 'Sincronització bidireccional del tauler amb l\'extensió de VSCode (API <code class="chip">/api/sync/kanban</code>). Si la desactives, l\'extensió no podrà empènyer ni rebre canvis.',
     'sync_crm_desc'         => 'Importar clients/projectes/tasques des del CRM d\'empresa. S\'aplicarà quan existeixi l\'API de Base44.',
+    'team_members_desc'   => 'Els membres es gestionen directament a Supabase (taula <code class="chip">team_members</code>).',
+    'identity_team_link'  => 'board de l\'equip',
 ];

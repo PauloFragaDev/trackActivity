@@ -122,14 +122,14 @@
                     @csrf
                     @php $running = $trackerRunning ?? false; @endphp
                     <button type="submit"
-                            data-loading-label="{{ $running ? 'Deteniendo' : 'Iniciando' }}"
+                            data-loading-label="{{ $running ? __('nav.tracker_stopping') : __('nav.tracker_starting') }}"
                             class="w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm
                                    border divider hover:bg-ink-100 dark:hover:bg-ink-800
                                    disabled:opacity-60 disabled:cursor-wait"
-                            aria-label="{{ $running ? 'Detener tracker' : 'Iniciar tracker' }}">
+                            aria-label="{{ $running ? __('nav.tracker_stop_aria') : __('nav.tracker_start_aria') }}">
                         <span class="inline-block w-2 h-2 rounded-full {{ $running ? 'bg-emerald-500 animate-pulse' : 'bg-ink-300 dark:bg-ink-700' }}"></span>
                         <span class="flex-1 text-left">{{ $running ? __('nav.tracker_active') : __('nav.tracker_inactive') }}</span>
-                        <span class="text-xs text-muted">{{ $running ? 'parar' : 'iniciar' }}</span>
+                        <span class="text-xs text-muted">{{ $running ? __('nav.tracker_stop_text') : __('nav.tracker_start_text') }}</span>
                     </button>
                 </form>
 
@@ -284,10 +284,10 @@
                 </button>
                 <button id="theme-toggle" type="button"
                         class="btn-ghost w-full justify-start"
-                        aria-label="Cambiar tema" title="Cambiar tema">
+                        aria-label="{{ __('nav.theme_toggle') }}" title="{{ __('nav.theme_toggle') }}">
                     <span data-icon-moon aria-hidden="true" class="inline-flex"><x-icon name="moon" class="w-4 h-4" /></span>
                     <span data-icon-sun  aria-hidden="true" class="hidden"><x-icon name="sun"  class="w-4 h-4" /></span>
-                    <span>Tema</span>
+                    <span>{{ __('nav.theme_label') }}</span>
                 </button>
             </div>
             {{-- Speech bubble para el estado colapsado (position: fixed, gestionado por JS) --}}
@@ -338,9 +338,9 @@
 
     {{-- Quick switcher (Ctrl/Cmd+K): buscar y saltar a una nota --}}
     <dialog id="quick-switcher" class="modal" aria-label="Buscar nota">
-        <input type="text" data-qs-input autocomplete="off" placeholder="Buscar o ir a…" class="input"
+        <input type="text" data-qs-input autocomplete="off" placeholder="{{ __('nav.search_ph') }}" class="input"
                role="combobox" aria-expanded="true" aria-controls="qs-results"
-               aria-autocomplete="list" aria-label="Buscar o ir a una sección">
+               aria-autocomplete="list" aria-label="{{ __('nav.search_aria') }}">
         <ul id="qs-results" data-qs-results role="listbox" aria-label="Resultados"
             class="mt-2 max-h-80 overflow-y-auto space-y-0.5"></ul>
     </dialog>
@@ -349,17 +349,17 @@
     <dialog id="folder-new" class="modal">
         <form method="POST" action="{{ route('note-folders.store') }}" class="space-y-3">
             @csrf
-            @include('layouts.partials.modal-header', ['title' => 'Nueva carpeta'])
+            @include('layouts.partials.modal-header', ['title' => __('nav.new_folder')])
             <label class="label">
                 <span>{{ __('common.name') }}</span>
-                <input type="text" name="name" required maxlength="120" class="input mt-1" placeholder="Ideas, Trabajo…">
+                <input type="text" name="name" required maxlength="120" class="input mt-1" placeholder="{{ __('nav.folder_name_ph') }}">
             </label>
             <label class="label">
-                <span>Icono</span>
+                <span>{{ __('common.icon') }}</span>
                 <div class="mt-1">@include('notes.partials.icon-field', ['value' => ''])</div>
             </label>
             <label class="label">
-                <span>Dentro de</span>
+                <span>{{ __('nav.folder_parent') }}</span>
                 <select name="parent_id" class="select mt-1">
                     <option value="">{{ __('notes.folder_root') }}</option>
                     @foreach ($sidebarFolders->sortBy('name') as $f)
@@ -397,7 +397,7 @@
                 <x-icon name="minus" class="w-3.5 h-3.5" />
             </button>
             <button type="button" class="pomodoro-dock__pause icon-btn"
-                    data-pomodoro-dock-pause aria-label="Pausar / reanudar">·</button>
+                    data-pomodoro-dock-pause aria-label="{{ __('nav.pause_resume') }}">·</button>
         </a>
     @endif
 

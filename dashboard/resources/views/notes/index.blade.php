@@ -65,9 +65,9 @@
                     @if ($currentFolder)
                         <span class="folder-title-inline block text-sm font-semibold truncate cursor-default select-none"
                               data-folder-id="{{ $currentFolder->id }}"
-                              title="Doble clic para renombrar">{{ $currentFolder->name }}</span>
+                              title="{{ __('notes.dblclick_rename') }}">{{ $currentFolder->name }}</span>
                     @else
-                        <span class="text-sm font-semibold">Notas</span>
+                        <span class="text-sm font-semibold">{{ __('notes.root_label') }}</span>
                     @endif
                     <div class="flex gap-1.5 mt-2">
                         <button type="button"
@@ -145,8 +145,8 @@
                                 @method('PATCH')
                                 <button type="submit"
                                         class="px-2 py-1.5 {{ $n->pinned ? 'text-amber-500' : 'text-faint hover:text-amber-500' }}"
-                                        title="{{ $n->pinned ? 'Desfijar' : 'Fijar' }}"
-                                        aria-label="{{ $n->pinned ? 'Desfijar nota' : 'Fijar nota' }}"><x-icon name="star" class="w-3.5 h-3.5" /></button>
+                                        title="{{ $n->pinned ? __('notes.unpin') : __('notes.pin') }}"
+                                        aria-label="{{ $n->pinned ? __('notes.unpin_note') : __('notes.pin_note') }}"><x-icon name="star" class="w-3.5 h-3.5" /></button>
                             </form>
                         </div>
                     @empty
@@ -179,7 +179,7 @@
                     <div class="shrink-0 flex items-start gap-2">
                         <details class="shrink-0 relative">
                             <summary class="list-none cursor-pointer select-none text-3xl leading-none px-1"
-                                     title="Cambiar icono">{{ $currentNote->icon ?: '📄' }}</summary>
+                                     title="{{ __('notes.change_icon') }}">{{ $currentNote->icon ?: '📄' }}</summary>
                             <div class="absolute z-10 mt-1 p-2 rounded border divider bg-[var(--paper)] dark:bg-ink-900 shadow-lg">
                                 @include('notes.partials.icon-field', ['value' => $currentNote->icon])
                             </div>
@@ -288,7 +288,7 @@
             @elseif ($isTrash)
                 <div class="flex-1 flex items-center justify-center text-center text-muted">
                     <div>
-                        <p class="text-base inline-flex items-center gap-1.5"><x-icon name="trash" class="w-4 h-4" />Papelera</p>
+                        <p class="text-base inline-flex items-center gap-1.5"><x-icon name="trash" class="w-4 h-4" />{{ __('notes.trash_label') }}</p>
                         <p class="text-sm mt-1">{{ __('notes.trash_empty_label') }}</p>
                     </div>
                 </div>
