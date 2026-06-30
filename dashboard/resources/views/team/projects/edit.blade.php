@@ -7,7 +7,7 @@
         <h1 class="text-xl font-semibold tracking-tight">
             {{ $isNew ? __('projects.team_new') : __('projects.team_title') }}
         </h1>
-        <a href="{{ route('team.projects.index') }}" class="btn-ghost">← Volver</a>
+        <a href="{{ route('team.projects.index') }}" class="btn-ghost">{{ __('projects.back') }}</a>
     </div>
 
     <form method="POST"
@@ -59,7 +59,7 @@
         </div>
 
         <label class="label">
-            <span>Descripción (opcional)</span>
+            <span>{{ __('common.description_optional') }}</span>
             <textarea name="description" rows="2" maxlength="1000"
                       class="input @error('description') is-invalid @enderror">{{ old('description', $project->description) }}</textarea>
             <x-field-error name="description" />
@@ -68,7 +68,7 @@
         <div class="pt-2 border-t divider flex items-center justify-between">
             <div class="flex items-center gap-2">
                 <button type="submit" class="btn">
-                    {{ $isNew ? 'Crear' : __('common.save') }}
+                    {{ $isNew ? __('projects.create_btn') : __('projects.save_changes') }}
                 </button>
                 <a href="{{ route('team.projects.index') }}" class="btn-ghost">{{ __('common.cancel') }}</a>
             </div>
@@ -76,7 +76,7 @@
                 <button type="button"
                         class="btn-danger"
                         onclick="document.getElementById('delete-form').requestSubmit()">
-                    Eliminar proyecto
+                    {{ __('projects.delete_btn') }}
                 </button>
             @endunless
         </div>
@@ -87,7 +87,7 @@
               method="POST"
               action="{{ route('team.projects.destroy', $project) }}"
               class="hidden"
-              data-confirm="¿Eliminar el proyecto {{ $project->code }}? Las tareas del equipo quedarán sin proyecto asignado.">
+              data-confirm="{{ __('projects.team_delete_confirm', ['code' => $project->code]) }}">
             @csrf
             @method('DELETE')
         </form>

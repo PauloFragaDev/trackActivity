@@ -29,4 +29,11 @@ return [
     'status_integrations'   => 'Ajustes de integración guardados.',
     'status_sync'           => 'Ajustes de sincronización guardados.',
     'save'                  => 'Guardar',
+    'integrations_desc'     => 'Conexiones con servicios externos: Supabase (Kanban de equipo) y CRM Base44.',
+    'supabase_desc'         => 'La conexión se configura en el fichero <code class="chip">.env</code> del servidor con las variables <code class="chip">SUPABASE_DB_*</code>.',
+    'identity_unlink_hint'  => 'Útil si cambias de dispositivo o alguien más va a usar este ordenador.',
+    'identity_no_link'      => 'Sin vincular en este dispositivo.',
+    'sync_desc'             => 'Activa o desactiva las sincronizaciones con sistemas externos.',
+    'sync_kanban_desc'      => 'Sincronización bidireccional del tablero con la extensión de VSCode (API <code class="chip">/api/sync/kanban</code>). Si la desactivas, la extensión no podrá empujar ni recibir cambios.',
+    'sync_crm_desc'         => 'Importar clientes/proyectos/tareas desde el CRM de empresa. Se aplicará cuando exista la API de Base44.',
 ];

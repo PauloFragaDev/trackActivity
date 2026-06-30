@@ -111,8 +111,8 @@
             </label>
             @include('timeline.partials.manual-entry-fields', ['entry' => null])
             <div class="modal-footer flex items-center justify-end gap-2">
-                <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
-                <button type="submit" class="btn">Añadir entrada</button>
+                <button type="button" class="btn-ghost" data-modal-close>{{ __('common.cancel') }}</button>
+                <button type="submit" class="btn">{{ __('calendar.add_manual') }}</button>
             </div>
         </form>
     </dialog>

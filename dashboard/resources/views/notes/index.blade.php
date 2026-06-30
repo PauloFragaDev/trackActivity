@@ -26,7 +26,7 @@
         <div id="notes-list" class="w-64 shrink-0 border-r divider flex flex-col">
             <div class="flex items-center gap-1 p-2 border-b divider">
                 <button type="button" class="btn-ghost shrink-0" data-panel-toggle="list"
-                        title="Plegar / desplegar notas" aria-label="{{ __('notes.collapse') }}">
+                        title="{{ __('notes.toggle_list') }}" aria-label="{{ __('notes.collapse') }}">
                     <span data-pc-collapse aria-hidden="true">«</span>
                     <span data-pc-expand   aria-hidden="true">»</span>
                 </button>
@@ -222,9 +222,9 @@
                             </select>
                         </label>
                         <label class="flex flex-col gap-0.5">
-                            <span class="text-xs text-muted font-medium">Proyecto</span>
+                            <span class="text-xs text-muted font-medium">{{ __('notes.project_label') }}</span>
                             <select name="project_id" style="min-width: 15rem" class="select">
-                                <option value="">Sin proyecto</option>
+                                <option value="">{{ __('notes.no_project') }}</option>
                                 @foreach ($projects as $pr)
                                     <option value="{{ $pr->id }}"
                                         @selected((int) old('project_id', $currentNote->project_id) === $pr->id)>
@@ -235,13 +235,13 @@
                         </label>
                         <label class="inline-flex items-center gap-2 text-sm mt-3.5">
                             <input type="checkbox" name="pinned" value="1" class="accent-emerald-500" @checked($currentNote->pinned)>
-                            Fijada
+                            {{ __('notes.pinned_label') }}
                         </label>
                         <div class="ml-auto flex items-center gap-3 mt-3.5">
                             <span data-autosave-status class="text-xs text-muted"></span>
                             <button type="button" class="btn-ghost text-sm" data-copy-link
-                                    data-url="{{ route('notes.index', ['note' => $currentNote->id]) }}">Copiar enlace</button>
-                            <button type="submit" class="btn">Guardar</button>
+                                    data-url="{{ route('notes.index', ['note' => $currentNote->id]) }}">{{ __('notes.copy_link') }}</button>
+                            <button type="submit" class="btn">{{ __('common.save') }}</button>
                         </div>
                     </div>
                 </form>
@@ -252,7 +252,7 @@
                      busca el título; al crear esa nota se adopta el huérfano. --}}
                 @if ($outgoing->isNotEmpty())
                     <div class="mt-3 shrink-0 flex items-start gap-2 text-sm">
-                        <span class="text-muted shrink-0 pt-1">→ Enlaza a:</span>
+                        <span class="text-muted shrink-0 pt-1">{{ __('notes.links_to') }}</span>
                         <div class="flex flex-wrap gap-1.5">
                             @foreach ($outgoing as $link)
                                 @if ($link->target)
@@ -270,7 +270,7 @@
 
                 @if ($backlinks->isNotEmpty())
                     <div class="mt-2 shrink-0 flex items-start gap-2 text-sm">
-                        <span class="text-muted shrink-0 pt-1">← Enlazada desde:</span>
+                        <span class="text-muted shrink-0 pt-1">{{ __('notes.linked_from') }}</span>
                         <div class="flex flex-wrap gap-1.5">
                             @foreach ($backlinks as $bl)
                                 <a href="{{ route('notes.index', ['note' => $bl->id]) }}"
@@ -281,22 +281,22 @@
                 @endif
 
                 <form method="POST" action="{{ route('notes.destroy', $currentNote) }}" class="mt-3 text-right shrink-0"
-                      data-confirm="¿Eliminar la nota «{{ $currentNote->title }}»?">
+                      data-confirm="{{ __('notes.delete_confirm', ['title' => $currentNote->title]) }}">
                     @csrf @method('DELETE')
-                    <button type="submit" class="btn-ghost text-rose-600 dark:text-rose-400 text-sm">Eliminar nota</button>
+                    <button type="submit" class="btn-ghost text-rose-600 dark:text-rose-400 text-sm">{{ __('notes.delete_note') }}</button>
                 </form>
             @elseif ($isTrash)
                 <div class="flex-1 flex items-center justify-center text-center text-muted">
                     <div>
                         <p class="text-base inline-flex items-center gap-1.5"><x-icon name="trash" class="w-4 h-4" />Papelera</p>
-                        <p class="text-sm mt-1">Notas eliminadas. Restaura una para volver a editarla.</p>
+                        <p class="text-sm mt-1">{{ __('notes.trash_empty_label') }}</p>
                     </div>
                 </div>
             @else
                 <div class="flex-1 flex items-center justify-center text-center text-muted">
                     <div>
-                        <p class="text-base">Ninguna nota seleccionada.</p>
-                        <p class="text-sm mt-1">Crea una con <strong>+ Nota</strong> o elige una de la lista.</p>
+                        <p class="text-base">{{ __('notes.no_selection') }}</p>
+                        <p class="text-sm mt-1">{!! __('notes.no_selection_hint') !!}</p>
                     </div>
                 </div>
             @endif
@@ -308,27 +308,27 @@
         <form method="POST" action="{{ route('notes.store') }}" class="space-y-3">
             @csrf
             <input type="hidden" name="folder_id" value="{{ $folderId }}">
-            @include('layouts.partials.modal-header', ['title' => 'Nueva nota'])
+            @include('layouts.partials.modal-header', ['title' => __('notes.new_note_title')])
             <label class="label">
                 <span>{{ __('notes.title_ph') }}</span>
                 <input type="text" name="title" required maxlength="200" class="input mt-1" placeholder="{{ __('notes.title_ph') }}">
             </label>
             <label class="label">
-                <span>Icono</span>
+                <span>{{ __('notes.icon_label') }}</span>
                 <div class="mt-1">@include('notes.partials.icon-field', ['value' => ''])</div>
             </label>
             <label class="label">
-                <span>Proyecto</span>
+                <span>{{ __('notes.project_label') }}</span>
                 <select name="project_id" class="select mt-1">
-                    <option value="">— Sin proyecto —</option>
+                    <option value="">{{ __('notes.no_project') }}</option>
                     @foreach ($projects as $pr)
                         <option value="{{ $pr->id }}">{{ $pr->code }} · {{ $pr->name }}</option>
                     @endforeach
                 </select>
             </label>
             <div class="modal-footer flex justify-end gap-2">
-                <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
-                <button type="submit" class="btn">Crear</button>
+                <button type="button" class="btn-ghost" data-modal-close>{{ __('common.cancel') }}</button>
+                <button type="submit" class="btn">{{ __('common.create') }}</button>
             </div>
         </form>
     </dialog>
@@ -337,15 +337,15 @@
         <form method="POST" action="{{ route('note-folders.store') }}" class="space-y-3">
             @csrf
             <input type="hidden" name="parent_id" value="{{ $currentFolder?->id }}">
-            @include('layouts.partials.modal-header', ['title' => 'Nueva carpeta'])
+            @include('layouts.partials.modal-header', ['title' => __('notes.new_folder_title')])
             <label class="label">
-                <span>Nombre</span>
-                <input type="text" name="name" required maxlength="120" class="input mt-1" placeholder="Nombre de la carpeta">
+                <span>{{ __('common.name') }}</span>
+                <input type="text" name="name" required maxlength="120" class="input mt-1" placeholder="{{ __('notes.folder_name_ph') }}">
             </label>
             @include('notes.partials.icon-field', ['value' => ''])
             <div class="modal-footer flex justify-end gap-2">
-                <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
-                <button type="submit" class="btn">Crear</button>
+                <button type="button" class="btn-ghost" data-modal-close>{{ __('common.cancel') }}</button>
+                <button type="submit" class="btn">{{ __('common.create') }}</button>
             </div>
         </form>
     </dialog>
@@ -355,19 +355,19 @@
             <form method="POST" action="{{ route('note-folders.update', $currentFolder) }}" class="space-y-3">
                 @csrf
                 @method('PATCH')
-                @include('layouts.partials.modal-header', ['title' => 'Renombrar carpeta'])
+                @include('layouts.partials.modal-header', ['title' => __('notes.rename_folder_title')])
                 <label class="label">
-                    <span>Nombre</span>
+                    <span>{{ __('common.name') }}</span>
                     <input type="text" name="name" required maxlength="120" class="input mt-1"
                            value="{{ $currentFolder->name }}">
                 </label>
                 <label class="label">
-                    <span>Icono</span>
+                    <span>{{ __('notes.icon_label') }}</span>
                     <div class="mt-1">@include('notes.partials.icon-field', ['value' => $currentFolder->icon])</div>
                 </label>
                 <div class="modal-footer flex justify-end gap-2">
-                    <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
-                    <button type="submit" class="btn">Guardar</button>
+                    <button type="button" class="btn-ghost" data-modal-close>{{ __('common.cancel') }}</button>
+                    <button type="submit" class="btn">{{ __('common.save') }}</button>
                 </div>
             </form>
         </dialog>
@@ -375,46 +375,46 @@
 
     {{-- Modal: mover nota --}}
     <dialog id="note-move" class="modal">
-        @include('layouts.partials.modal-header', ['title' => 'Mover nota'])
+        @include('layouts.partials.modal-header', ['title' => __('notes.move_title')])
         <div class="space-y-3">
             <p class="text-sm text-muted">
-                Carpeta destino para <strong id="note-move-title" class="text-foreground font-semibold"></strong>:
+                {!! __('notes.move_note_dest', ['title' => '<strong id="note-move-title" class="text-foreground font-semibold"></strong>']) !!}
             </p>
             <label class="label">
-                <span>Carpeta</span>
+                <span>{{ __('common.folder') }}</span>
                 <select id="note-move-select" class="select mt-1">
-                    <option value="">Sin carpeta (raíz)</option>
+                    <option value="">{{ __('notes.root_option') }}</option>
                     @foreach ($folderOptions as $fo)
                         <option value="{{ $fo['id'] }}">{{ $fo['name'] }}</option>
                     @endforeach
                 </select>
             </label>
             <div class="modal-footer flex justify-end gap-2">
-                <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
-                <button type="button" class="btn" id="note-move-confirm">Mover</button>
+                <button type="button" class="btn-ghost" data-modal-close>{{ __('common.cancel') }}</button>
+                <button type="button" class="btn" id="note-move-confirm">{{ __('notes.move_btn') }}</button>
             </div>
         </div>
     </dialog>
 
     {{-- Modal: mover carpeta --}}
     <dialog id="folder-move" class="modal">
-        @include('layouts.partials.modal-header', ['title' => 'Mover carpeta'])
+        @include('layouts.partials.modal-header', ['title' => __('notes.move_folder_title')])
         <div class="space-y-3">
             <p class="text-sm text-muted">
-                Nueva ubicación para <strong id="folder-move-title" class="text-foreground font-semibold"></strong>:
+                {!! __('notes.move_folder_parent', ['name' => '<strong id="folder-move-title" class="text-foreground font-semibold"></strong>']) !!}
             </p>
             <label class="label">
-                <span>Carpeta padre</span>
+                <span>{{ __('notes.parent_folder') }}</span>
                 <select id="folder-move-select" class="select mt-1">
-                    <option value="">Sin carpeta (raíz)</option>
+                    <option value="">{{ __('notes.root_option') }}</option>
                     @foreach ($folderOptions as $fo)
                         <option value="{{ $fo['id'] }}">{{ $fo['name'] }}</option>
                     @endforeach
                 </select>
             </label>
             <div class="modal-footer flex justify-end gap-2">
-                <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
-                <button type="button" class="btn" id="folder-move-confirm">Mover</button>
+                <button type="button" class="btn-ghost" data-modal-close>{{ __('common.cancel') }}</button>
+                <button type="button" class="btn" id="folder-move-confirm">{{ __('notes.move_btn') }}</button>
             </div>
         </div>
     </dialog>

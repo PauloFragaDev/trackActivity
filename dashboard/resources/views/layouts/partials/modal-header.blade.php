@@ -11,11 +11,11 @@
                     {{ $hint }}
                 @else
                     <x-kbd>Esc</x-kbd>
-                    <span>para cerrar</span>
+                    <span>{{ __('common.close_esc_hint') }}</span>
                 @endif
             </span>
         @endif
-        <button type="button" class="icon-btn" data-modal-close aria-label="Cerrar">
+        <button type="button" class="icon-btn" data-modal-close aria-label="{{ __('common.close') }}">
             <x-icon name="close" class="w-4 h-4" />
         </button>
     </div>

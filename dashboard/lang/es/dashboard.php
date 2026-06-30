@@ -1,7 +1,8 @@
 <?php
 return [
     'title'             => 'Inicio',
-    'tracker_stale'     => 'El tracker no registra actividad desde :time',
+    'tracker_stale'        => 'El tracker no registra actividad desde :time',
+    'tracker_stale_prefix' => 'El tracker no registra actividad desde',
     'check_daemon'      => 'Comprueba que el daemon esté en marcha.',
     'now'               => 'Ahora mismo',
     'idle'              => 'Inactivo',

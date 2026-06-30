@@ -1,13 +1,13 @@
 @extends('layouts.settings')
 
-@section('title', $isNew ? 'Nuevo proyecto' : ('Editar · ' . $project->code))
+@section('title', $isNew ? __('projects.new') : (__('projects.edit_prefix') . $project->code))
 
 @section('settings-content')
     <div class="flex items-center justify-between mb-6">
         <h1 class="text-xl font-semibold tracking-tight">
-            {{ $isNew ? 'Nuevo proyecto' : 'Editar ' . $project->code }}
+            {{ $isNew ? __('projects.new') : __('projects.edit_prefix') . $project->code }}
         </h1>
-        <a href="{{ route('projects.index') }}" class="btn-ghost">← Volver</a>
+        <a href="{{ route('projects.index') }}" class="btn-ghost">{{ __('projects.back') }}</a>
     </div>
 
     <form method="POST"
@@ -20,7 +20,7 @@
 
         <div class="grid grid-cols-2 gap-4">
             <label class="label">
-                <span>Code (mayúsculas)</span>
+                <span>{{ __('projects.code_hint') }}</span>
                 <input type="text" name="code" required
                        value="{{ old('code', $project->code) }}"
                        pattern="[A-Z0-9_\-]+"
@@ -30,7 +30,7 @@
                 <x-field-error name="code" />
             </label>
             <label class="label">
-                <span>Nombre</span>
+                <span>{{ __('common.name') }}</span>
                 <input type="text" name="name" required
                        value="{{ old('name', $project->name) }}"
                        maxlength="128"
@@ -42,7 +42,7 @@
 
         <div class="grid grid-cols-2 gap-4 items-end">
             <label class="label">
-                <span>Color (hex #RRGGBB)</span>
+                <span>{{ __('projects.color_hint') }}</span>
                 <div class="flex items-center gap-2">
                     <input type="color" name="color"
                            value="{{ old('color', $project->color ?? '#10b981') }}"
@@ -59,7 +59,7 @@
         </div>
 
         <label class="label">
-            <span>Descripción (opcional)</span>
+            <span>{{ __('common.description_optional') }}</span>
             <textarea name="description" rows="2" maxlength="1000"
                       class="input @error('description') is-invalid @enderror">{{ old('description', $project->description) }}</textarea>
             <x-field-error name="description" />
@@ -68,15 +68,15 @@
         <div class="pt-2 border-t divider flex items-center justify-between">
             <div class="flex items-center gap-2">
                 <button type="submit" class="btn">
-                    {{ $isNew ? 'Crear' : 'Guardar cambios' }}
+                    {{ $isNew ? __('projects.create_btn') : __('projects.save_changes') }}
                 </button>
-                <a href="{{ route('projects.index') }}" class="btn-ghost">Cancelar</a>
+                <a href="{{ route('projects.index') }}" class="btn-ghost">{{ __('common.cancel') }}</a>
             </div>
             @unless ($isNew)
                 <button type="button"
                         class="btn-danger"
                         onclick="document.getElementById('delete-form').requestSubmit()">
-                    Eliminar proyecto
+                    {{ __('projects.delete_btn') }}
                 </button>
             @endunless
         </div>
@@ -87,18 +87,16 @@
               method="POST"
               action="{{ route('projects.destroy', $project) }}"
               class="hidden"
-              data-confirm="¿Eliminar el proyecto {{ $project->code }}? Sus mappings se borrarán también. Los bloques quedan sin proyecto asignado.">
+              data-confirm="{{ __('projects.delete_confirm', ['code' => $project->code]) }}">
             @csrf
             @method('DELETE')
         </form>
 
         {{-- ─────── Mappings ─────── --}}
         <section class="mt-8">
-            <h2 class="text-base font-semibold mb-3">Mappings</h2>
+            <h2 class="text-base font-semibold mb-3">{{ __('projects.mappings_title') }}</h2>
             <p class="text-sm text-muted mb-4">
-                Patrones que asocian la actividad del SO con este proyecto. El matching es
-                <strong>substring case-insensitive</strong> salvo que marques "regex".
-                Ver detalle en <a class="underline" href="{{ route('help') }}">la guía</a>.
+                {!! __('projects.mappings_desc', ['url' => route('help')]) !!}
             </p>
 
             {{-- Nuevo mapping --}}
@@ -107,7 +105,7 @@
                 @csrf
                 <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
                     <label class="label md:col-span-3">
-                        <span>Tipo</span>
+                        <span>{{ __('projects.mapping_type') }}</span>
                         <select name="type" class="select">
                             @foreach (\App\Models\ProjectMapping::TYPES as $t)
                                 <option value="{{ $t }}">{{ $t }}</option>
@@ -115,38 +113,38 @@
                         </select>
                     </label>
                     <label class="label md:col-span-5">
-                        <span>Patrón</span>
+                        <span>{{ __('projects.mapping_pattern') }}</span>
                         <input type="text" name="pattern" required class="input font-mono"
-                               placeholder="ej. jasper-api  |  github.com/company/jasper">
+                               placeholder="{{ __('projects.mapping_pattern_ph') }}">
                     </label>
                     <label class="label md:col-span-2">
-                        <span>Bonus</span>
+                        <span>{{ __('projects.mapping_bonus') }}</span>
                         <input type="number" name="weight_bonus" value="0" min="-10" max="10" class="input font-mono">
                     </label>
                     <label class="inline-flex items-center gap-2 md:col-span-1 text-sm">
                         <input type="checkbox" name="is_regex" value="1" class="accent-emerald-500">
-                        regex
+                        {{ __('projects.mapping_regex') }}
                     </label>
                     <div class="md:col-span-1 text-right">
-                        <button type="submit" class="btn w-full md:w-auto">Añadir</button>
+                        <button type="submit" class="btn w-full md:w-auto">{{ __('projects.mapping_add') }}</button>
                     </div>
                 </div>
             </form>
 
             @if ($mappings->isEmpty())
                 <div class="card p-6 text-center text-muted">
-                    Sin mappings. Añade al menos uno para que la actividad se atribuya a este proyecto.
+                    {{ __('projects.no_mappings') }}
                 </div>
             @else
                 <div class="card overflow-hidden">
                     <table class="w-full text-sm">
                         <thead class="surface-soft text-xs uppercase tracking-wider text-muted">
                             <tr>
-                                <th class="text-left px-3 py-2">Tipo</th>
-                                <th class="text-left px-3 py-2">Patrón</th>
-                                <th class="text-center px-3 py-2">Regex</th>
-                                <th class="text-right px-3 py-2">Bonus</th>
-                                <th class="text-center px-3 py-2">Estado</th>
+                                <th class="text-left px-3 py-2">{{ __('projects.mapping_type_col') }}</th>
+                                <th class="text-left px-3 py-2">{{ __('projects.mapping_pattern_col') }}</th>
+                                <th class="text-center px-3 py-2">{{ __('projects.mapping_regex_col') }}</th>
+                                <th class="text-right px-3 py-2">{{ __('projects.mapping_bonus_col') }}</th>
+                                <th class="text-center px-3 py-2">{{ __('projects.mapping_status_col') }}</th>
                                 <th class="px-3 py-2"></th>
                             </tr>
                         </thead>
@@ -161,15 +159,15 @@
                                         <form method="POST" action="{{ route('projects.mappings.toggle', [$project, $m]) }}" class="inline">
                                             @csrf @method('PATCH')
                                             <button class="chip" title="Activar/desactivar">
-                                                {{ $m->enabled ? 'activo' : 'inactivo' }}
+                                                {{ $m->enabled ? __('projects.mapping_active') : __('projects.mapping_inactive') }}
                                             </button>
                                         </form>
                                     </td>
                                     <td class="px-3 py-2 text-right">
                                         <form method="POST" action="{{ route('projects.mappings.destroy', [$project, $m]) }}" class="inline"
-                                              data-confirm="¿Eliminar este mapping?">
+                                              data-confirm="{{ __('projects.mapping_delete_confirm') }}">
                                             @csrf @method('DELETE')
-                                            <button class="btn-ghost text-rose-600 dark:text-rose-400">Eliminar</button>
+                                            <button class="btn-ghost text-rose-600 dark:text-rose-400">{{ __('common.delete') }}</button>
                                         </form>
                                     </td>
                                 </tr>
@@ -182,10 +180,10 @@
 
         @php $projectNotes = $project->notes()->orderByDesc('updated_at')->get(); @endphp
         <section class="mt-8">
-            <h2 class="text-base font-semibold mb-3">Notas</h2>
+            <h2 class="text-base font-semibold mb-3">{{ __('projects.notes_section') }}</h2>
             @if ($projectNotes->isEmpty())
                 <div class="card p-6 text-center text-muted text-sm">
-                    Sin notas vinculadas a este proyecto.
+                    {{ __('projects.no_linked_notes') }}
                 </div>
             @else
                 <div class="card divide-y divider">

@@ -6,7 +6,7 @@
     <div class="mb-5">
         <h1 class="text-xl font-semibold tracking-tight">{{ __('settings.sync_title') }}</h1>
         <p class="text-sm text-muted mt-1">
-            Activa o desactiva las sincronizaciones con sistemas externos.
+            {{ __('settings.sync_desc') }}
         </p>
     </div>
 
@@ -19,11 +19,9 @@
                 <input type="checkbox" name="extension" value="1" @checked($extension)
                        class="mt-1 h-4 w-4 rounded border-ink-300 dark:border-ink-600 text-emerald-600 focus:ring-emerald-500">
                 <span class="flex-1 min-w-0">
-                    <span class="block text-sm font-medium">Extensión code-kanban</span>
+                    <span class="block text-sm font-medium">{{ __('projects.sync_kanban_label') }}</span>
                     <span class="block text-xs text-faint mt-0.5">
-                        Sincronización bidireccional del tablero con la extensión de VSCode
-                        (API <code class="chip">/api/sync/kanban</code>). Si la desactivas, la
-                        extensión no podrá empujar ni recibir cambios.
+                        {!! __('settings.sync_kanban_desc') !!}
                     </span>
                 </span>
             </label>
@@ -33,11 +31,9 @@
                 <input type="checkbox" name="crm" value="1" @checked($crm)
                        class="mt-1 h-4 w-4 rounded border-ink-300 dark:border-ink-600 text-emerald-600 focus:ring-emerald-500">
                 <span class="flex-1 min-w-0">
-                    <span class="block text-sm font-medium">CRM (Base44)</span>
+                    <span class="block text-sm font-medium">{{ __('projects.sync_crm_label') }}</span>
                     <span class="block text-xs text-faint mt-0.5">
-                        Importar clientes/proyectos/tareas desde el CRM de empresa. Se aplicará
-                        cuando exista la API de Base44 (ahora mismo es solo una preferencia
-                        guardada — la integración todavía no está construida).
+                        {!! __('settings.sync_crm_desc') !!}
                     </span>
                 </span>
             </label>

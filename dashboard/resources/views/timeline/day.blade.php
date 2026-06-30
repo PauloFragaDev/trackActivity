@@ -241,11 +241,11 @@
                                         @if (! empty($session['rule_candidates']))
                                             <details class="text-sm">
                                                 <summary class="cursor-pointer text-xs text-muted select-none">
-                                                    Crear regla para que no se repita
+                                                    {{ __('timeline.create_rule') }}
                                                 </summary>
                                                 <div class="mt-2 space-y-1.5 pl-1">
                                                     <p class="text-[11px] text-faint">
-                                                        Marca qué señal debe ir siempre al proyecto elegido.
+                                                        {{ __('timeline.rule_hint') }}
                                                     </p>
                                                     @foreach ($session['rule_candidates'] as $cand)
                                                         <label class="flex items-center gap-2">
@@ -256,11 +256,11 @@
                                                         </label>
                                                     @endforeach
                                                     <label class="flex items-center gap-2 mt-1">
-                                                        <span class="text-xs text-muted">Reprocesar bloques automáticos de</span>
+                                                        <span class="text-xs text-muted">{{ __('timeline.reprocess_blocks') }}</span>
                                                         <select name="reprocess_days" class="select text-xs" data-no-search>
-                                                            <option value="0">no reprocesar</option>
-                                                            <option value="7">últimos 7 días</option>
-                                                            <option value="30">últimos 30 días</option>
+                                                            <option value="0">{{ __('timeline.no_reprocess') }}</option>
+                                                            <option value="7">{{ __('common.last_7_days') }}</option>
+                                                            <option value="30">{{ __('common.last_30_days') }}</option>
                                                         </select>
                                                     </label>
                                                 </div>
@@ -268,26 +268,25 @@
                                         @endif
 
                                         <label class="label">
-                                            <span>Resumen (opcional, sobrescribe el generado)</span>
+                                            <span>{{ __('timeline.summary_label') }}</span>
                                             <textarea name="summary_text" rows="2" maxlength="500"
                                                       class="textarea mt-1"
-                                                      placeholder="Deja vacío para conservar el resumen actual">{{ $session['status'] === 'edited' ? $session['summary'] : '' }}</textarea>
+                                                      placeholder="{{ __('timeline.summary_ph') }}">{{ $session['status'] === 'edited' ? $session['summary'] : '' }}</textarea>
                                         </label>
 
                                         <div class="flex items-center gap-2">
-                                            <button type="submit" class="btn">Guardar</button>
+                                            <button type="submit" class="btn">{{ __('timeline.save_btn') }}</button>
                                             @if ($session['status'] === 'edited')
                                                 <button type="submit"
                                                         class="btn-ghost"
                                                         formaction="{{ route('blocks.reset') }}"
                                                         title="Devuelve la sesión a modo automático">
-                                                    Volver a automático
+                                                    {{ __('timeline.revert_automatic') }}
                                                 </button>
                                             @endif
                                         </div>
                                         <p class="text-[11px] text-faint">
-                                            Al guardar, los {{ $session['block_count'] }} bloque(s) de esta sesión quedan
-                                            marcados como <code class="chip">editado</code> y no se recalcularán en los rebuilds.
+                                            {!! __('timeline.edited_hint', ['count' => $session['block_count'] ?? 0]) !!}
                                         </p>
                                     </form>
                                 </details>
@@ -329,17 +328,17 @@
                             <button type="button"
                                     class="text-muted hover:text-ink-900 dark:hover:text-ink-50 underline underline-offset-2 decoration-dotted"
                                     data-modal-open="#manual-edit-{{ $entry->id }}">
-                                editar entrada
+                                {{ __('timeline.edit_entry') }}
                             </button>
                             <form method="POST" action="{{ route('manual-entries.destroy', $entry) }}"
-                                  class="inline" data-confirm="¿Eliminar esta entrada manual?">
+                                  class="inline" data-confirm="{{ __('timeline.entry_delete_confirm') }}">
                                 @csrf
                                 @method('DELETE')
                                 <input type="hidden" name="date" value="{{ $day->toDateString() }}">
                                 <input type="hidden" name="return" value="day">
                                 <button type="submit"
                                         class="text-rose-600 dark:text-rose-400 underline underline-offset-2 decoration-dotted">
-                                    eliminar
+                                    {{ __('timeline.delete_entry') }}
                                 </button>
                             </form>
                         </div>
@@ -348,13 +347,13 @@
                             <form method="POST" action="{{ route('manual-entries.update', $entry) }}" class="space-y-3">
                                 @csrf
                                 @method('PATCH')
-                                @include('layouts.partials.modal-header', ['title' => 'Editar entrada manual'])
+                                @include('layouts.partials.modal-header', ['title' => __('timeline.edit_entry_title')])
                                 <input type="hidden" name="date" value="{{ $day->toDateString() }}">
                                 <input type="hidden" name="return" value="day">
                                 @include('timeline.partials.manual-entry-fields', ['entry' => $entry])
                                 <div class="modal-footer flex items-center justify-end gap-2">
-                                    <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
-                                    <button type="submit" class="btn">Guardar cambios</button>
+                                    <button type="button" class="btn-ghost" data-modal-close>{{ __('timeline.cancel_btn') }}</button>
+                                    <button type="submit" class="btn">{{ __('timeline.save_changes') }}</button>
                                 </div>
                             </form>
                         </dialog>
@@ -367,34 +366,34 @@
     {{-- ─────── Añadir entrada manual ─────── --}}
     <div class="mt-6">
         <button type="button" class="btn" data-modal-open="#manual-add">
-            + Añadir entrada manual
+            {{ __('timeline.add_entry_btn') }}
         </button>
     </div>
 
     <dialog id="manual-add" class="modal">
         <form method="POST" action="{{ route('manual-entries.store') }}" class="space-y-3">
             @csrf
-            @include('layouts.partials.modal-header', ['title' => 'Nueva entrada manual'])
-            <p class="-mt-1 text-xs text-muted">Reunión, corrección de horas… para el {{ $day->format('d/m/Y') }}.</p>
+            @include('layouts.partials.modal-header', ['title' => __('timeline.add_entry_title')])
+            <p class="-mt-1 text-xs text-muted">{{ __('timeline.add_entry_hint', ['date' => $day->format('d/m/Y')]) }}</p>
             <input type="hidden" name="date" value="{{ $day->toDateString() }}">
             <input type="hidden" name="return" value="day">
             @include('timeline.partials.manual-entry-fields', ['entry' => null])
             <div class="modal-footer flex items-center justify-end gap-2">
-                <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
-                <button type="submit" class="btn">Añadir</button>
+                <button type="button" class="btn-ghost" data-modal-close>{{ __('timeline.cancel_btn') }}</button>
+                <button type="submit" class="btn">{{ __('timeline.add_btn') }}</button>
             </div>
         </form>
     </dialog>
 
     {{-- ─── Modal: editar un activity_event (asignar proyecto a mano) ─── --}}
     <dialog id="event-edit" class="modal" data-event-edit-modal>
-        @include('layouts.partials.modal-header', ['title' => 'Editar evento'])
+        @include('layouts.partials.modal-header', ['title' => __('timeline.edit_event_title')])
 
         <dl class="text-sm space-y-1 mb-4">
-            <div class="flex gap-2"><dt class="w-20 shrink-0 text-muted">Hora</dt><dd data-event-time></dd></div>
-            <div class="flex gap-2"><dt class="w-20 shrink-0 text-muted">Fuente</dt><dd data-event-source></dd></div>
+            <div class="flex gap-2"><dt class="w-20 shrink-0 text-muted">{{ __('timeline.event_hour') }}</dt><dd data-event-time></dd></div>
+            <div class="flex gap-2"><dt class="w-20 shrink-0 text-muted">{{ __('timeline.event_source') }}</dt><dd data-event-source></dd></div>
             <div class="flex gap-2"><dt class="w-20 shrink-0 text-muted">App</dt><dd data-event-app class="flex-1 min-w-0 truncate"></dd></div>
-            <div class="flex gap-2"><dt class="w-20 shrink-0 text-muted">Título</dt><dd data-event-title class="flex-1 min-w-0 truncate"></dd></div>
+            <div class="flex gap-2"><dt class="w-20 shrink-0 text-muted">{{ __('timeline.event_title_col') }}</dt><dd data-event-title class="flex-1 min-w-0 truncate"></dd></div>
             <div class="flex gap-2 hidden" data-event-cwd-row><dt class="w-20 shrink-0 text-muted">Dir</dt><dd data-event-cwd class="flex-1 min-w-0 truncate font-mono text-xs"></dd></div>
             <div class="flex gap-2 hidden" data-event-cmd-row><dt class="w-20 shrink-0 text-muted">Cmd</dt><dd data-event-cmd class="flex-1 min-w-0 truncate font-mono text-xs"></dd></div>
         </dl>
@@ -403,20 +402,20 @@
             @csrf
             @method('PATCH')
             <label class="label">
-                <span>Proyecto</span>
+                <span>{{ __('timeline.event_project') }}</span>
                 <select name="project_id" class="select mt-1">
-                    <option value="">— Sin proyecto (atribución automática) —</option>
+                    <option value="">{{ __('timeline.event_no_project') }}</option>
                     @foreach ($projects as $p)
                         <option value="{{ $p->id }}">{{ $p->code }} · {{ $p->name }}</option>
                     @endforeach
                 </select>
             </label>
             <p class="text-xs text-muted">
-                Al guardar, el bloque que contiene este evento se reatribuirá al proyecto elegido.
+                {{ __('timeline.event_update_hint') }}
             </p>
             <div class="modal-footer flex items-center justify-end gap-2">
-                <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
-                <button type="submit" class="btn">Guardar</button>
+                <button type="button" class="btn-ghost" data-modal-close>{{ __('timeline.cancel_btn') }}</button>
+                <button type="submit" class="btn">{{ __('timeline.save_btn') }}</button>
             </div>
         </form>
     </dialog>

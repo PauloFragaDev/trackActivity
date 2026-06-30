@@ -1,7 +1,8 @@
 <?php
 return [
     'title'             => 'Inici',
-    'tracker_stale'     => 'El tracker no registra activitat des de :time',
+    'tracker_stale'        => 'El tracker no registra activitat des de :time',
+    'tracker_stale_prefix' => 'El tracker no registra activitat des de',
     'check_daemon'      => 'Comprova que el dimoni estigui en marxa.',
     'now'               => 'Ara mateix',
     'idle'              => 'Inactiu',

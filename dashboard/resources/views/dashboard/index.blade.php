@@ -19,7 +19,7 @@
                         text-amber-800 dark:text-amber-300">
                 <x-icon name="alert-triangle" class="w-4 h-4 mt-0.5 shrink-0" />
                 <span>
-                    El tracker no registra actividad desde
+                    {{ __('dashboard.tracker_stale_prefix') }}
                     <x-timestamp :at="$trackerStaleSince" class="text-amber-900 dark:text-amber-200 cursor-help" />.
                     {{ __('dashboard.check_daemon') }}
                 </span>
@@ -37,7 +37,7 @@
                             $cwdHint = data_get($latestEvent->metadata, 'cwd_hint');
                             $cmdHint = data_get($latestEvent->metadata, 'cmd_hint');
                         @endphp
-                        {{ $latestEvent->app ?: 'Actividad' }}
+                        {{ $latestEvent->app ?: __('dashboard.activity') }}
                         @if ($latestEvent->title)<span class="text-muted"> · {{ $latestEvent->title }}</span>@endif
                         @if ($latestEvent->repo_name)
                             <span class="chip ml-1">{{ $latestEvent->repo_name }}@if ($latestEvent->branch):{{ $latestEvent->branch }}@endif</span>
