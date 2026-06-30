@@ -1,4 +1,5 @@
 import Swal from 'sweetalert2';
+import { setSelectValue } from './select.js';
 
 const csrf = () => document.querySelector('meta[name="csrf-token"]')?.content ?? '';
 
@@ -79,7 +80,7 @@ function openNoteMoveDialog(id, title, currentFolderId) {
     if (!dlg || !sel || !label) return;
 
     label.textContent = title;
-    sel.value = currentFolderId ?? '';
+    setSelectValue(sel, currentFolderId ?? '');
     pendingMove = { type: 'note', id };
     dlg.showModal();
 }
@@ -91,17 +92,7 @@ function openFolderMoveDialog(id, name, currentParentId) {
     if (!dlg || !sel || !label) return;
 
     label.textContent = name;
-
-    // Deshabilitar la carpeta que se está moviendo para evitar ciclos
-    sel.querySelectorAll('option[data-fid]').forEach(opt => {
-        opt.disabled = opt.dataset.fid == id;
-    });
-
-    // Pre-seleccionar el padre actual ('' = raíz)
-    sel.value = currentParentId ?? '';
-    // Si el padre actual es la carpeta misma (no debería), reset a raíz
-    if (sel.options[sel.selectedIndex]?.disabled) sel.value = '';
-
+    setSelectValue(sel, currentParentId ?? '');
     pendingMove = { type: 'folder', id };
     dlg.showModal();
 }

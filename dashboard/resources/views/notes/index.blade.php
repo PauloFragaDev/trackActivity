@@ -370,7 +370,7 @@
             </p>
             <label class="label">
                 <span>Carpeta</span>
-                <select id="note-move-select" class="select mt-1" data-no-search>
+                <select id="note-move-select" class="select mt-1">
                     <option value="">Sin carpeta (raíz)</option>
                     @foreach ($folderOptions as $fo)
                         <option value="{{ $fo['id'] }}">{{ $fo['name'] }}</option>
@@ -393,10 +393,10 @@
             </p>
             <label class="label">
                 <span>Carpeta padre</span>
-                <select id="folder-move-select" class="select mt-1" data-no-search>
+                <select id="folder-move-select" class="select mt-1">
                     <option value="">Sin carpeta (raíz)</option>
                     @foreach ($folderOptions as $fo)
-                        <option value="{{ $fo['id'] }}" data-fid="{{ $fo['id'] }}">{{ $fo['name'] }}</option>
+                        <option value="{{ $fo['id'] }}">{{ $fo['name'] }}</option>
                     @endforeach
                 </select>
             </label>
