@@ -110,22 +110,7 @@ async function handleReadAll() {
     closePanel();
 }
 
-// ── Panel (expanded sidebar) ──────────────────────────────
-// #notif-panel lives inside the <aside> which has overflow:hidden.
-// To avoid clipping, we switch the panel to position:fixed and
-// anchor it to the bell button's bounding rect at open time.
-
-function positionPanel(panel) {
-    const bell = document.getElementById('notif-bell-expanded');
-    if (!bell) return;
-    const rect = bell.getBoundingClientRect();
-    panel.style.position = 'fixed';
-    panel.style.top      = `${rect.bottom + 4}px`;
-    panel.style.left     = `${rect.left}px`;
-    panel.style.zIndex   = '200';
-    // Remove any residual absolute-layout classes that could conflict
-    panel.style.width    = '20rem'; // w-80
-}
+// ── Panel (expanded sidebar, inline) ─────────────────────
 
 function closePanel() {
     document.getElementById('notif-panel')?.classList.add('hidden');
@@ -134,14 +119,8 @@ function closePanel() {
 function togglePanel() {
     const panel = document.getElementById('notif-panel');
     if (!panel) return;
-    const isHidden = panel.classList.contains('hidden');
-    if (isHidden) {
-        positionPanel(panel);
-        refreshLists();
-        panel.classList.remove('hidden');
-    } else {
-        panel.classList.add('hidden');
-    }
+    const opening = panel.classList.toggle('hidden');
+    if (!opening) refreshLists();
 }
 
 // ── Speech bubble (collapsed sidebar) ────────────────────
@@ -178,16 +157,41 @@ function toggleBubble() {
 // ── Init ─────────────────────────────────────────────────
 
 export function initNotifications() {
-    if (!window.MY_MEMBER_ID) return;
-    if (!window.SUPABASE_URL)  return;
+    // UI handlers always — bell must open panel regardless of session/Supabase
+    document.getElementById('notif-bell-expanded')?.addEventListener('click', togglePanel);
+    document.getElementById('notif-bell-collapsed')?.addEventListener('click', toggleBubble);
+    document.getElementById('notif-read-all')?.addEventListener('click', handleReadAll);
+    document.getElementById('notif-bubble-read-all')?.addEventListener('click', handleReadAll);
+
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('#notif-bubble') && !e.target.closest('#notif-bell-collapsed')) {
+            closeBubble();
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') { closeBubble(); }
+    });
+
+    document.getElementById('sidebar-toggle')?.addEventListener('click', () => {
+        const isCollapsed = document.documentElement.classList.contains('sidebar-collapsed');
+        const bell        = document.getElementById('notif-bell-collapsed');
+        if (bell) bell.classList.toggle('hidden', notifCount === 0 || !isCollapsed);
+        closeBubble();
+        closePanel();
+    });
+
+    // Fetch + realtime require member identity and Supabase
+    if (!window.MY_MEMBER_ID || !window.SUPABASE_URL) return;
 
     // Load initial notifications
     fetch('/team/notifications')
-        .then(r => r.json())
+        .then(r => r.ok ? r.json() : [])
         .then(items => {
             notifItems = items;
             updateBadge(items.length);
-        });
+        })
+        .catch(() => {});
 
     // Realtime subscription
     const supabase = getSupabaseClient();
@@ -204,7 +208,6 @@ export function initNotifications() {
                 notifItems.unshift(n);
                 updateBadge(notifItems.length);
                 refreshLists();
-                // Toast
                 const text = notifText(n).replace(/<\/?em>/g, '"');
                 Toastify({
                     text,
@@ -217,38 +220,4 @@ export function initNotifications() {
             })
             .subscribe();
     }
-
-    // Expanded bell click
-    document.getElementById('notif-bell-expanded')?.addEventListener('click', togglePanel);
-
-    // Collapsed bell click
-    document.getElementById('notif-bell-collapsed')?.addEventListener('click', toggleBubble);
-
-    // Read-all buttons
-    document.getElementById('notif-read-all')?.addEventListener('click', handleReadAll);
-    document.getElementById('notif-bubble-read-all')?.addEventListener('click', handleReadAll);
-
-    // Close panel/bubble on outside click
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('#notif-panel') && !e.target.closest('#notif-bell-expanded')) {
-            closePanel();
-        }
-        if (!e.target.closest('#notif-bubble') && !e.target.closest('#notif-bell-collapsed')) {
-            closeBubble();
-        }
-    });
-
-    // Close on Escape
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') { closePanel(); closeBubble(); }
-    });
-
-    // Sync collapsed bell visibility when sidebar toggles
-    document.getElementById('sidebar-toggle')?.addEventListener('click', () => {
-        const isCollapsed = document.documentElement.classList.contains('sidebar-collapsed');
-        const bell        = document.getElementById('notif-bell-collapsed');
-        if (bell) bell.classList.toggle('hidden', notifCount === 0 || !isCollapsed);
-        closeBubble();
-        closePanel();
-    });
 }

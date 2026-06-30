@@ -143,7 +143,7 @@
 
                 {{-- Campana de notificaciones (solo si el módulo equipo está activo) --}}
                 @if ($modules['team']['enabled'] ?? false)
-                <div class="relative">
+                <div>
                     <button id="notif-bell-expanded" type="button"
                             class="w-full flex items-center gap-1.5 px-2 py-1.5 rounded
                                    text-ink-600 dark:text-ink-300 hover:bg-ink-100 dark:hover:bg-ink-800">
@@ -155,20 +155,16 @@
                                      flex items-center justify-center px-1 leading-none">0</span>
                     </button>
 
-                    {{-- Panel dropdown (se muestra/oculta por JS) --}}
-                    <div id="notif-panel"
-                         class="hidden absolute left-0 top-full mt-1 w-80 z-50
-                                rounded-lg border divider shadow-lg
-                                bg-[var(--paper)] dark:bg-ink-900">
-                        <div class="flex items-center justify-between px-3 py-2 border-b divider">
-                            <span class="text-xs font-semibold uppercase tracking-wider text-muted">Notificaciones</span>
+                    {{-- Panel inline: se expande dentro del sidebar --}}
+                    <div id="notif-panel" class="hidden mt-0.5 ml-2">
+                        <div class="flex items-center justify-between px-2 py-1">
                             <button id="notif-read-all" type="button"
-                                    class="text-xs text-muted hover:text-ink-900 dark:hover:text-ink-100">
-                                Marcar todas como leídas
+                                    class="text-xs text-muted hover:text-ink-900 dark:hover:text-ink-100 ml-auto">
+                                Marcar todas
                             </button>
                         </div>
-                        <ul id="notif-list" class="max-h-80 overflow-y-auto divide-y divide-ink-100 dark:divide-ink-800">
-                            <li class="px-3 py-4 text-sm text-muted text-center" data-empty>
+                        <ul id="notif-list" class="max-h-48 overflow-y-auto space-y-0.5">
+                            <li class="px-2 py-3 text-xs text-muted text-center" data-empty>
                                 Sin notificaciones pendientes
                             </li>
                         </ul>

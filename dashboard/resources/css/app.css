@@ -845,9 +845,57 @@ html.notes-list-collapsed #notes-list [data-pc-expand]   { display: inline; }
    menú "/" (que es hermano de .ProseMirror dentro de .milkdown). */
 /* ── Notas · editor Tiptap ───────────────────────────── */
 
+/* Ocultar el textarea bruto desde el principio para evitar el flash del
+   contenido raw mientras Tiptap inicializa. JS lo restaura si Tiptap falla. */
+textarea[data-note-body] { display: none; }
+
 [data-note-editor]:not([hidden]) {
     display: flex;
     flex-direction: column;
+}
+
+/* Skeleton de carga del editor */
+.note-skeleton {
+    flex: 1;
+    min-height: 0;
+    padding: 1.1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+}
+.note-skel-line {
+    height: 0.8rem;
+    border-radius: 4px;
+    background: linear-gradient(
+        90deg,
+        rgb(226 232 240 / 0.7) 25%,
+        rgb(241 245 249) 50%,
+        rgb(226 232 240 / 0.7) 75%
+    );
+    background-size: 200% 100%;
+    animation: note-skel-shimmer 1.4s ease-in-out infinite;
+    flex-shrink: 0;
+}
+html.dark .note-skel-line {
+    background: linear-gradient(
+        90deg,
+        rgb(51 65 85 / 0.6) 25%,
+        rgb(71 85 105 / 0.9) 50%,
+        rgb(51 65 85 / 0.6) 75%
+    );
+    background-size: 200% 100%;
+}
+.note-skel-h1 {
+    height: 1.45rem;
+    width: 52%;
+    margin-bottom: 0.4rem;
+}
+@keyframes note-skel-shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .note-skel-line { animation: none; }
 }
 
 /* Toolbar de formato */

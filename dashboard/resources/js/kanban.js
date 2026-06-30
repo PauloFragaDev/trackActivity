@@ -53,6 +53,24 @@ const escape = (s) => {
     return d.innerHTML;
 };
 
+// Escapa HTML y luego resalta @menciones conocidas en azul.
+const renderBody = (s) => {
+    let html = escape(s);
+    const members = window.TEAM_MEMBERS || [];
+    // Ordenar por longitud descendente para que "@Paulo Fraga" no sea solapado
+    // por un hipotético "@Paulo" más corto antes de que se pueda encontrar.
+    [...members]
+        .sort((a, b) => b.name.length - a.name.length)
+        .forEach(m => {
+            const safeName = m.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            html = html.replace(
+                new RegExp('@' + safeName, 'g'),
+                `<span class="font-semibold text-sky-600 dark:text-sky-400">@${escape(m.name)}</span>`,
+            );
+        });
+    return html;
+};
+
 const send = (url, method, params = {}) => {
     // Marca de mutación propia: el polling JS la usa para no recargar
     // por un cambio que YO mismo acabo de hacer (drag, subtask toggle,
@@ -77,10 +95,10 @@ function renderSubtasks() {
     if (progress) progress.textContent = items.length ? `${done} / ${items.length}` : '';
 
     list.innerHTML = items.map((c) => `
-        <li class="flex items-center gap-2 group">
-            <input type="checkbox" class="cursor-pointer" data-subtask-toggle data-id="${c.id}" ${c.checked ? 'checked' : ''}>
-            <span class="flex-1 ${c.checked ? 'line-through text-muted' : ''}">${escape(c.title)}</span>
-            <button type="button" class="btn-ghost text-xs text-rose-500 opacity-0 group-hover:opacity-100"
+        <li class="flex items-start gap-2 group py-0.5">
+            <input type="checkbox" class="cursor-pointer shrink-0 mt-0.5" data-subtask-toggle data-id="${c.id}" ${c.checked ? 'checked' : ''}>
+            <span class="flex-1 min-w-0 break-words ${c.checked ? 'line-through text-muted' : ''}">${escape(c.title)}</span>
+            <button type="button" class="shrink-0 mt-0.5 leading-none text-rose-500 hover:text-rose-700 dark:text-rose-400 opacity-0 group-hover:opacity-100 rounded px-0.5"
                     data-subtask-delete data-id="${c.id}" aria-label="Borrar subtarea">×</button>
         </li>
     `).join('');
@@ -154,7 +172,7 @@ function renderComments() {
                         <button type="button" class="task-chat__del opacity-0 group-hover:opacity-100"
                                 data-comment-delete data-id="${c.id}" aria-label="Borrar comentario">×</button>
                     </div>
-                    <p class="task-chat__text">${escape(c.body)}</p>
+                    <p class="task-chat__text">${renderBody(c.body)}</p>
                 </div>
             </li>`;
     }).join('');
@@ -868,13 +886,6 @@ function initIdentity() {
     const identityStore = (window.KANBAN_ROUTES && window.KANBAN_ROUTES.identityStore) || '/team/identity';
     const identityClear = (window.KANBAN_ROUTES && window.KANBAN_ROUTES.identityClear) || '/team/identity';
 
-    if (window.KANBAN_MODE === 'team' && window.TEAM_MEMBER_ID) {
-        MY_TOKEN = String(window.TEAM_MEMBER_ID);
-        renderPastilla(window.TEAM_MEMBER_ID);
-    } else if (window.KANBAN_MODE === 'team' && !window.TEAM_MEMBER_ID) {
-        modal.showModal();
-    }
-
     modal.querySelectorAll('.identity-option').forEach((btn) => {
         btn.addEventListener('click', async () => {
             const memberId   = btn.dataset.memberId;
@@ -926,6 +937,18 @@ function initIdentity() {
         if (! e.target.closest('#btn-change-identity')) return;
         clearIdentity(identityClear, modal);
     });
+
+    // ── Determinar el estado inicial ─────────────────────────────
+    if (window.KANBAN_MODE !== 'team') return;
+
+    if (window.TEAM_MEMBER_ID) {
+        // Sesión activa: usar directamente
+        MY_TOKEN = String(window.TEAM_MEMBER_ID);
+        renderPastilla(window.TEAM_MEMBER_ID);
+        return;
+    }
+
+    modal.showModal();
 }
 
 async function clearIdentity(identityClear, modal) {

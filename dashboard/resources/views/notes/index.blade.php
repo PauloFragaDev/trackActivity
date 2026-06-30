@@ -189,13 +189,25 @@
                                class="flex-1 min-w-0 bg-transparent border-0 px-0 py-1 text-2xl font-bold tracking-tight rounded
                                       placeholder:text-ink-300 dark:placeholder:text-ink-600">
                     </div>
-                    <textarea name="body" rows="18"
+                    <textarea name="body" rows="18" data-note-body
                               class="textarea font-mono flex-1 min-h-0"
                               placeholder="Escribe en Markdown…">{{ old('body', $currentNote->body) }}</textarea>
-                    {{-- El editor WYSIWYG (Crepe) se monta aquí; ver resources/js/notes-editor.js.
-                         Altura fija: el contenido scrollea dentro de .ProseMirror (CSS en app.css);
-                         el editor en sí no lleva overflow, para que el menú "/" no se recorte. --}}
-                    <div data-note-editor hidden class="flex-1 min-h-0"></div>
+                    {{-- El editor WYSIWYG (Tiptap) se monta aquí; ver resources/js/notes-editor.js.
+                         El skeleton se retira cuando Tiptap termina de inicializar. --}}
+                    <div data-note-editor class="flex-1 min-h-0">
+                        <div data-note-skeleton class="note-skeleton">
+                            <div class="note-skel-line note-skel-h1"></div>
+                            <div class="note-skel-line" style="width:94%"></div>
+                            <div class="note-skel-line" style="width:88%"></div>
+                            <div class="note-skel-line" style="width:96%"></div>
+                            <div class="note-skel-line" style="width:76%"></div>
+                            <div class="note-skel-line" style="width:100%; margin-top:0.5rem"></div>
+                            <div class="note-skel-line" style="width:91%"></div>
+                            <div class="note-skel-line" style="width:84%"></div>
+                            <div class="note-skel-line" style="width:100%"></div>
+                            <div class="note-skel-line" style="width:68%"></div>
+                        </div>
+                    </div>
                     <div class="border-t divider pt-3 mt-1 shrink-0 flex items-center gap-4 flex-wrap">
                         <label class="flex flex-col gap-0.5">
                             <span class="text-xs text-muted font-medium">Carpeta</span>

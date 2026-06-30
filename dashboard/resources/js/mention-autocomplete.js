@@ -128,6 +128,10 @@ function attach(textarea) {
             setActive(Math.max(activeIndex - 1, 0));
         } else if (e.key === 'Enter' && activeIndex >= 0) {
             e.preventDefault();
+            // Evita que otros listeners (p.ej. el "Enter envía" del chat) también
+            // procesen este evento; stopImmediatePropagation cancela listeners
+            // registrados después de este en el mismo elemento.
+            e.stopImmediatePropagation();
             const members = getMatches(getQuery());
             if (members[activeIndex]) selectMember(members[activeIndex]);
         } else if (e.key === 'Escape') {

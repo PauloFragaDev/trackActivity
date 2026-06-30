@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Setting;
 use App\Models\TeamMember;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -20,6 +21,7 @@ class TeamIdentityController extends Controller
             'team_member_id'   => $member->id,
             'team_member_name' => $member->name,
         ]);
+        Setting::set('team.member_id', $member->id);
 
         return response()->json(['ok' => true]);
     }
@@ -27,6 +29,7 @@ class TeamIdentityController extends Controller
     public function destroy(Request $request): JsonResponse|RedirectResponse
     {
         session()->forget(['team_member_id', 'team_member_name']);
+        Setting::set('team.member_id', null);
 
         if ($request->expectsJson()) {
             return response()->json(['ok' => true]);

@@ -80,9 +80,6 @@ export async function initNoteEditor() {
 
     let editor;
     try {
-        textarea.classList.add('hidden');
-        mount.removeAttribute('hidden');
-
         editor = new Editor({
             element: mount,
             extensions: [
@@ -122,13 +119,16 @@ export async function initNoteEditor() {
             },
         });
 
+        // Retirar el skeleton ahora que el editor está montado
+        mount.querySelector('[data-note-skeleton]')?.remove();
+
         // Si el contenido es HTML, cargarlo después de init usando el parser DOM nativo
         if (isHtml && rawContent) {
             editor.commands.setContent(rawContent, false);
         }
     } catch (err) {
         console.error('Notas: no se pudo iniciar Tiptap; se usa el textarea.', err);
-        textarea.classList.remove('hidden');
+        textarea.style.display = 'block';
         mount.setAttribute('hidden', '');
         return;
     }
