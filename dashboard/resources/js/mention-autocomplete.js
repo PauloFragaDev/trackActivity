@@ -46,6 +46,9 @@ function attach(textarea) {
             'z-[300] bg-[var(--paper)] dark:bg-ink-900',
             'border divider rounded shadow-lg py-1 w-48 text-sm',
         ].join(' ');
+        // data-mention-dropdown permite que el CSS del modal quite el overflow
+        // clipping cuando este dropdown está activo (evita que se recorte).
+        dropdown.dataset.mentionDropdown = '';
 
         members.forEach((m, i) => {
             const li = document.createElement('li');
@@ -57,13 +60,34 @@ function attach(textarea) {
             dropdown.appendChild(li);
         });
 
-        // Position dropdown below the cursor
-        const rect = textarea.getBoundingClientRect();
-        dropdown.style.position = 'fixed';
-        dropdown.style.top  = `${rect.bottom + 4}px`;
-        dropdown.style.left = `${rect.left}px`;
+        const rect   = textarea.getBoundingClientRect();
+        const dialog = textarea.closest('dialog');
 
-        document.body.appendChild(dropdown);
+        // El dialog tiene transform:[open] que lo convierte en containing block
+        // para position:fixed. Calculamos relativo al dialog para que encaje
+        // dentro de su sistema de coordenadas; el CSS :has([data-mention-dropdown])
+        // quita el overflow:auto del modal para que no lo recorte.
+        dropdown.style.position = 'fixed';
+
+        if (dialog) {
+            const dRect = dialog.getBoundingClientRect();
+            dropdown.style.top  = `${rect.bottom - dRect.top + 4}px`;
+            dropdown.style.left = `${rect.left   - dRect.left}px`;
+        } else {
+            dropdown.style.top  = `${rect.bottom + 4}px`;
+            dropdown.style.left = `${rect.left}px`;
+        }
+
+        // Ajuste si el dropdown se sale por la derecha del viewport
+        const vw = window.innerWidth;
+        (dialog ?? document.body).appendChild(dropdown);
+        const dw = dropdown.offsetWidth;
+        const origin = dialog ? dialog.getBoundingClientRect().left : 0;
+        const absLeft = origin + parseFloat(dropdown.style.left);
+        if (absLeft + dw > vw - 8) {
+            dropdown.style.left = `${parseFloat(dropdown.style.left) - (absLeft + dw - vw + 8)}px`;
+        }
+
         setActive(0);
     }
 

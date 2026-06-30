@@ -448,6 +448,12 @@
         width: min(40rem, calc(100vw - 2rem));
         max-height: calc(100vh - 4rem);
         overflow-y: auto;
+        /* Choices.js y el autocomplete de menciones usan position:absolute /
+           position:fixed dentro del modal. El overflow:auto + transform combinados
+           los recortan. Cuando cualquiera de los dos está activo, quitamos el
+           clipping para que el dropdown pueda asomar fuera del área del modal. */
+        &:has(.choices.is-open),
+        &:has([data-mention-dropdown]) { overflow: visible; }
         /* Estado cerrado para la transición. El <dialog> nativo no anima
            el cierre con `animation`; con transition + allow-discrete
            (display/overlay) la salida también se reproduce. El origin es
