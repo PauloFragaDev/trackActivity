@@ -46,6 +46,11 @@ function applyTo(select) {
             noChoicesText:    'Sin opciones',
         });
         INSTANCES.set(select, instance);
+        // Choices no hereda el inline style del <select> original — copiarlo
+        // al contenedor para que min-width y similares sigan funcionando.
+        if (select.style.cssText) {
+            instance.containerOuter.element.style.cssText = select.style.cssText;
+        }
     } catch (err) {
         console.warn('Choices: no se pudo aplicar a', select, err);
     }
