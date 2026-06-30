@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# Ejecutado automáticamente tras `git pull` (merge exitoso).
+# Reconstruye solo lo que cambió para no perder tiempo.
+set -euo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+APP_DIR="$REPO_ROOT/dashboard"
+
+CHANGED=$(git diff-tree -r --name-only --no-commit-id ORIG_HEAD HEAD 2>/dev/null || true)
+
+do_composer=0
+do_npm=0
+do_cache=0
+
+echo "$CHANGED" | grep -qE '^dashboard/composer\.(json|lock)$'                                          && do_composer=1 || true
+echo "$CHANGED" | grep -qE '^dashboard/(package\.json|package-lock\.json|vite\.config\.(js|ts)|resources/(js|css)/)' && do_npm=1      || true
+echo "$CHANGED" | grep -qE '^dashboard/.*\.php$'                                                          && do_cache=1   || true
+
+if [ "$do_composer" -eq 1 ]; then
+    echo "[post-merge] composer install..."
+    cd "$APP_DIR" && composer install --no-dev --optimize-autoloader --quiet
+fi
+
+if [ "$do_npm" -eq 1 ]; then
+    echo "[post-merge] npm run build..."
+    cd "$APP_DIR" && npm run build
+fi
+
+if [ "$do_cache" -eq 1 ]; then
+    echo "[post-merge] php artisan optimize:clear..."
+    cd "$APP_DIR" && php artisan optimize:clear --quiet
+fi
+
+if [ "$do_composer$do_npm$do_cache" = "000" ]; then
+    echo "[post-merge] Sin cambios relevantes."
+else
+    echo "[post-merge] Listo."
+fi
