@@ -67,42 +67,89 @@ function showMenu(items, clientX, clientY) {
     menu.style.visibility = '';
 }
 
-// ─────────────────── Acciones ───────────────────
+// ─────────────────── Diálogos de mover ───────────────────
 
-async function moveNote(id, title, currentFolderId) {
-    const folders = window.__NOTE_FOLDERS ?? [];
-    const opts    = [
-        `<option value="">Sin carpeta (raíz)${!currentFolderId ? ' — actual' : ''}</option>`,
-        ...folders.map(f =>
-            `<option value="${f.id}" ${f.id == currentFolderId ? 'selected' : ''}>${escHtml(f.name)}</option>`
-        ),
-    ].join('');
+// Estado compartido para la operación de mover pendiente
+let pendingMove = null;
 
-    const { value, isConfirmed } = await Swal.fire({
-        title: `Mover «${escHtml(title)}»`,
-        html: `<label class="block text-left text-sm mb-1">Carpeta destino</label>
-               <select id="swal-folder" class="swal2-select w-full">${opts}</select>`,
-        showCancelButton: true,
-        confirmButtonText: 'Mover',
-        cancelButtonText: 'Cancelar',
-        preConfirm() {
-            const v = document.getElementById('swal-folder').value;
-            return v === '' ? null : parseInt(v, 10);
-        },
-    });
-    if (!isConfirmed) return;
+function openNoteMoveDialog(id, title, currentFolderId) {
+    const dlg   = document.getElementById('note-move');
+    const sel   = document.getElementById('note-move-select');
+    const label = document.getElementById('note-move-title');
+    if (!dlg || !sel || !label) return;
 
-    try {
-        await jsonFetch(`/notes/${id}/move`, { folder_id: value });
-        window.location.reload();
-    } catch (err) {
-        Swal.fire({ icon: 'error', title: 'Error', text: err.message });
-    }
+    label.textContent = title;
+    sel.value = currentFolderId ?? '';
+    pendingMove = { type: 'note', id };
+    dlg.showModal();
 }
+
+function openFolderMoveDialog(id, name, currentParentId) {
+    const dlg   = document.getElementById('folder-move');
+    const sel   = document.getElementById('folder-move-select');
+    const label = document.getElementById('folder-move-title');
+    if (!dlg || !sel || !label) return;
+
+    label.textContent = name;
+
+    // Deshabilitar la carpeta que se está moviendo para evitar ciclos
+    sel.querySelectorAll('option[data-fid]').forEach(opt => {
+        opt.disabled = opt.dataset.fid == id;
+    });
+
+    // Pre-seleccionar el padre actual ('' = raíz)
+    sel.value = currentParentId ?? '';
+    // Si el padre actual es la carpeta misma (no debería), reset a raíz
+    if (sel.options[sel.selectedIndex]?.disabled) sel.value = '';
+
+    pendingMove = { type: 'folder', id };
+    dlg.showModal();
+}
+
+function wireMoveDialogs() {
+    // Confirmar mover nota
+    document.getElementById('note-move-confirm')?.addEventListener('click', async () => {
+        if (!pendingMove || pendingMove.type !== 'note') return;
+        const { id } = pendingMove;
+        const sel    = document.getElementById('note-move-select');
+        const folder = sel.value === '' ? null : parseInt(sel.value, 10);
+        document.getElementById('note-move').close();
+        pendingMove = null;
+        try {
+            await jsonFetch(`/notes/${id}/move`, { folder_id: folder });
+            window.location.reload();
+        } catch (err) {
+            Swal.fire({ icon: 'error', title: 'Error', text: err.message });
+        }
+    });
+
+    // Confirmar mover carpeta
+    document.getElementById('folder-move-confirm')?.addEventListener('click', async () => {
+        if (!pendingMove || pendingMove.type !== 'folder') return;
+        const { id } = pendingMove;
+        const sel    = document.getElementById('folder-move-select');
+        const parent = sel.value === '' ? null : parseInt(sel.value, 10);
+        document.getElementById('folder-move').close();
+        pendingMove = null;
+        try {
+            await jsonFetch(`/note-folders/${id}/move`, { parent_id: parent });
+            window.location.reload();
+        } catch (err) {
+            Swal.fire({ icon: 'error', title: 'Error', text: err.message });
+        }
+    });
+
+    // Resetear estado al cerrar cualquiera de los dos diálogos
+    ['note-move', 'folder-move'].forEach(id => {
+        document.getElementById(id)?.addEventListener('close', () => { pendingMove = null; });
+    });
+}
+
+// ─────────────────── Acciones ───────────────────
 
 async function deleteNote(id, title) {
     const result = await Swal.fire({
-        title: `¿Eliminar «${escHtml(title)}»?`,
+        title: `¿Eliminar «${title}»?`,
         text: 'La nota pasará a la papelera.',
         icon: 'warning',
         showCancelButton: true,
@@ -119,38 +166,6 @@ async function deleteNote(id, title) {
                       <input type="hidden" name="_method" value="DELETE">`;
     document.body.appendChild(form);
     form.submit();
-}
-
-async function moveFolder(id, name, currentParentId) {
-    const all    = window.__NOTE_FOLDERS ?? [];
-    const folders = all.filter(f => f.id !== id);
-    const opts   = [
-        `<option value="">Sin carpeta (raíz)${!currentParentId ? ' — actual' : ''}</option>`,
-        ...folders.map(f =>
-            `<option value="${f.id}" ${f.id == currentParentId ? 'selected' : ''}>${escHtml(f.name)}</option>`
-        ),
-    ].join('');
-
-    const { value, isConfirmed } = await Swal.fire({
-        title: `Mover carpeta «${escHtml(name)}»`,
-        html: `<label class="block text-left text-sm mb-1">Carpeta destino</label>
-               <select id="swal-folder" class="swal2-select w-full">${opts}</select>`,
-        showCancelButton: true,
-        confirmButtonText: 'Mover',
-        cancelButtonText: 'Cancelar',
-        preConfirm() {
-            const v = document.getElementById('swal-folder').value;
-            return v === '' ? null : parseInt(v, 10);
-        },
-    });
-    if (!isConfirmed) return;
-
-    try {
-        await jsonFetch(`/note-folders/${id}/move`, { parent_id: value });
-        window.location.reload();
-    } catch (err) {
-        Swal.fire({ icon: 'error', title: 'Error', text: err.message });
-    }
 }
 
 async function renameFolderViaPrompt(id, currentName, nameSpan) {
@@ -176,7 +191,7 @@ async function renameFolderViaPrompt(id, currentName, nameSpan) {
 
 async function deleteFolderFromList(id, name) {
     const result = await Swal.fire({
-        title: `¿Eliminar «${escHtml(name)}»?`,
+        title: `¿Eliminar «${name}»?`,
         text: 'Sus notas y subcarpetas pasarán a la raíz.',
         icon: 'warning',
         showCancelButton: true,
@@ -199,8 +214,8 @@ async function deleteFolderFromList(id, name) {
 
 function attachInlineRename(span) {
     span.addEventListener('dblclick', () => {
-        const folderId   = span.dataset.folderId;
-        const origName   = span.textContent.trim();
+        const folderId = span.dataset.folderId;
+        const origName = span.textContent.trim();
 
         const input = document.createElement('input');
         input.type      = 'text';
@@ -221,12 +236,9 @@ function attachInlineRename(span) {
         const save = async () => {
             const newName = input.value.trim();
             if (!newName || newName === origName) { restore(); return; }
-
             try {
                 const res = await jsonFetch(`/note-folders/${folderId}`, { name: newName }, 'PATCH');
                 span.textContent = res.name;
-                // also update page title if it reflects the folder name
-                document.title = document.title.replace(origName, res.name);
                 input.replaceWith(span);
                 attachInlineRename(span);
             } catch (err) {
@@ -249,15 +261,17 @@ export function initNotesUI() {
     const list = document.getElementById('notes-list');
     if (!list) return;
 
-    // Cerrar menú con click fuera o Escape
+    wireMoveDialogs();
+
+    // Cerrar menú contextual al hacer click fuera o pulsar Escape
     document.addEventListener('click', closeMenu);
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMenu(); });
 
-    // Inline rename en título de carpeta de la cabecera
+    // Rename inline en el título de carpeta de la cabecera
     const titleSpan = list.querySelector('.folder-title-inline');
     if (titleSpan) attachInlineRename(titleSpan);
 
-    // Menú contextual en ítems de nota
+    // Menú contextual
     list.addEventListener('contextmenu', (e) => {
         // ¿Nota?
         const noteEl = e.target.closest('[data-note-id]');
@@ -269,10 +283,10 @@ export function initNotesUI() {
             const url      = noteEl.querySelector('a')?.href ?? `/notes?note=${id}`;
 
             showMenu([
-                { label: 'Abrir',     action: () => { window.location.href = url; } },
-                { label: 'Mover a…',  action: () => moveNote(id, title, folderId) },
+                { label: 'Abrir',    action: () => { window.location.href = url; } },
+                { label: 'Mover a…', action: () => openNoteMoveDialog(id, title, folderId) },
                 'sep',
-                { label: 'Eliminar',  action: () => deleteNote(id, title), danger: true },
+                { label: 'Eliminar', action: () => deleteNote(id, title), danger: true },
             ], e.clientX, e.clientY);
             return;
         }
@@ -287,20 +301,12 @@ export function initNotesUI() {
             const nameSpan = sfEl.querySelector('.subfolder-name-text');
 
             showMenu([
-                { label: 'Abrir',      action: () => { window.location.href = sfEl.href; } },
-                { label: 'Renombrar',  action: () => renameFolderViaPrompt(id, name, nameSpan) },
-                { label: 'Mover a…',   action: () => moveFolder(id, name, parentId) },
+                { label: 'Abrir',     action: () => { window.location.href = sfEl.href; } },
+                { label: 'Renombrar', action: () => renameFolderViaPrompt(id, name, nameSpan) },
+                { label: 'Mover a…',  action: () => openFolderMoveDialog(id, name, parentId) },
                 'sep',
-                { label: 'Eliminar',   action: () => deleteFolderFromList(id, name), danger: true },
+                { label: 'Eliminar',  action: () => deleteFolderFromList(id, name), danger: true },
             ], e.clientX, e.clientY);
         }
     });
-}
-
-function escHtml(str) {
-    return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
 }

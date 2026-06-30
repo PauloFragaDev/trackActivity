@@ -361,6 +361,52 @@
         </dialog>
     @endif
 
+    {{-- Modal: mover nota --}}
+    <dialog id="note-move" class="modal">
+        @include('layouts.partials.modal-header', ['title' => 'Mover nota'])
+        <div class="space-y-3">
+            <p class="text-sm text-muted">
+                Carpeta destino para <strong id="note-move-title" class="text-foreground font-semibold"></strong>:
+            </p>
+            <label class="label">
+                <span>Carpeta</span>
+                <select id="note-move-select" class="select mt-1" data-no-search>
+                    <option value="">Sin carpeta (raíz)</option>
+                    @foreach ($folderOptions as $fo)
+                        <option value="{{ $fo['id'] }}">{{ $fo['name'] }}</option>
+                    @endforeach
+                </select>
+            </label>
+            <div class="modal-footer flex justify-end gap-2">
+                <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
+                <button type="button" class="btn" id="note-move-confirm">Mover</button>
+            </div>
+        </div>
+    </dialog>
+
+    {{-- Modal: mover carpeta --}}
+    <dialog id="folder-move" class="modal">
+        @include('layouts.partials.modal-header', ['title' => 'Mover carpeta'])
+        <div class="space-y-3">
+            <p class="text-sm text-muted">
+                Nueva ubicación para <strong id="folder-move-title" class="text-foreground font-semibold"></strong>:
+            </p>
+            <label class="label">
+                <span>Carpeta padre</span>
+                <select id="folder-move-select" class="select mt-1" data-no-search>
+                    <option value="">Sin carpeta (raíz)</option>
+                    @foreach ($folderOptions as $fo)
+                        <option value="{{ $fo['id'] }}" data-fid="{{ $fo['id'] }}">{{ $fo['name'] }}</option>
+                    @endforeach
+                </select>
+            </label>
+            <div class="modal-footer flex justify-end gap-2">
+                <button type="button" class="btn-ghost" data-modal-close>Cancelar</button>
+                <button type="button" class="btn" id="folder-move-confirm">Mover</button>
+            </div>
+        </div>
+    </dialog>
+
     <script>
         window.__NOTE_FOLDERS = {!! json_encode(
             $folderOptions->map(fn ($fo) => ['id' => $fo['id'], 'name' => $fo['name']])->values()
