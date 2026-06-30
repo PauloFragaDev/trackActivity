@@ -187,6 +187,8 @@ Route::middleware(EnsureTeamEnabled::class)->group(function () {
     Route::get('/team/projects/{project}/edit',   [TeamProjectController::class, 'edit'])->name('team.projects.edit');
     Route::patch('/team/projects/{project}',      [TeamProjectController::class, 'update'])->name('team.projects.update');
     Route::delete('/team/projects/{project}',     [TeamProjectController::class, 'destroy'])->name('team.projects.destroy');
+    Route::get('/team/projects/{project}/board',  [TeamProjectController::class, 'board'])->name('team.projects.board');
+    Route::patch('/team/projects/{project}/columns',[TeamProjectController::class, 'updateColumns'])->name('team.projects.columns');
 
     Route::post('/team/identity',   [TeamIdentityController::class, 'store'])->name('team.identity.store');
     Route::delete('/team/identity', [TeamIdentityController::class, 'destroy'])->name('team.identity.destroy');

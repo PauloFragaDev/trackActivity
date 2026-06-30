@@ -1,9 +1,42 @@
 @extends('layouts.app')
 
-@section('title', 'Tareas')
+@section('title', isset($project) ? $project->code . ' · ' . $project->name : 'Tareas')
 @section('container', '')
 
 @section('content')
+@if(isset($project))
+    {{-- ── Cabecera: Kanban de proyecto específico ────────────────────── --}}
+    <div class="mb-4 flex items-center justify-between gap-3 flex-wrap">
+        <div class="flex items-center gap-3 min-w-0">
+            <nav class="flex items-center gap-1.5 text-sm min-w-0">
+                <a href="{{ route('team.projects.index') }}" class="text-faint hover:text-default shrink-0">Proyectos</a>
+                <span class="text-faint">/</span>
+                <span class="flex items-center gap-1.5 font-semibold truncate">
+                    <span class="w-2.5 h-2.5 rounded-sm shrink-0 inline-block" style="background:{{ $project->color ?? '#999' }}"></span>
+                    {{ $project->code }} · {{ $project->name }}
+                </span>
+            </nav>
+            @if($mode === 'team')
+                <div id="identity-pastilla" class="flex items-center gap-1.5 text-sm ml-1 shrink-0"></div>
+            @endif
+        </div>
+        @if(isset($members) && $members->isNotEmpty())
+        <form method="GET" action="{{ route('team.projects.board', $project) }}">
+            <div class="w-44">
+                <select name="assignee" class="select text-sm" onchange="this.form.submit()">
+                    <option value="">Todo el equipo</option>
+                    @foreach($members as $member)
+                        <option value="{{ $member->id }}" @selected(isset($assigneeId) && $assigneeId === $member->id)>
+                            {{ $member->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+        </form>
+        @endif
+    </div>
+@else
+    {{-- ── Cabecera: Kanban global (personal / equipo) ────────────────── --}}
     <div class="mb-4 flex items-center justify-between gap-3 flex-wrap">
         <div class="flex items-center gap-3">
             <h1 class="text-xl font-semibold tracking-tight">Tareas</h1>
@@ -62,6 +95,7 @@
             </form>
         </div>
     </div>
+@endif
 
     {{-- Barra de búsqueda + chips de labels (filtrado client-side). JS persiste en localStorage. --}}
     <div class="mb-4 flex items-center gap-3 flex-wrap" data-board-filters>
@@ -94,13 +128,22 @@
     {{-- Los errores de validación se muestran inline en cada campo
          (ver tasks/partials/form-fields.blade.php + x-field-error). --}}
 
-    <div data-task-board class="flex gap-3 items-start overflow-x-auto pb-2">
+    <div data-task-board @if(isset($columnDraggable) && $columnDraggable)data-columns-container@endif class="flex gap-3 items-start overflow-x-auto pb-2">
         @foreach ($columns as $col)
             @php $colTasks = $tasks->get($col->value, collect()); @endphp
-            <section class="card flex flex-col task-column" data-task-column="{{ $col->value }}" style="min-height: 60vh">
+            <section class="card flex flex-col task-column" data-task-column="{{ $col->value }}"
+                     @if(isset($columnDraggable) && $columnDraggable)data-column="{{ $col->value }}"@endif
+                     style="min-height: 60vh">
                 <header class="task-column__header flex items-center justify-between gap-1 p-3 border-b divider cursor-pointer select-none"
                         data-task-column-toggle title="Plegar columna">
                     <span class="task-column__title text-sm font-medium flex items-center gap-1.5">
+                        @if(isset($columnDraggable) && $columnDraggable)
+                        <span data-column-handle
+                              class="text-faint hover:text-default cursor-grab active:cursor-grabbing touch-none shrink-0"
+                              onclick="event.stopPropagation()" title="Arrastrar columna">
+                            <x-icon name="grip" class="w-3.5 h-3.5" />
+                        </span>
+                        @endif
                         <x-icon name="chevron-down" class="task-column__chevron text-faint w-3 h-3" />
                         {{ $col->label() }}
                         <span class="text-faint" data-column-count>{{ $colTasks->count() }}</span>
@@ -291,6 +334,9 @@ window.KANBAN_ROUTES = {
     identityClear:   '{{ route("team.identity.destroy") }}',
     transferPreview: '/tasks',
     transfer:        '/tasks',
+    @if(isset($columnDraggable) && $columnDraggable)
+    updateColumns:   '{{ route("team.projects.columns", $project) }}',
+    @endif
 };
 @if($mode === 'team')
 window.SUPABASE_URL      = '{{ config("team.supabase_url") }}';

@@ -854,6 +854,27 @@ function initLivePolling() {
     window.addEventListener('focus', () => { tick(); });
 }
 
+// ─── Drag de columnas (reordenar) ───────────────────────────────────
+function setupColumnDrag() {
+    const container = document.querySelector('[data-columns-container]');
+    if (!container || !window.KANBAN_ROUTES?.updateColumns) return;
+
+    Sortable.create(container, {
+        animation: 150,
+        handle: '[data-column-handle]',
+        ghostClass: 'opacity-30',
+        onEnd() {
+            const order = [...container.querySelectorAll('[data-column]')]
+                .map((el) => el.dataset.column);
+            fetch(window.KANBAN_ROUTES.updateColumns, {
+                method:  'PATCH',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf },
+                body:    JSON.stringify({ columns: order }),
+            }).catch(() => {});
+        },
+    });
+}
+
 export function initKanban() {
     board = document.querySelector('[data-task-board]');
     if (! board) return;
@@ -873,6 +894,7 @@ export function initKanban() {
     setupDeleteTask();
     setupCollapse();
     setupSort();
+    setupColumnDrag();
     initLivePolling();
     initIdentity();
     initTransfer();

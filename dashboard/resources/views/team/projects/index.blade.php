@@ -47,6 +47,7 @@
                             </td>
                             <td class="px-4 py-3 text-right font-mono">{{ $p->tasks_count }}</td>
                             <td class="px-4 py-3 text-right">
+                                <a href="{{ route('team.projects.board', $p) }}" class="btn-ghost">Board</a>
                                 <a href="{{ route('team.projects.edit', $p) }}" class="btn-ghost">Editar</a>
                             </td>
                         </tr>
