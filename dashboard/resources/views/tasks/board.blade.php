@@ -128,11 +128,11 @@
     {{-- Los errores de validación se muestran inline en cada campo
          (ver tasks/partials/form-fields.blade.php + x-field-error). --}}
 
-    <div data-task-board @if(isset($columnDraggable) && $columnDraggable)data-columns-container@endif class="flex gap-3 items-start overflow-x-auto pb-2">
+    <div data-task-board {{ isset($columnDraggable) && $columnDraggable ? 'data-columns-container' : '' }} class="flex gap-3 items-start overflow-x-auto pb-2">
         @foreach ($columns as $col)
             @php $colTasks = $tasks->get($col->value, collect()); @endphp
             <section class="card flex flex-col task-column" data-task-column="{{ $col->value }}"
-                     @if(isset($columnDraggable) && $columnDraggable)data-column="{{ $col->value }}"@endif
+                     {!! isset($columnDraggable) && $columnDraggable ? 'data-column="'.$col->value.'"' : '' !!}
                      style="min-height: 60vh">
                 <header class="task-column__header flex items-center justify-between gap-1 p-3 border-b divider cursor-pointer select-none"
                         data-task-column-toggle title="Plegar columna">
