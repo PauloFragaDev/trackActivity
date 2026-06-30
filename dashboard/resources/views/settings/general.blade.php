@@ -60,8 +60,8 @@
                 </p>
             </div>
             <select name="locale" class="select mt-1">
-                <option value="es" @selected(Setting::get('app.locale', 'es') === 'es')>{{ __('common.spanish') }}</option>
-                <option value="ca" @selected(Setting::get('app.locale', 'es') === 'ca')>{{ __('common.catalan') }}</option>
+                <option value="es" @selected(\App\Models\Setting::get('app.locale', 'es') === 'es')>{{ __('common.spanish') }}</option>
+                <option value="ca" @selected(\App\Models\Setting::get('app.locale', 'es') === 'ca')>{{ __('common.catalan') }}</option>
             </select>
         </div>
 
