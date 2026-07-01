@@ -52,4 +52,50 @@ class TeamUsersSeederTest extends TestCase
 
         $this->assertEquals(0, User::count());
     }
+
+    public function test_does_not_write_when_nothing_changed(): void
+    {
+        putenv('TEAM_USER_1_EMAIL=ana@example.com');
+        putenv('TEAM_USER_1_PASSWORD=secret123');
+        putenv('TEAM_USER_1_NAME=Ana');
+        putenv('TEAM_USER_1_MEMBER_ID=5');
+
+        (new TeamUsersSeeder())->run();
+
+        $updatedAt = User::where('email', 'ana@example.com')->firstOrFail()->updated_at;
+
+        // Avanzamos el reloj para que, si el seeder disparase un UPDATE real
+        // (aunque solo fuese por refrescar los timestamps), `updated_at`
+        // cambiaría y lo detectaríamos.
+        $this->travel(1)->hour();
+
+        (new TeamUsersSeeder())->run();
+
+        $this->assertTrue(
+            $updatedAt->equalTo(
+                User::where('email', 'ana@example.com')->firstOrFail()->updated_at
+            ),
+            'El seeder no debería reescribir el usuario cuando ningún dato cambió.'
+        );
+    }
+
+    public function test_rotates_password_hash_when_env_password_changes(): void
+    {
+        putenv('TEAM_USER_1_EMAIL=ana@example.com');
+        putenv('TEAM_USER_1_PASSWORD=secret123');
+
+        (new TeamUsersSeeder())->run();
+
+        $originalHash = User::where('email', 'ana@example.com')->firstOrFail()->password;
+
+        $this->travel(1)->hour();
+
+        putenv('TEAM_USER_1_PASSWORD=new-secret-456');
+        (new TeamUsersSeeder())->run();
+
+        $user = User::where('email', 'ana@example.com')->firstOrFail();
+
+        $this->assertNotSame($originalHash, $user->password);
+        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('new-secret-456', $user->password));
+    }
 }
