@@ -5,6 +5,8 @@ services:
       context: ../dashboard
       dockerfile: Dockerfile
     restart: unless-stopped
+    # .env.team NO se commitea (ver .gitignore). Copia infra/.env.team.example
+    # a infra/.env.team y rellena los valores reales antes de levantar el stack.
     env_file:
       - .env.team
     environment:
