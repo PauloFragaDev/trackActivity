@@ -4,10 +4,13 @@ namespace Tests\Feature;
 
 use App\Services\SchedulerManager;
 use App\Services\TrackerManager;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class TrackerControlTest extends TestCase
 {
+    use RefreshDatabase;
+
     protected function setUp(): void
     {
         parent::setUp();
