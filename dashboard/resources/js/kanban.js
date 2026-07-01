@@ -927,64 +927,72 @@ export function initKanban() {
 
 function initIdentity() {
     const modal = document.getElementById('identity-modal');
-    if (!modal) return;
 
     const identityStore = (window.KANBAN_ROUTES && window.KANBAN_ROUTES.identityStore) || '/team/identity';
     const identityClear = (window.KANBAN_ROUTES && window.KANBAN_ROUTES.identityClear) || '/team/identity';
 
-    modal.querySelectorAll('.identity-option').forEach((btn) => {
-        btn.addEventListener('click', async () => {
-            const memberId   = btn.dataset.memberId;
-            const memberName = btn.dataset.memberName;
+    // El wiring del modal (selector de identidad) solo tiene sentido si el
+    // modal existe en el DOM — en modo `team_only` no se renderiza y la
+    // identidad ya viene resuelta por el middleware, así que este bloque
+    // se salta entero.
+    if (modal) {
+        modal.querySelectorAll('.identity-option').forEach((btn) => {
+            btn.addEventListener('click', async () => {
+                const memberId   = btn.dataset.memberId;
+                const memberName = btn.dataset.memberName;
 
-            try {
-                await fetch(identityStore, {
-                    method:  'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf },
-                    body:    JSON.stringify({ member_id: memberId }),
+                try {
+                    await fetch(identityStore, {
+                        method:  'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf },
+                        body:    JSON.stringify({ member_id: memberId }),
+                    });
+                } catch {}
+
+                localStorage.setItem('team_member_id',   memberId);
+                localStorage.setItem('team_member_name', memberName);
+                window.TEAM_MEMBER_ID   = memberId;
+                window.TEAM_MEMBER_NAME = memberName;
+                MY_TOKEN = String(memberId);
+
+                // Actualizar estado visual de los botones del modal
+                modal.querySelectorAll('.identity-option').forEach((b) => {
+                    const active = b.dataset.memberId === memberId;
+                    b.classList.toggle('bg-ink-100', active);
+                    b.classList.toggle('dark:bg-ink-800', active);
+                    b.classList.toggle('ring-2', active);
+                    b.classList.toggle('ring-inset', active);
+                    b.classList.toggle('ring-ink-300', active);
+                    b.classList.toggle('dark:ring-ink-600', active);
+                    b.classList.toggle('hover:bg-ink-100', !active);
+                    b.classList.toggle('dark:hover:bg-ink-800', !active);
+                    b.querySelector('.tu-badge')?.remove();
+                    if (active) {
+                        const badge = document.createElement('span');
+                        badge.className = 'tu-badge text-xs font-semibold px-2 py-0.5 rounded-full text-white';
+                        const avatar = b.querySelector('span[style]');
+                        badge.style.backgroundColor = avatar?.style.backgroundColor || '#666';
+                        badge.textContent = 'Tú';
+                        b.appendChild(badge);
+                    }
                 });
-            } catch {}
 
-            localStorage.setItem('team_member_id',   memberId);
-            localStorage.setItem('team_member_name', memberName);
-            window.TEAM_MEMBER_ID   = memberId;
-            window.TEAM_MEMBER_NAME = memberName;
-            MY_TOKEN = String(memberId);
-
-            // Actualizar estado visual de los botones del modal
-            modal.querySelectorAll('.identity-option').forEach((b) => {
-                const active = b.dataset.memberId === memberId;
-                b.classList.toggle('bg-ink-100', active);
-                b.classList.toggle('dark:bg-ink-800', active);
-                b.classList.toggle('ring-2', active);
-                b.classList.toggle('ring-inset', active);
-                b.classList.toggle('ring-ink-300', active);
-                b.classList.toggle('dark:ring-ink-600', active);
-                b.classList.toggle('hover:bg-ink-100', !active);
-                b.classList.toggle('dark:hover:bg-ink-800', !active);
-                b.querySelector('.tu-badge')?.remove();
-                if (active) {
-                    const badge = document.createElement('span');
-                    badge.className = 'tu-badge text-xs font-semibold px-2 py-0.5 rounded-full text-white';
-                    const avatar = b.querySelector('span[style]');
-                    badge.style.backgroundColor = avatar?.style.backgroundColor || '#666';
-                    badge.textContent = 'Tú';
-                    b.appendChild(badge);
-                }
+                renderPastilla(memberId);
+                modal.close();
             });
-
-            renderPastilla(memberId);
-            modal.close();
         });
-    });
 
-    // "Cambiar" — delegación sobre el contenedor de la pastilla
-    document.getElementById('identity-pastilla')?.addEventListener('click', (e) => {
-        if (! e.target.closest('#btn-change-identity')) return;
-        clearIdentity(identityClear, modal);
-    });
+        // "Cambiar" — delegación sobre el contenedor de la pastilla
+        document.getElementById('identity-pastilla')?.addEventListener('click', (e) => {
+            if (! e.target.closest('#btn-change-identity')) return;
+            clearIdentity(identityClear, modal);
+        });
+    }
 
-    // ── Determinar el estado inicial ─────────────────────────────
+    // ── Determinar el estado inicial de la pastilla ───────────────
+    // Esto debe ejecutarse siempre en modo 'team', exista o no el modal
+    // (en team_only no existe, pero la pastilla igualmente debe pintarse
+    // con el botón de "Cerrar sesión").
     if (window.KANBAN_MODE !== 'team') return;
 
     if (window.TEAM_MEMBER_ID) {
@@ -994,7 +1002,7 @@ function initIdentity() {
         return;
     }
 
-    modal.showModal();
+    modal?.showModal();
 }
 
 async function clearIdentity(identityClear, modal) {
