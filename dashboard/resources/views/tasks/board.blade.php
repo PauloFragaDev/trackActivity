@@ -43,7 +43,7 @@
             <a href="{{ route('tasks.archived') }}" class="text-xs text-faint hover:underline">
                 {{ __('tasks.archived_link') }}
             </a>
-            @if(config('team.db_host') && env('APP_MODE') !== 'team_only' && \App\Services\ModuleVisibility::enabled('team'))
+            @if(config('team.db_host') && config('app.mode') !== 'team_only' && \App\Services\ModuleVisibility::enabled('team'))
             <div class="flex items-center gap-1 bg-surface-2 rounded-lg p-0.5 text-sm">
                 <a href="{{ route('tasks.index') }}" data-tab-link
                    class="px-3 py-1 rounded-md transition-colors {{ $mode === 'personal' ? 'bg-surface-1 shadow-sm font-medium' : 'text-faint hover:text-default' }}">
@@ -294,7 +294,7 @@
         </div>
     </dialog>
 
-@if($mode === 'team' && isset($members) && $members->isNotEmpty() && env('APP_MODE') !== 'team_only')
+@if($mode === 'team' && isset($members) && $members->isNotEmpty() && config('app.mode') !== 'team_only')
 @php $activeMemberId = session('team_member_id') ? (int) session('team_member_id') : null @endphp
 <dialog id="identity-modal" class="modal">
     @include('layouts.partials.modal-header', ['title' => __('tasks.who_are_you'), 'hint' => false])
@@ -323,7 +323,7 @@
 
 <script>
 window.KANBAN_MODE      = '{{ $mode }}';
-window.KANBAN_TEAM_ONLY = @json(env('APP_MODE') === 'team_only');
+window.KANBAN_TEAM_ONLY = @json(config('app.mode') === 'team_only');
 window.KANBAN_ROUTES = {
     store:         '{{ $mode === "team" ? route("team.tasks.store")   : route("tasks.store") }}',
     move:          '{{ $mode === "team" ? "/team/tasks"               : "/tasks" }}',

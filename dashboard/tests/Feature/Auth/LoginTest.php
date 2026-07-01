@@ -53,6 +53,19 @@ class LoginTest extends TestCase
         $this->assertGuest();
     }
 
+    public function test_sixth_consecutive_failed_login_attempt_is_throttled(): void
+    {
+        User::create(['name' => 'Ana', 'email' => 'ana@example.com', 'password' => 'secret123']);
+
+        for ($i = 0; $i < 5; $i++) {
+            $this->post('/login', ['email' => 'ana@example.com', 'password' => 'wrong'])
+                ->assertSessionHasErrors('email');
+        }
+
+        $this->post('/login', ['email' => 'ana@example.com', 'password' => 'wrong'])
+            ->assertStatus(429);
+    }
+
     public function test_logout_clears_session_and_identity(): void
     {
         $member = TeamMember::create(['name' => 'Ana', 'color' => '#6366f1', 'position' => 0]);

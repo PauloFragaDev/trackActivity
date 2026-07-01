@@ -56,6 +56,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Application Mode
+    |--------------------------------------------------------------------------
+    |
+    | Cuando vale "team_only" (instancia pública del Kanban de equipo en el
+    | VPS), toda la app queda restringida al Kanban de equipo + login: el
+    | resto de rutas es inalcanzable. Se lee vía config() en vez de env()
+    | directo para que siga funcionando si algún día se corre
+    | `php artisan config:cache` (env() devolvería null tras cachear config,
+    | desactivando toda esta protección de golpe).
+    |
+    */
+
+    'mode' => env('APP_MODE'),
+
+    /*
+    |--------------------------------------------------------------------------
     | API REST · token Bearer
     |--------------------------------------------------------------------------
     |

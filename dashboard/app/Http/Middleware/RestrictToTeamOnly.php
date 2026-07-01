@@ -16,7 +16,7 @@ class RestrictToTeamOnly
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (env('APP_MODE') !== 'team_only') {
+        if (config('app.mode') !== 'team_only') {
             return $next($request);
         }
 

@@ -12,6 +12,8 @@ class TeamIdentityController extends Controller
 {
     public function store(Request $request): JsonResponse
     {
+        abort_if(config('app.mode') === 'team_only', 403);
+
         $data = $request->validate([
             'member_id' => ['required', 'integer', 'exists:supabase.team_members,id'],
         ]);
@@ -28,6 +30,8 @@ class TeamIdentityController extends Controller
 
     public function destroy(Request $request): JsonResponse|RedirectResponse
     {
+        abort_if(config('app.mode') === 'team_only', 403);
+
         session()->forget(['team_member_id', 'team_member_name']);
         Setting::set('team.member_id', null);
 

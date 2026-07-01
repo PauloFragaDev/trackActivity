@@ -28,7 +28,7 @@ use App\Http\Controllers\TimelineController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/login',   [\App\Http\Controllers\Auth\LoginController::class, 'create'])->name('login');
-Route::post('/login',  [\App\Http\Controllers\Auth\LoginController::class, 'store'])->name('login.store');
+Route::post('/login',  [\App\Http\Controllers\Auth\LoginController::class, 'store'])->middleware('throttle:5,1')->name('login.store');
 Route::post('/logout', [\App\Http\Controllers\Auth\LoginController::class, 'destroy'])->name('logout');
 
 // ─────────────────── Inicio ───────────────────
@@ -172,7 +172,7 @@ Route::post('/settings/integrations', [\App\Http\Controllers\SettingsController:
 
 // ─────────────────── Equipo (Kanban compartido, Supabase) ───────────────────
 $teamMiddleware = [EnsureTeamEnabled::class, RestoreTeamIdentity::class];
-if (env('APP_MODE') === 'team_only') {
+if (config('app.mode') === 'team_only') {
     $teamMiddleware[] = 'auth';
 }
 
@@ -215,7 +215,7 @@ Route::middleware($teamMiddleware)->group(function () {
 // ruta posterior con el mismo uri pisa a una anterior (p. ej. Route::get('/',
 // ...timeline.today...) definida arriba). Registrando esto al final nos
 // aseguramos de que gane sobre cualquier ruta '/' o '/tasks' ya registrada.
-if (env('APP_MODE') === 'team_only') {
+if (config('app.mode') === 'team_only') {
     Route::redirect('/tasks', '/team/tasks');
     Route::redirect('/', '/team/tasks');
 }
