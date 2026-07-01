@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\TeamMember;
 use App\Models\User;
 use Database\Seeders\TeamUsersSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -10,6 +11,12 @@ use Tests\TestCase;
 class TeamUsersSeederTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->artisan('migrate', ['--database' => 'supabase', '--path' => 'database/migrations/team']);
+    }
 
     protected function tearDown(): void
     {
@@ -21,18 +28,19 @@ class TeamUsersSeederTest extends TestCase
 
     public function test_creates_user_from_env_vars(): void
     {
+        $member = TeamMember::create(['name' => 'Ana', 'color' => '#6366f1', 'position' => 0]);
         putenv('TEAM_USER_1_EMAIL=ana@example.com');
         putenv('TEAM_USER_1_PASSWORD=secret123');
         putenv('TEAM_USER_1_NAME=Ana');
-        putenv('TEAM_USER_1_MEMBER_ID=5');
+        putenv("TEAM_USER_1_MEMBER_ID={$member->id}");
 
         (new TeamUsersSeeder())->run();
 
         $this->assertDatabaseHas('users', [
             'email'          => 'ana@example.com',
             'name'           => 'Ana',
-            'team_member_id' => 5,
-        ]);
+            'team_member_id' => $member->id,
+        ], 'supabase');
     }
 
     public function test_is_idempotent_when_run_twice(): void
@@ -55,10 +63,11 @@ class TeamUsersSeederTest extends TestCase
 
     public function test_does_not_write_when_nothing_changed(): void
     {
+        $member = TeamMember::create(['name' => 'Ana', 'color' => '#6366f1', 'position' => 0]);
         putenv('TEAM_USER_1_EMAIL=ana@example.com');
         putenv('TEAM_USER_1_PASSWORD=secret123');
         putenv('TEAM_USER_1_NAME=Ana');
-        putenv('TEAM_USER_1_MEMBER_ID=5');
+        putenv("TEAM_USER_1_MEMBER_ID={$member->id}");
 
         (new TeamUsersSeeder())->run();
 

@@ -10,6 +10,8 @@ class User extends Authenticatable
 {
     use Notifiable;
 
+    protected $connection = 'supabase';
+
     protected $fillable = ['name', 'email', 'password', 'team_member_id'];
 
     protected $hidden = ['password', 'remember_token'];

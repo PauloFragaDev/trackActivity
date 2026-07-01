@@ -5,17 +5,16 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
+    protected $connection = 'supabase';
+
     public function up(): void
     {
-        Schema::create('users', function (Blueprint $table) {
+        Schema::connection('supabase')->create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
             $table->string('password');
-            // Sin FK: users vive en sqlite, team_members en la conexión
-            // 'supabase' (Postgres) — conexiones distintas no admiten FK
-            // cruzada. Validado en la capa de aplicación (seeder / login).
-            $table->unsignedBigInteger('team_member_id')->nullable();
+            $table->foreignId('team_member_id')->nullable()->constrained('team_members')->nullOnDelete();
             $table->rememberToken();
             $table->timestamps();
         });
@@ -23,6 +22,6 @@ return new class extends Migration {
 
     public function down(): void
     {
-        Schema::dropIfExists('users');
+        Schema::connection('supabase')->dropIfExists('users');
     }
 };
