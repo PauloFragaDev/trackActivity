@@ -1,11 +1,17 @@
 #!/usr/bin/env bash
 # Instala los git hooks desde scripts/hooks/ en .git/hooks/.
-# Ejecutar una vez tras un clone limpio: bash scripts/setup-hooks.sh
+# Se ejecuta sola tras `composer install` (ver dashboard/composer.json);
+# no falla si no hay .git (build desde tarball/CI sin historial).
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SRC_DIR="$REPO_ROOT/scripts/hooks"
 DST_DIR="$REPO_ROOT/.git/hooks"
+
+if [ ! -d "$DST_DIR" ]; then
+    echo "  (sin .git/hooks — no es un clon git, se omite la instalación de hooks)"
+    exit 0
+fi
 
 for hook in "$SRC_DIR"/*; do
     name="$(basename "$hook")"
