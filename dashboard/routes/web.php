@@ -27,6 +27,10 @@ use App\Http\Controllers\TrackerController;
 use App\Http\Controllers\TimelineController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/login',   [\App\Http\Controllers\Auth\LoginController::class, 'create'])->name('login');
+Route::post('/login',  [\App\Http\Controllers\Auth\LoginController::class, 'store'])->name('login.store');
+Route::post('/logout', [\App\Http\Controllers\Auth\LoginController::class, 'destroy'])->name('logout');
+
 // En Render (APP_MODE=team_only) redirigir la raíz del kanban al equipo
 if (env('APP_MODE') === 'team_only') {
     Route::redirect('/tasks', '/team/tasks');
