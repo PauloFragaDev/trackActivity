@@ -17,7 +17,6 @@ use App\Http\Controllers\TaskCommentController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TaskLabelController;
 use App\Http\Controllers\TeamIdentityController;
-use App\Http\Controllers\TeamMemberController;
 use App\Http\Controllers\TeamProjectController;
 use App\Http\Controllers\TeamTaskController;
 use App\Http\Controllers\TeamTaskCommentController;
