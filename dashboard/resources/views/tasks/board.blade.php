@@ -294,7 +294,7 @@
         </div>
     </dialog>
 
-@if($mode === 'team' && isset($members) && $members->isNotEmpty())
+@if($mode === 'team' && isset($members) && $members->isNotEmpty() && env('APP_MODE') !== 'team_only')
 @php $activeMemberId = session('team_member_id') ? (int) session('team_member_id') : null @endphp
 <dialog id="identity-modal" class="modal">
     @include('layouts.partials.modal-header', ['title' => __('tasks.who_are_you'), 'hint' => false])
@@ -322,7 +322,8 @@
 @endif
 
 <script>
-window.KANBAN_MODE = '{{ $mode }}';
+window.KANBAN_MODE      = '{{ $mode }}';
+window.KANBAN_TEAM_ONLY = @json(env('APP_MODE') === 'team_only');
 window.KANBAN_ROUTES = {
     store:         '{{ $mode === "team" ? route("team.tasks.store")   : route("tasks.store") }}',
     move:          '{{ $mode === "team" ? "/team/tasks"               : "/tasks" }}',
@@ -334,6 +335,7 @@ window.KANBAN_ROUTES = {
     identityClear:   '{{ route("team.identity.destroy") }}',
     transferPreview: '/tasks',
     transfer:        '/tasks',
+    logout:          '{{ route("logout") }}',
     @if(isset($columnDraggable) && $columnDraggable)
     updateColumns:   '{{ route("team.projects.columns", $project) }}',
     @endif

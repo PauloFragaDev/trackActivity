@@ -1027,11 +1027,18 @@ function renderPastilla(memberId) {
     const m = members.find((x) => String(x.id) === String(memberId));
     if (! m) return;
 
+    const changeAction = window.KANBAN_TEAM_ONLY
+        ? `<form method="POST" action="${window.KANBAN_ROUTES.logout}" class="inline">
+               <input type="hidden" name="_token" value="${csrf}">
+               <button type="submit" class="text-xs text-faint hover:underline">Cerrar sesión</button>
+           </form>`
+        : `<button type="button" id="btn-change-identity" class="text-xs text-faint hover:underline">Cambiar</button>`;
+
     el.innerHTML = `
         <span class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white select-none"
               style="background-color:${escape(m.color)}">${escape(m.initials)}</span>
         <span class="text-faint">${escape(m.name)}</span>
-        <button type="button" id="btn-change-identity" class="text-xs text-faint hover:underline">Cambiar</button>
+        ${changeAction}
     `;
 }
 
