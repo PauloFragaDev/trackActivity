@@ -12,6 +12,7 @@ class DatabaseSeeder extends Seeder
             ScoringRulesSeeder::class,
             ProjectsSeeder::class,
             MappingsSeeder::class,
+            TeamUsersSeeder::class,
         ]);
     }
 }
