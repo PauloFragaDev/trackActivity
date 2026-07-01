@@ -40,6 +40,24 @@ cargo tauri build
 # artefactos en: src-tauri/target/release/bundle/{appimage,deb}/
 ```
 
+## Actualizar una instalación existente
+
+El dashboard (PHP/JS que se ve dentro de la ventana) se autoactualiza solo con
+`git pull` gracias al hook de post-merge (ver `scripts/hooks/post-merge`,
+instalado por `composer install`). **La app de escritorio en sí no** — es un
+binario compilado, así que un cambio en `desktop/src-tauri/` (config de la
+ventana, bandeja, autostart…) solo llega reconstruyendo y reinstalando el
+paquete.
+
+```bash
+bash desktop/rebuild.sh
+```
+
+Hace `git pull` + `cargo tauri build` + instala el `.deb` generado
+(`sudo dpkg -i`, pide contraseña). Si el build produce un AppImage en vez de
+`.deb`, el script te indica la ruta para sustituirlo a mano. Tras instalar,
+cierra trackActivity del todo (bandeja → **Salir**) y vuelve a abrirlo.
+
 ## Checklist de verificación manual
 
 La cáscara nativa (ventana/bandeja) no tiene tests automatizados. Verificar a mano:
