@@ -114,8 +114,10 @@
                     </label>
                     <label class="label md:col-span-5">
                         <span>{{ __('projects.mapping_pattern') }}</span>
-                        <input type="text" name="pattern" required class="input font-mono"
+                        <input type="text" name="pattern" required
+                               class="input font-mono @error('pattern') is-invalid @enderror"
                                placeholder="{{ __('projects.mapping_pattern_ph') }}">
+                        <x-field-error name="pattern" />
                     </label>
                     <label class="label md:col-span-2">
                         <span>{{ __('projects.mapping_bonus') }}</span>

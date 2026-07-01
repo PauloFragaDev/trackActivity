@@ -23,7 +23,8 @@
             </div>
             <input type="text" name="user_name" maxlength="80"
                    value="{{ $userName }}" placeholder="{{ __('settings.user_name_ph') }}"
-                   class="input text-sm max-w-xs">
+                   class="input text-sm max-w-xs @error('user_name') is-invalid @enderror">
+            <x-field-error name="user_name" />
         </div>
 
         <div class="space-y-3 pt-4 border-t divider">

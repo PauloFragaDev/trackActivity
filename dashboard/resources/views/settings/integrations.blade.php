@@ -104,19 +104,17 @@
                     <label class="label" for="base44-url">{{ __('projects.api_url_label') }}</label>
                     <input type="url" id="base44-url" name="base44_url" maxlength="255"
                            value="{{ old('base44_url', $base44Url) }}"
-                           class="input" placeholder="{{ __('projects.api_url_ph') }}">
-                    @error('base44_url')
-                        <p class="mt-1 text-xs text-rose-500">{{ $message }}</p>
-                    @enderror
+                           class="input @error('base44_url') is-invalid @enderror"
+                           placeholder="{{ __('projects.api_url_ph') }}">
+                    <x-field-error name="base44_url" />
                 </div>
                 <div>
                     <label class="label" for="base44-token">{{ __('projects.bearer_token_label') }}</label>
                     <input type="password" id="base44-token" name="base44_token" maxlength="500"
                            value="{{ old('base44_token', $base44Token) }}"
-                           class="input" placeholder="{{ __('projects.bearer_token_ph') }}">
-                    @error('base44_token')
-                        <p class="mt-1 text-xs text-rose-500">{{ $message }}</p>
-                    @enderror
+                           class="input @error('base44_token') is-invalid @enderror"
+                           placeholder="{{ __('projects.bearer_token_ph') }}">
+                    <x-field-error name="base44_token" />
                 </div>
                 <div class="pt-1">
                     <button type="submit" class="btn">{{ __('settings.save') }}</button>
