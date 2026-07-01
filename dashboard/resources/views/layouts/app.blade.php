@@ -344,7 +344,7 @@
                 </div>
             </main>
 
-            <footer class="px-6 py-4 text-xs text-muted border-t divider">
+            <footer class="px-6 py-[0.89rem] text-xs text-muted border-t divider">
                 @if ($isTeamOnly)
                     trackActivity
                 @else
