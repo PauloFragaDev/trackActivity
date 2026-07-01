@@ -12,7 +12,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        $middleware->web(append: [\App\Http\Middleware\SetLocale::class]);
+        $middleware->web(append: [
+            \App\Http\Middleware\SetLocale::class,
+            \App\Http\Middleware\RestrictToTeamOnly::class,
+        ]);
         $middleware->alias([
             'api.token' => \App\Http\Middleware\ApiToken::class,
         ]);

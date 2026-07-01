@@ -31,11 +31,6 @@ Route::get('/login',   [\App\Http\Controllers\Auth\LoginController::class, 'crea
 Route::post('/login',  [\App\Http\Controllers\Auth\LoginController::class, 'store'])->name('login.store');
 Route::post('/logout', [\App\Http\Controllers\Auth\LoginController::class, 'destroy'])->name('logout');
 
-// En Render (APP_MODE=team_only) redirigir la raíz del kanban al equipo
-if (env('APP_MODE') === 'team_only') {
-    Route::redirect('/tasks', '/team/tasks');
-}
-
 // ─────────────────── Inicio ───────────────────
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
@@ -176,7 +171,12 @@ Route::get('/settings/integrations',  [\App\Http\Controllers\SettingsController:
 Route::post('/settings/integrations', [\App\Http\Controllers\SettingsController::class, 'saveIntegrations'])->name('settings.integrations.save');
 
 // ─────────────────── Equipo (Kanban compartido, Supabase) ───────────────────
-Route::middleware([EnsureTeamEnabled::class, RestoreTeamIdentity::class])->group(function () {
+$teamMiddleware = [EnsureTeamEnabled::class, RestoreTeamIdentity::class];
+if (env('APP_MODE') === 'team_only') {
+    $teamMiddleware[] = 'auth';
+}
+
+Route::middleware($teamMiddleware)->group(function () {
     Route::get('/team/tasks',                [TeamTaskController::class, 'index'])->name('team.tasks.index');
     Route::get('/team/tasks/peek',           [TeamTaskController::class, 'peek'])->name('team.tasks.peek');
     Route::post('/team/tasks',               [TeamTaskController::class, 'store'])->name('team.tasks.store');
@@ -208,3 +208,14 @@ Route::middleware([EnsureTeamEnabled::class, RestoreTeamIdentity::class])->group
     Route::delete('/team/notifications/{id}', [NotificationController::class, 'destroy'])->name('notification.destroy');
     Route::delete('/team/notifications',      [NotificationController::class, 'destroyAll'])->name('notification.destroy_all');
 });
+
+// En modo team_only (instancia pública del Kanban) redirigir la raíz al equipo.
+// Va al final del fichero a propósito: Route::redirect() registra con
+// Route::any(), y Laravel indexa las rutas por [método][uri], así que una
+// ruta posterior con el mismo uri pisa a una anterior (p. ej. Route::get('/',
+// ...timeline.today...) definida arriba). Registrando esto al final nos
+// aseguramos de que gane sobre cualquier ruta '/' o '/tasks' ya registrada.
+if (env('APP_MODE') === 'team_only') {
+    Route::redirect('/tasks', '/team/tasks');
+    Route::redirect('/', '/team/tasks');
+}
