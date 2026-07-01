@@ -48,7 +48,7 @@ class TeamTaskCommentController extends Controller
         $actorName = session('team_member_name') ?: 'Alguien';
         $excerpt   = mb_substr($body, 0, 120);
 
-        TeamMember::all()->each(function (TeamMember $member) use ($task, $body, $actorId, $actorName, $excerpt) {
+        TeamMember::select(['id', 'name'])->get()->each(function (TeamMember $member) use ($task, $body, $actorId, $actorName, $excerpt) {
             $pattern = '/@' . preg_quote($member->name, '/') . '(?!\w)/iu';
             if (preg_match($pattern, $body)) {
                 NotificationService::create(
