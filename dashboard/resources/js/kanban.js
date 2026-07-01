@@ -147,6 +147,18 @@ const toggleSubtask = async (id, checked) => {
 };
 const deleteSubtask = async (id) => {
     if (! edit) return;
+    const { isConfirmed } = await Swal.fire({
+        buttonsStyling: false,
+        reverseButtons: true,
+        customClass: { popup: 'app-swal', confirmButton: 'btn-danger', cancelButton: 'btn-ghost' },
+        title: '¿Eliminar subtarea?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+    });
+    if (! isConfirmed) return;
+
     edit.checkboxes = edit.checkboxes.filter((c) => c.id != id);
     renderSubtasks();
     await send(`${checkboxBase()}/${edit.taskId}/checkboxes/${id}`, 'DELETE');
@@ -207,6 +219,18 @@ const addComment = async (body) => {
 };
 const deleteComment = async (id) => {
     if (! edit) return;
+    const { isConfirmed } = await Swal.fire({
+        buttonsStyling: false,
+        reverseButtons: true,
+        customClass: { popup: 'app-swal', confirmButton: 'btn-danger', cancelButton: 'btn-ghost' },
+        title: '¿Eliminar comentario?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+    });
+    if (! isConfirmed) return;
+
     edit.comments = edit.comments.filter((c) => c.id != id);
     renderComments();
     await send(`${commentBase()}/${edit.taskId}/comments/${id}`, 'DELETE');
