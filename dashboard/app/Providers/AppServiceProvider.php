@@ -38,9 +38,14 @@ class AppServiceProvider extends ServiceProvider
         // se enciende si está vivo cualquiera de los dos procesos (daemon
         // o scheduler) — un clic en el botón los gestiona conjuntamente.
         View::composer('layouts.app', function ($view) {
-            $tracker   = app(TrackerManager::class)->status()['running'];
-            $scheduler = app(SchedulerManager::class)->status()['running'];
-            $view->with('trackerRunning', $tracker || $scheduler);
+            try {
+                $tracker   = app(TrackerManager::class)->status()['running'];
+                $scheduler = app(SchedulerManager::class)->status()['running'];
+                $view->with('trackerRunning', $tracker || $scheduler);
+            } catch (\Throwable $e) {
+                report($e);
+                $view->with('trackerRunning', false);
+            }
         });
 
         // Visibilidad de módulos + tema activo. Composer (lazy) en lugar
