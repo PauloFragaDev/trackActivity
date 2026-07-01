@@ -32,6 +32,7 @@ return [
     'integrations_desc'     => 'Connexions amb serveis externs: Supabase (Kanban d\'equip) i CRM Base44.',
     'supabase_desc'         => 'La connexió es configura al fitxer <code class="chip">.env</code> del servidor amb les variables <code class="chip">SUPABASE_DB_*</code>.',
     'identity_unlink_hint'  => 'Útil si canvies de dispositiu o algú altre farà servir aquest ordinador.',
+    'identity_unlink_confirm' => 'Vols desvincular-te d\'aquest dispositiu? Podràs tornar a triar el teu perfil quan vulguis.',
     'identity_no_link'      => 'Sense vincular en aquest dispositiu.',
     'sync_desc'             => 'Activa o desactiva les sincronitzacions amb sistemes externs.',
     'sync_kanban_desc'      => 'Sincronització bidireccional del tauler amb l\'extensió de VSCode (API <code class="chip">/api/sync/kanban</code>). Si la desactives, l\'extensió no podrà empènyer ni rebre canvis.',

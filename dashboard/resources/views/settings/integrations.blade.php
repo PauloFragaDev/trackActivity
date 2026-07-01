@@ -70,9 +70,11 @@
                             <span class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white"
                                   style="background-color: {{ $myMember->color }}">{{ $myMember->initials() }}</span>
                             <span class="text-sm font-medium">{{ $myMember->name }}</span>
-                            <form method="POST" action="{{ route('team.identity.destroy') }}" id="desvincular-form" class="ml-auto">
+                            <form method="POST" action="{{ route('team.identity.destroy') }}" id="desvincular-form" class="ml-auto"
+                                  data-confirm="{{ __('settings.identity_unlink_confirm') }}"
+                                  data-confirm-button="{{ __('projects.unlink_me') }}">
                                 @csrf @method('DELETE')
-                                <button type="button" id="btn-desvincular"
+                                <button type="submit"
                                         class="btn-ghost text-sm text-rose-600 dark:text-rose-400">
                                     {{ __('projects.unlink_me') }}
                                 </button>
@@ -111,7 +113,7 @@
                 <div>
                     <label class="label" for="base44-token">{{ __('projects.bearer_token_label') }}</label>
                     <input type="password" id="base44-token" name="base44_token" maxlength="500"
-                           value="{{ old('base44_token', $base44Token) }}"
+                           value="{{ $base44Token }}"
                            class="input @error('base44_token') is-invalid @enderror"
                            placeholder="{{ __('projects.bearer_token_ph') }}">
                     <x-field-error name="base44_token" />
@@ -132,11 +134,15 @@ localStorage.removeItem('team_member_id');
 localStorage.removeItem('team_member_name');
 @endif
 
-// El botón Desvincularme limpia localStorage y luego envía el formulario
-document.getElementById('btn-desvincular')?.addEventListener('click', () => {
+// Limpia localStorage solo cuando el envío ya pasó por la confirmación de
+// SweetAlert (data-confirm marca form.dataset.confirmed = '1' antes de
+// reenviar). Este listener se registra antes que el genérico de app.js
+// (script inline, se ejecuta durante el parseo del body), así que corre
+// primero en cada submit sin interferir con el preventDefault del confirm.
+document.getElementById('desvincular-form')?.addEventListener('submit', (e) => {
+    if (e.target.dataset.confirmed !== '1') return;
     localStorage.removeItem('team_member_id');
     localStorage.removeItem('team_member_name');
-    document.getElementById('desvincular-form').submit();
 });
 </script>
 @endsection
