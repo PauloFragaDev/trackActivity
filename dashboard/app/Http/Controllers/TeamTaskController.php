@@ -21,18 +21,6 @@ class TeamTaskController extends Controller
 {
     public function index(Request $request): View
     {
-        if (! session('team_member_id')) {
-            $savedId = Setting::get('team.member_id');
-            if ($savedId) {
-                $member = TeamMember::find((int) $savedId);
-                if ($member) {
-                    session(['team_member_id' => $member->id, 'team_member_name' => $member->name]);
-                } else {
-                    Setting::set('team.member_id', null);
-                }
-            }
-        }
-
         $projectId  = $request->integer('project') ?: null;
         $assigneeId = $request->integer('assignee') ?: null;
 

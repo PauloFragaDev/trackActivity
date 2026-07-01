@@ -21,6 +21,7 @@ use App\Http\Controllers\TeamProjectController;
 use App\Http\Controllers\TeamTaskController;
 use App\Http\Controllers\TeamTaskCommentController;
 use App\Http\Middleware\EnsureTeamEnabled;
+use App\Http\Middleware\RestoreTeamIdentity;
 use App\Http\Controllers\TimeBlockController;
 use App\Http\Controllers\TrackerController;
 use App\Http\Controllers\TimelineController;
@@ -171,7 +172,7 @@ Route::get('/settings/integrations',  [\App\Http\Controllers\SettingsController:
 Route::post('/settings/integrations', [\App\Http\Controllers\SettingsController::class, 'saveIntegrations'])->name('settings.integrations.save');
 
 // ─────────────────── Equipo (Kanban compartido, Supabase) ───────────────────
-Route::middleware(EnsureTeamEnabled::class)->group(function () {
+Route::middleware([EnsureTeamEnabled::class, RestoreTeamIdentity::class])->group(function () {
     Route::get('/team/tasks',                [TeamTaskController::class, 'index'])->name('team.tasks.index');
     Route::get('/team/tasks/peek',           [TeamTaskController::class, 'peek'])->name('team.tasks.peek');
     Route::post('/team/tasks',               [TeamTaskController::class, 'store'])->name('team.tasks.store');

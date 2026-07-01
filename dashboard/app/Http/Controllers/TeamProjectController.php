@@ -71,18 +71,6 @@ class TeamProjectController extends Controller
 
     public function board(Request $request, TeamProject $project): View
     {
-        if (! session('team_member_id')) {
-            $savedId = Setting::get('team.member_id');
-            if ($savedId) {
-                $member = TeamMember::find((int) $savedId);
-                if ($member) {
-                    session(['team_member_id' => $member->id, 'team_member_name' => $member->name]);
-                } else {
-                    Setting::set('team.member_id', null);
-                }
-            }
-        }
-
         $allValues  = collect(TaskStatus::cases())->map->value->all();
         $savedOrder = Setting::get("team.project.{$project->id}.columns") ?? [];
         $ordered    = collect($savedOrder)->filter(fn($v) => in_array($v, $allValues))->values();
