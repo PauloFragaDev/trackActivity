@@ -143,8 +143,12 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Quick switcher (Ctrl/Cmd+K).
-    initQuickSwitcher();
+    // Quick switcher (Ctrl/Cmd+K). No aplica en la instancia pública del
+    // Kanban de equipo — busca notas/tareas personales que ahí no existen,
+    // y el atajo de teclado no debe quedar activo aunque el botón esté oculto.
+    if (!window.APP_TEAM_ONLY) {
+        initQuickSwitcher();
+    }
 
     // Selector de icono (emoji): los presets rellenan el input[name=icon];
     // si hay un <details> alrededor, se actualiza el icono que muestra.

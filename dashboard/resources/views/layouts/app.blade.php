@@ -60,18 +60,26 @@
     </script>
     @endif
     <script>window.TRANSLATIONS = @json(__('js'));</script>
+    <script>window.APP_TEAM_ONLY = @json(config('app.mode') === 'team_only');</script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body>
     @php
+        // Instancia pública del Kanban de equipo (APP_MODE=team_only): el
+        // sidebar completo es de la app personal (tracker, notas, tareas
+        // propias, pomodoro, ajustes) y no debe verse — solo queda el
+        // Kanban de equipo, sin nada que enlace a rutas que ahora dan 404.
+        $isTeamOnly = config('app.mode') === 'team_only';
+
         // Clases de un ítem de navegación según si su ruta está activa.
         $navItem = fn (array $routes) => request()->routeIs(...$routes)
             ? 'bg-[var(--selected)] text-ink-900 dark:text-ink-50 font-medium'
             : 'text-ink-600 dark:text-ink-300 hover:bg-ink-100 dark:hover:bg-ink-800';
 
         // Árbol de carpetas y notas favoritas (fijadas) para el menú lateral.
-        $sidebarFolders = \App\Models\NoteFolder::orderBy('name')->get();
-        $sidebarPinned  = \App\Models\Note::where('pinned', true)->orderBy('title')->get();
+        // No aplica en team_only (no hay notas que mostrar en esa instancia).
+        $sidebarFolders = $isTeamOnly ? collect() : \App\Models\NoteFolder::orderBy('name')->get();
+        $sidebarPinned  = $isTeamOnly ? collect() : \App\Models\Note::where('pinned', true)->orderBy('title')->get();
     @endphp
 
     <a href="#main-content"
@@ -117,6 +125,7 @@
             </div>
 
             <nav class="sidebar-full flex-1 overflow-y-auto p-2 space-y-0.5 text-sm">
+                @unless ($isTeamOnly)
                 {{-- Control del tracker (arranca/para el daemon Python) --}}
                 <form method="POST" action="{{ route('tracker.toggle') }}" class="mb-1" data-loading-form>
                     @csrf
@@ -141,6 +150,7 @@
                     <span>{{ __('common.search') }}</span>
                     <x-kbd class="ml-auto">Ctrl K</x-kbd>
                 </button>
+                @endunless
 
                 {{-- Campana de notificaciones (solo si el módulo equipo está activo) --}}
                 @if ($modules['team']['enabled'] ?? false)
@@ -173,6 +183,7 @@
                 </div>
                 @endif
 
+                @unless ($isTeamOnly)
                 {{-- Inicio --}}
                 <a href="{{ route('dashboard') }}"
                    class="block px-2 py-1.5 rounded {{ $navItem(['dashboard']) }}">{{ __('nav.dashboard') }}</a>
@@ -267,10 +278,12 @@
                 {{-- Ayuda --}}
                 <a href="{{ route('help') }}"
                    class="block px-2 py-1.5 rounded {{ $navItem(['help']) }}">{{ __('nav.help') }}</a>
+                @endunless
             </nav>
 
 
             <div class="sidebar-full p-2 border-t divider">
+                @unless ($isTeamOnly)
                 {{-- Temporizador minimizado: aparece aquí cuando se minimiza el
                      dock flotante; al clicar, vuelve a flotante. Lo gobierna
                      pomodoro.js (clase .pomodoro-sidebar--visible). --}}
@@ -282,6 +295,7 @@
                     <span class="text-[11px] uppercase tracking-wider text-muted" data-pomodoro-sidebar-phase>{{ __('pomodoro.phase_focus') }}</span>
                     <span class="font-mono tabular-nums ml-auto" data-pomodoro-sidebar-time>00:00</span>
                 </button>
+                @endunless
                 <button id="theme-toggle" type="button"
                         class="btn-ghost w-full justify-start"
                         aria-label="{{ __('nav.theme_toggle') }}" title="{{ __('nav.theme_toggle') }}">
@@ -331,11 +345,16 @@
             </main>
 
             <footer class="px-6 py-4 text-xs text-muted border-t divider">
-                Local · {{ config('tracker.display_timezone') }} · BBDD: {{ basename(config('database.connections.sqlite.database')) }}
+                @if ($isTeamOnly)
+                    trackActivity
+                @else
+                    Local · {{ config('tracker.display_timezone') }} · BBDD: {{ basename(config('database.connections.sqlite.database')) }}
+                @endif
             </footer>
         </div>
     </div>
 
+    @unless ($isTeamOnly)
     {{-- Quick switcher (Ctrl/Cmd+K): buscar y saltar a una nota --}}
     <dialog id="quick-switcher" class="modal" aria-label="Buscar nota">
         <input type="text" data-qs-input autocomplete="off" placeholder="{{ __('nav.search_ph') }}" class="input"
@@ -373,12 +392,13 @@
             </div>
         </form>
     </dialog>
+    @endunless
 
     {{-- Dock flotante del Pomodoro: visible en cualquier página mientras
          haya una fase corriendo o esperando. El JS lo muestra/oculta con
          la clase .pomodoro-dock--visible. Lleva la config como data-attrs
          para poder pintar el contador sin necesidad de la página principal. --}}
-    @if ($modules['pomodoro']['enabled'] ?? true)
+    @if (!$isTeamOnly && ($modules['pomodoro']['enabled'] ?? true))
         @php $pomCfg = app(\App\Services\PomodoroService::class)->currentConfig(); @endphp
         <a href="{{ route('pomodoro.index') }}"
            id="pomodoro-dock"
