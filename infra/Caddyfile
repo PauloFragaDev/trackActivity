@@ -1,0 +1,5 @@
+# infra/Caddyfile
+# Sustituye kanban.tudominio.com por el subdominio real antes de desplegar.
+kanban.tudominio.com {
+    reverse_proxy app:10000
+}

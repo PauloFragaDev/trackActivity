@@ -1,0 +1,33 @@
+# infra/docker-compose.yml
+services:
+  app:
+    build:
+      context: ../dashboard
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env.team
+    environment:
+      PORT: "10000"
+    volumes:
+      - app-storage:/app/storage
+    expose:
+      - "10000"
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - app
+
+volumes:
+  app-storage:
+  caddy-data:
+  caddy-config:

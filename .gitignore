@@ -58,6 +58,7 @@ yarn-error.log
 .env.backup
 .env.production
 .env.local
+infra/.env.team
 
 # ──────────────────────────────────────────────
 # Misc legacy
